@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
@@ -50,6 +51,30 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _outputFolderPath;
             set => this.RaiseAndSetIfChanged(ref _outputFolderPath, value);
+        }
+
+        private bool _overwriteExistingFiles = false;
+        [DataMember]
+        public bool OverwriteExistingFiles
+        {
+            get => _overwriteExistingFiles;
+            set => this.RaiseAndSetIfChanged(ref _overwriteExistingFiles, value);
+        }
+
+        private bool _upscaleImages = false;
+        [DataMember]
+        public bool UpscaleImages
+        {
+            get => _upscaleImages;
+            set => this.RaiseAndSetIfChanged(ref _upscaleImages, value);
+        }
+
+        private bool _upscaleArchives = true;
+        [DataMember]
+        public bool UpscaleArchives
+        {
+            get => _upscaleArchives;
+            set => this.RaiseAndSetIfChanged(ref _upscaleArchives, value);
         }
 
         private bool _autoAdjustLevels = false;
@@ -106,6 +131,62 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _resizeFactorAfterUpscale;
             set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value);
+        }
+
+        private bool _valid = false;
+        [IgnoreDataMember]
+        public bool Valid
+        {
+            get => _valid;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _valid, value);
+                this.RaisePropertyChanged(nameof(UpscaleEnabled));
+            }
+        }
+
+        private bool _upscaling = false;
+        [IgnoreDataMember]
+        public bool Upscaling
+        {
+            get => _upscaling;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _upscaling, value);
+                this.RaisePropertyChanged(nameof(UpscaleEnabled));
+            }
+        }
+
+        private string _validationText = string.Empty;
+        public string ValidationText
+        {
+            get => _validationText;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _validationText, value);
+            }
+        }
+
+        private string _consoleText = string.Empty;
+        public string ConsoleText
+        {
+            get => _consoleText;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _consoleText, value);
+            }
+        }
+
+        public bool UpscaleEnabled => Valid && !Upscaling;
+
+        public async Task RunUpscale()
+        {
+
+        }
+
+        public void CancelUpscale()
+        {
+
         }
     }
 }

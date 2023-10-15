@@ -191,14 +191,7 @@ namespace MangaJaNaiConverterGui.Views
             // Start async operation to open the dialog.
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
-                Title = "Save Video File",
-                DefaultExtension = "mkv",
-                FileTypeChoices = new FilePickerFileType[]
-                {
-                    new("MKV file (*.mkv)") { Patterns = new[] { "*.mkv" } },
-                    new("MP4 file (*.mp4)") { Patterns = new[] { "*.mp4" } },
-                    new("All files (*.*)") { Patterns = new[] { "*" } },
-                },
+                Title = "Save File",
             });
 
             if (file is not null)
