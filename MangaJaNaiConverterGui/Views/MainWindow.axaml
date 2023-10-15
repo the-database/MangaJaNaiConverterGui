@@ -1,0 +1,144 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MangaJaNaiConverterGui.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" 
+        x:Class="MangaJaNaiConverterGui.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="MangaJaNaiConverterGui">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+      <StackPanel Margin="20">
+        <TextBlock FontWeight="Bold" Text="Manga Paths"></TextBlock>
+        <Border Margin="0,10,0,0"
+          CornerRadius="5"
+          BorderBrush="Gray" BorderThickness="1"
+          Padding="5">
+          <StackPanel>
+
+            <TabControl SelectedIndex="{Binding SelectedTabIndex}">
+              <TabItem Header="Single File Upscale" VerticalContentAlignment="Center" FontSize="18">
+                <StackPanel>
+                  <StackPanel Orientation="Horizontal" Margin="0,20,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
+                    <TextBox x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding InputFilePath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                    <Button Content="Select File" Click="OpenInputFileButtonClick" />
+                  </StackPanel>
+
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output File</TextBlock>
+                    <TextBox x:Name="OutputFileNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFilePath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                    <Button Content="Select File" Click="OpenOutputFileButtonClick" />
+                  </StackPanel>
+                </StackPanel>
+              </TabItem>
+              <TabItem Header="Batch Folder Upscale" VerticalAlignment="Center" FontSize="18">
+                <StackPanel>
+                  <StackPanel Orientation="Horizontal" Margin="0,20,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
+                    <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding InputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                    <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
+                  </StackPanel>
+
+                  <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
+                    <TextBox x:Name="OutputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                    <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
+                  </StackPanel>
+                </StackPanel>
+              </TabItem>
+            </TabControl>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Preprocessing"></TextBlock>
+        <Border Margin="0,10,0,0"
+          CornerRadius="5"
+          BorderBrush="Gray" BorderThickness="1"
+          Padding="5">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Auto Adjust Levels</TextBlock>
+              <CheckBox IsChecked="{Binding AutoAdjustLevels}" />
+              <TextBlock FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of the image. This is recommend when upscaling images which appear to be faded. This will have no effect on images that have sufficient contrast. </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
+              <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+              <TextBlock FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Resize each image to this height before upscaling, set to 0 to disable. 
+              </TextBlock>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
+              <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+              <TextBlock Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.
+              </TextBlock>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Upscaling"></TextBlock>
+        <Border Margin="0,10,0,0"
+          CornerRadius="5"
+          BorderBrush="Gray" BorderThickness="1"
+          Padding="5">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Grayscale Model Path</TextBlock>
+              <TextBox Margin="0,0,5,0" Text="{Binding GrayscaleModelFilePath}" IsReadOnly="False" Width="800" />
+              <Button Content="Select File" Click="OpenGrayscaleModelFileButtonClick" />
+              <TextBlock FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">File path of the PyTorch .pth or ONNX model to run on black and white images.</TextBlock>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Color Model Path</TextBlock>
+              <TextBox Margin="0,0,5,0" Text="{Binding ColorModelFilePath}" IsReadOnly="False" Width="800" />
+              <Button Content="Select File" Click="OpenColorModelFileButtonClick" />
+              <TextBlock FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">File path of the PyTorch .pth or ONNX model to run on color images.</TextBlock>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Postprocessing"></TextBlock>
+        <Border Margin="0,10,0,0"
+          CornerRadius="5"
+          BorderBrush="Gray" BorderThickness="1"
+          Padding="5">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height After Upscale</TextBlock>
+              <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+              <TextBlock FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Resize each image to this height after upscaling, set to 0 to disable. 
+              </TextBlock>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor After Upscale</TextBlock>
+              <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+              <TextBlock Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. 
+              </TextBlock>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+     </StackPanel>
+     </ScrollViewer>
+
+</Window>
