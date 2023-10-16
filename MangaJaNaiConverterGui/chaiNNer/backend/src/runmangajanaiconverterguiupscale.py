@@ -199,7 +199,7 @@ def postprocess_image(image):
     return to_uint8(image, normalized=True)
 
 def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression):
-    print(f"save_image_zip {file_name.encode('utf-8')} {output_zip} {image_format} {lossy_compression_quality} {use_lossless_compression}")
+    print(f"save image to zip: {file_name}", flush=True)
 
 
     # Convert the resized image back to bytes
@@ -210,31 +210,10 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
     # Add the resized image to the output zip
     output_zip.writestr(file_name, upscaled_image_data)
 
+
 def save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression):
-    print(f"save_image {output_file_path} {image_format} {lossy_compression_quality} {use_lossless_compression}")
+    print(f"save image: {output_file_path}")
     Image.fromarray(image).save(output_file_path, format=image_format, quality=lossy_compression_quality, lossless=use_lossless_compression)
-
-
-# def read_worker(load_queue, input_zip_path):
-
-#     for _ in range(LOAD_MAX_PROCESSES):
-#         load_queue.put(SENTINEL)
-
-
-# def load_worker(load_queue, preprocess_queue):
-#     print("load_worker entering")
-
-#     while True:
-#         image_data, file_name = load_queue.get()
-#         if image_data is None:
-#             break
-#         # print(f"load_worker!!!! {load_queue.qsize()}")
-#         print(file_name)
-#         loaded_image = load_image(image_data)
-#         preprocess_queue.put((loaded_image, file_name))
-#     preprocess_queue.put(SENTINEL)
-
-#     print("load_worker exiting")
 
 
 def preprocess_worker_zip(preprocess_queue, upscale_queue, input_zip_path):
