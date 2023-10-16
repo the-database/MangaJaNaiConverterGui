@@ -162,6 +162,34 @@
                 Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. 
               </TextBlock>
             </StackPanel>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Image Format</TextBlock>
+              <ToggleButton IsChecked="{Binding WebpSelected}" Content="WebP" Command="{Binding SetWebpSelected}" />
+              <ToggleButton IsChecked="{Binding PngSelected}" Content="PNG" Command="{Binding SetPngSelected}" />
+              <ToggleButton IsChecked="{Binding JpegSelected}" Content="JPEG" Command="{Binding SetJpegSelected}" />
+              <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
+<Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
+<Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
+        </TextBlock>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
+              <CheckBox Margin="0,0,5,0" IsChecked="{Binding UseLosslessCompression}">Use Lossless Compression</CheckBox>
+              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Use lossless compression. Usually not recommended due to producing images with much larger filesize.
+              </TextBlock>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
+              <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Quality level for compression. Note that a quality level of 100 is still lossy. 
+              </TextBlock>
+            </StackPanel>
+
           </StackPanel>
         </Border>
 

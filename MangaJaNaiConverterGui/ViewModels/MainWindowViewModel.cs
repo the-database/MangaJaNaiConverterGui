@@ -153,6 +153,74 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value);
         }
 
+        private bool _webpSelected = true;
+        [DataMember]
+        public bool WebpSelected
+        {
+            get => _webpSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _webpSelected, value);
+                this.RaisePropertyChanged(nameof(ShowUseLosslessCompression));
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+            }
+        }
+
+        private bool _pngSelected = false;
+        [DataMember]
+        public bool PngSelected
+        {
+            get => _pngSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _pngSelected, value);
+            }
+        }
+
+        private bool _jpegSelected = false;
+        [DataMember]
+        public bool JpegSelected
+        {
+            get => _jpegSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _jpegSelected, value);
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+            }
+        }
+
+        public bool ShowUseLosslessCompression => WebpSelected;
+
+        private bool _useLosslessCompression = false;
+        [DataMember]
+        public bool UseLosslessCompression
+        {
+            get => _useLosslessCompression;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _useLosslessCompression, value);
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+            }
+        }
+
+        public bool ShowLossyCompressionQuality => JpegSelected || (WebpSelected && !UseLosslessCompression);
+
+        private string _lossyCompressionQuality = 80.ToString();
+        [DataMember]
+        public string LossyCompressionQuality
+        {
+            get => _lossyCompressionQuality;
+            set => this.RaiseAndSetIfChanged(ref _lossyCompressionQuality, value);
+        }
+
+        private bool _showLossySettings = true;
+        [DataMember]
+        public bool ShowLossySettings
+        {
+            get => _showLossySettings;
+            set => this.RaiseAndSetIfChanged(ref _showLossySettings, value);
+        }
+
         private bool _valid = false;
         [IgnoreDataMember]
         public bool Valid
@@ -228,8 +296,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     flags.Append("--auto-adjust-levels ");
                 }
+                if (UseLosslessCompression)
+                {
+                    flags.Append("--use-lossless-compression ");
+                }
 
-                var cmd = $@"python "".\backend\src\runmangajanaiconverterguiupscale.py"" --input-file ""{InputFilePath}"" --output-file ""{OutputFilePath}"" --input-folder ""{InputFolderPath}"" --output-folder ""{OutputFolderPath}"" --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" {flags}";
+                var imageFormat = WebpSelected ? "webp" : PngSelected ? "png" : "jpeg";
+
+                var cmd = $@"python "".\backend\src\runmangajanaiconverterguiupscale.py"" --input-file ""{InputFilePath}"" --output-file ""{OutputFilePath}"" --input-folder ""{InputFolderPath}"" --output-folder ""{OutputFolderPath}"" --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {imageFormat} --lossy-compression-quality {LossyCompressionQuality} {flags}";
                 ConsoleText += $"Upscaling with command: {cmd}\n";
                 await RunCommand($@" /C {cmd}");
 
@@ -270,6 +344,27 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
             }
             catch { }
+        }
+
+        public void SetWebpSelected()
+        {
+            WebpSelected = true;
+            PngSelected = false;
+            JpegSelected = false;
+        }
+
+        public void SetPngSelected()
+        {
+            PngSelected = true;
+            WebpSelected = false;
+            JpegSelected = false;
+        }
+
+        public void SetJpegSelected()
+        {
+            JpegSelected = true;
+            WebpSelected = false;
+            PngSelected = false;
         }
 
         public void Validate()

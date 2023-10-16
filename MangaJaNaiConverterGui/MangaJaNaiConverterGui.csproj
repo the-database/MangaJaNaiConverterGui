@@ -23,4 +23,11 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.4" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.4" />
   </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="chaiNNer\backend\src\runmangajanaiconverterguiupscale.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
