@@ -134,8 +134,8 @@ def enhance_contrast(image):
             if continuous_count > 1:
                 break
 
-    print("NEW BLACK LEVEL =", new_black_level, flush=True)
-    print("NEW WHITE LEVEL =", new_white_level)
+    # print("NEW BLACK LEVEL =", new_black_level, flush=True)
+    # print("NEW WHITE LEVEL =", new_white_level)
 
     # Apply level adjustment
     # min_pixel_value = np.min(image)
