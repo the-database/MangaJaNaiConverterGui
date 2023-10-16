@@ -1,11 +1,31 @@
 ﻿using ReactiveUI;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
+    [DataContract]
     public class MainWindowViewModel : ViewModelBase
     {
+        public MainWindowViewModel() 
+        {
+            this.WhenAnyValue(x => x.InputFilePath, x => x.OutputFilePath,
+                                x => x.InputFolderPath, x => x.OutputFolderPath,
+                                x => x.SelectedTabIndex).Subscribe(x =>
+                                {
+                                    Validate();
+                                });
+        }
+
+        private CancellationTokenSource? _cancellationTokenSource;
+        private Process? _runningProcess = null;
 
         private int _selectedTabIndex;
         [DataMember]
@@ -181,12 +201,156 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public async Task RunUpscale()
         {
+            // TODO use embedded python
+            _cancellationTokenSource = new CancellationTokenSource();
+            var ct = _cancellationTokenSource.Token;
+
+            var task = Task.Run(async () =>
+            {
+                ct.ThrowIfCancellationRequested();
+                ConsoleText = "";
+                Upscaling = true;
+
+                var flags = new StringBuilder();
+                if (UpscaleArchives)
+                {
+                    flags.Append("--upscale-archives ");
+                }
+                if (UpscaleImages)
+                {
+                    flags.Append("--upscale-images ");
+                }
+                if (OverwriteExistingFiles)
+                {
+                    flags.Append("--overwrite-existing-files ");
+                }
+                if (AutoAdjustLevels)
+                {
+                    flags.Append("--auto-adjust-levels ");
+                }
+
+                var cmd = $@"python "".\backend\src\runmangajanaiconverterguiupscale.py"" --input-file ""{InputFilePath}"" --output-file ""{OutputFilePath}"" --input-folder ""{InputFolderPath}"" --output-folder ""{OutputFolderPath}"" --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" {flags}";
+                ConsoleText += $"Upscaling with command: {cmd}\n";
+                await RunCommand($@" /C {cmd}");
+
+                Valid = true;
+            }, ct);
+
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException e)
+            {
+                Console.WriteLine($"{nameof(OperationCanceledException)} thrown with message: {e.Message}");
+                Upscaling = false;
+            }
+            finally
+            {
+                _cancellationTokenSource.Dispose();
+                Upscaling = false;
+            }
+
+
+
+
 
         }
 
         public void CancelUpscale()
         {
+            try
+            {
+                _cancellationTokenSource?.Cancel();
+                if (_runningProcess != null && !_runningProcess.HasExited)
+                {
+                    // Kill the process
+                    _runningProcess.Kill(true);
+                    _runningProcess = null; // Clear the reference to the terminated process
+                }
+            }
+            catch { }
+        }
 
+        public void Validate()
+        {
+            var valid = true;
+            var validationText = new List<string>();
+            if (SelectedTabIndex == 0)
+            {
+                if (!File.Exists(InputFilePath))
+                {
+                    valid = false;
+                    validationText.Add("Input File is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(OutputFilePath))
+                {
+                    valid = false;
+                    validationText.Add("Output File is required.");
+                }
+            }
+            else
+            {
+                if (!Directory.Exists(InputFolderPath))
+                {
+                    valid = false;
+                    validationText.Add("Input Folder is required.");
+                }
+
+                if (string.IsNullOrWhiteSpace(OutputFolderPath))
+                {
+                    valid = false;
+                    validationText.Add("Output Folder is required.");
+                }
+            }
+
+            Valid = valid;
+            ValidationText = string.Join("\n", validationText);
+        }
+
+        public async Task RunCommand(string command)
+        {
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                _runningProcess = process;
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = command;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\chaiNNer");
+
+                // Create a StreamWriter to write the output to a log file
+                using (var outputFile = new StreamWriter("error.log", append: true))
+                {
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            outputFile.WriteLine(e.Data); // Write the output to the log file
+                            ConsoleText += e.Data + "\n";
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            outputFile.WriteLine(e.Data); // Write the output to the log file
+                            ConsoleText += e.Data + "\n";
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+                }
+                
+            }
         }
     }
 }
