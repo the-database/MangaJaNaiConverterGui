@@ -1,10 +1,10 @@
+import sys
 import asyncio
 import functools
 import gc
 import importlib
 import logging
 import os
-import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
@@ -78,7 +78,7 @@ import numpy as np
 import argparse
 import zipfile
 import time
-from multiprocessing import SimpleQueue, Process, Manager
+from multiprocessing import Queue, Process, Manager
 
 def enhance_contrast(image):
     # print('1', image[199][501], np.min(image), np.max(image))
@@ -136,37 +136,12 @@ def enhance_contrast(image):
 
     print(f"Auto adjusted levels: new black level = {new_black_level}; new white level = {new_white_level}", flush=True)
 
-    # Apply level adjustment
-    # min_pixel_value = np.min(image)
-    # max_pixel_value = np.max(image)
-    # adjusted_image = ImageOps.level(image, (min_pixel_value, max_pixel_value), (new_black_level, new_white_level))
-
-
-    # print("np.max =", new_black_level)
-    # Create a NumPy array from the image
     image_array = np.array(image_p).astype('float32')
-    # print('2', image_array[199][501], np.min(image), np.max(image))
-    # new_black_level = np.max(image_array)
-    # print(image_array)
-    # Apply level adjustment
-    # min_pixel_value = np.min(image_array)
-    # max_pixel_value = np.max(image_array)
-
-    # Normalize pixel values to the new levels
-    # print(image_array)
     image_array = np.maximum(image_array - new_black_level, 0) / (new_white_level - new_black_level)
     image_array = np.clip(image_array, 0, 1)
-    # print('3', image_array[199][501], np.min(image), np.max(image))
-    # print(image_array)
-    # print(np.any(image_array > 1))
 
-    # Ensure the pixel values are in the valid range [0, 255]
-
-
-    # print(image_array)
-    # Create a new Pillow image from the adjusted NumPy array
-    # return stretch_contrast_node(image, StretchMode.MANUAL, True, 0, 50, 100)
     return image_array
+
 
 def _read_pil(im) -> np.ndarray | None:
     img = np.array(im)
@@ -178,23 +153,12 @@ def _read_pil(im) -> np.ndarray | None:
     return img
 
 
-def load_image(image_data):
-    # print(f"load_image")
-    with Image.open(io.BytesIO(image_data)) as img:
-        return _read_pil(img)
-    return None
-
-def preprocess_image(image):
-    # print(f"preprocess_image")
-    return enhance_contrast(image)
-
 def ai_upscale_image(image):
     # print(f"ai_upscale_image")
     if grayscale_model is not None:
         # TODO estimate vs no_tiling benchmark
         return upscale_image_node(image, grayscale_model, ESTIMATE, False)  # TODO color vs grayscale model
     return image
-    # return (image, file_name)
 
 def postprocess_image(image):
     # print(f"postprocess_image")
@@ -218,7 +182,7 @@ def save_image(image, output_file_path, image_format, lossy_compression_quality,
     Image.fromarray(image).save(output_file_path, format=image_format, quality=lossy_compression_quality, lossless=use_lossless_compression)
 
 
-def preprocess_worker_zip(preprocess_queue, upscale_queue, input_zip_path, auto_adjust_levels):
+def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
     """
     given a zip path, read images out of the zip, apply auto levels, add the image to upscale queue
     """
@@ -241,6 +205,8 @@ def preprocess_worker_zip(preprocess_queue, upscale_queue, input_zip_path, auto_
                         image = _read_pil(img)
                         if auto_adjust_levels:
                             image = enhance_contrast(image)
+                        else:
+                            image = image.astype('float32')
                         upscale_queue.put((image, file_name, True))
                 except:
                     # skip non-images
@@ -253,7 +219,7 @@ def preprocess_worker_zip(preprocess_queue, upscale_queue, input_zip_path, auto_
     print("preprocess_worker_zip exiting")
 
 
-def preprocess_worker_folder(preprocess_queue, upscale_queue, input_folder_path, output_folder_path, upscale_images, upscale_archives,
+def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_path, upscale_images, upscale_archives,
 overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
     """
     given a folder path, recursively iterate the folder
@@ -275,6 +241,8 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
                         image = _read_pil(img)
                         if auto_adjust_levels:
                             image = enhance_contrast(image)
+                        else:
+                            image = image.astype('float32')
                         upscale_queue.put((image, filename_rel))
             elif filename.lower().endswith(('.zip', '.cbz')):  # TODO if archive
                 if upscale_archives:
@@ -284,7 +252,7 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
     print("preprocess_worker_folder exiting")
 
 
-def preprocess_worker_image(preprocess_queue, upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels):
+def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels):
     """
     given an image path, apply auto levels and add to upscale queue
     """
@@ -300,6 +268,8 @@ def preprocess_worker_image(preprocess_queue, upscale_queue, input_image_path, o
             image = _read_pil(img)
             if auto_adjust_levels:
                 image = enhance_contrast(image)
+            else:
+                image = image.astype('float32')
             upscale_queue.put((image, None))
     upscale_queue.put(SENTINEL)
 
@@ -368,12 +338,13 @@ def postprocess_worker_image(postprocess_queue, output_file_path, image_format, 
 
 def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
     # TODO accept multiple paths to reuse simple queues?
-    preprocess_queue = SimpleQueue()
-    upscale_queue = SimpleQueue()
-    postprocess_queue = SimpleQueue()
+    # print("hello?",flush=True)
+    # preprocess_queue = Queue(maxsize=1)
+    upscale_queue = Queue(maxsize=1)
+    postprocess_queue = Queue(maxsize=1)
 
     # start preprocess zip process
-    preprocess_process = Process(target=preprocess_worker_zip, args=(preprocess_queue, upscale_queue, input_zip_path, auto_adjust_levels))
+    preprocess_process = Process(target=preprocess_worker_zip, args=(upscale_queue, input_zip_path, auto_adjust_levels))
     preprocess_process.start()
 
     # start upscale process
@@ -391,12 +362,12 @@ def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, image_
 
 
 def upscale_image_file(input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
-    preprocess_queue = SimpleQueue()
-    upscale_queue = SimpleQueue()
-    postprocess_queue = SimpleQueue()
+    # preprocess_queue = Queue(maxsize=1)
+    upscale_queue = Queue(maxsize=1)
+    postprocess_queue = Queue(maxsize=1)
 
     # start preprocess zip process
-    preprocess_process = Process(target=preprocess_worker_image, args=(preprocess_queue, upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels))
+    preprocess_process = Process(target=preprocess_worker_image, args=(upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels))
     preprocess_process.start()
 
     # start upscale process
@@ -430,12 +401,12 @@ def upscale_folder(input_folder, output_folder, upscale_images, upscale_archives
 auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
     print("upscale_folder: entering")
 
-    preprocess_queue = SimpleQueue()
-    upscale_queue = SimpleQueue()
-    postprocess_queue = SimpleQueue()
+    # preprocess_queue = Queue(maxsize=1)
+    upscale_queue = Queue(maxsize=1)
+    postprocess_queue = Queue(maxsize=1)
 
     # start preprocess folder process
-    preprocess_process = Process(target=preprocess_worker_folder, args=(preprocess_queue, upscale_queue, input_folder, output_folder,
+    preprocess_process = Process(target=preprocess_worker_folder, args=(upscale_queue, input_folder, output_folder,
         upscale_images, upscale_archives, overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression))
     preprocess_process.start()
 
