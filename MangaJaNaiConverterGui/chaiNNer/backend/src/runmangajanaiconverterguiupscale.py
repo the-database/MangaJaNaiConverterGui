@@ -231,13 +231,18 @@ def preprocess_worker_zip(preprocess_queue, upscale_queue, input_zip_path):
             with input_zip.open(file_name) as file_in_zip:
                 # Read the image data
                 # load_queue.put((file_in_zip.read(), file_name))
+
                 image_data = file_in_zip.read()
 
-                with Image.open(io.BytesIO(image_data)) as img:
-                    image = _read_pil(img)
-                    image = enhance_contrast(image) # TODO restore
-
-                    upscale_queue.put((image, file_name))
+                try:
+                    with Image.open(io.BytesIO(image_data)) as img:
+                        image = _read_pil(img)
+                        image = enhance_contrast(image) # TODO restore
+                        upscale_queue.put((image, file_name))
+                except:
+                    # skip non-images
+                    # TODO copy non-images. copy queue?
+                    pass
     upscale_queue.put(SENTINEL)
 
     print("preprocess_worker_zip exiting")
