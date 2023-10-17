@@ -177,7 +177,7 @@
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
               <CheckBox Margin="0,0,5,0" IsChecked="{Binding UseLosslessCompression}">Use Lossless Compression</CheckBox>
               <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Use lossless compression. Usually not recommended due to producing images with much larger filesize.
+                Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
               </TextBlock>
             </StackPanel>
             
