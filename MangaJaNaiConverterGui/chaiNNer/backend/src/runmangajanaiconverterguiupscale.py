@@ -361,7 +361,7 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
                     is_grayscale = cv_image_is_grayscale(image)
                     print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
 
-                    if auto_adjust_levels:
+                    if is_grayscale and auto_adjust_levels:
                         image = enhance_contrast(image)
                     else:
                         # TODO ???
@@ -403,7 +403,7 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
 
                     # with Image.open(os.path.join(root, filename)) as img:
                         # image = _read_pil(img)
-                    if auto_adjust_levels:
+                    if is_grayscale and auto_adjust_levels:
                         image = enhance_contrast(image)
                     else:
                         # image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
@@ -436,7 +436,7 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
         print(f"grayscale? {is_grayscale} {input_image_path}")
 
         # image = _read_pil(img)
-        if auto_adjust_levels:
+        if is_grayscale and auto_adjust_levels:
             image = enhance_contrast(image)
         else:
             print("why?")
