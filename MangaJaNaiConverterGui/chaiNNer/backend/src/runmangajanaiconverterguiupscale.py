@@ -143,9 +143,61 @@ def enhance_contrast(image):
     return image_array
 
 
+def _read_cv(img_stream):
+    # if get_ext(path) not in get_opencv_formats():
+    #     # not supported
+    #     return None
+
+    # img = None
+    # try:
+    #     img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    # except Exception as cv_err:
+    #     print(f"Error loading image, trying with imdecode: {cv_err}")
+
+    # if img is None:
+    #     try:
+    #         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    #     except Exception as e:
+    #         raise RuntimeError(
+    #             f'Error reading image image from path "{path}". Image may be corrupt.'
+    #         ) from e
+
+    # if img is None:  # type: ignore
+    #     raise RuntimeError(
+    #         f'Error reading image image from path "{path}". Image may be corrupt.'
+    #     )
+
+    return cv2.imdecode(np.frombuffer(img_stream.read(), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+
+
+
+def _read_cv_from_path(path):
+    img = None
+    try:
+        img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    except Exception as cv_err:
+        logger.warning(f"Error loading image, trying with imdecode: {cv_err}")
+
+    if img is None:
+        try:
+            img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        except Exception as e:
+            raise RuntimeError(
+                f'Error reading image image from path "{path}". Image may be corrupt.'
+            ) from e
+
+    if img is None:  # type: ignore
+        raise RuntimeError(
+            f'Error reading image image from path "{path}". Image may be corrupt.'
+        )
+
+    return img
+
+
 def _read_pil(im) -> np.ndarray | None:
     img = np.array(im)
     _, _, c = get_h_w_c(img)
+    print(f"_read_pil c={c}")
     if c == 3:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     elif c == 4:
@@ -167,10 +219,38 @@ def postprocess_image(image):
 def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression):
     print(f"save image to zip: {file_name}", flush=True)
 
+    params = []
+    if image_format == 'jpg':
+        params = [
+            cv2.IMWRITE_JPEG_QUALITY,
+            int(lossy_compression_quality),
+            cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
+            cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
+            cv2.IMWRITE_JPEG_PROGRESSIVE,
+            1, # jpeg_progressive
+        ]
+    elif image_format == "webp":
+        params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else int(lossy_compression_quality)]
+    else:
+        params = []
+
+    # the bit depth depends on the image format and settings
+    precision = "u8"
+
+    if precision == "u8":
+        image = to_uint8(image, normalized=True)
+    elif precision == "u16":
+        image = to_uint16(image, normalized=True)
+    elif precision == "f32":
+        # chainner images are always f32
+        pass
+
+    # cv_save_image(output_file_path, image, params)
 
     # Convert the resized image back to bytes
-    output_buffer = io.BytesIO()
-    Image.fromarray(image).save(output_buffer, format=image_format, quality=lossy_compression_quality, lossless=use_lossless_compression)
+    print('params',params)
+    _, buf_img = cv2.imencode(f".{image_format}", image, params)
+    output_buffer = io.BytesIO(buf_img)
     upscaled_image_data = output_buffer.getvalue()
 
     # Add the resized image to the output zip
@@ -179,14 +259,60 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
 
 def save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression):
     print(f"save image: {output_file_path}")
-    Image.fromarray(image).save(output_file_path, format=image_format, quality=lossy_compression_quality, lossless=use_lossless_compression)
+
+    # channels = get_h_w_c(image)[2]
+    # print(f"channels = {channels}")
+    # if channels == 1:
+    #     # PIL supports grayscale images just fine, so we don't need to do any conversion
+    #     pass
+    # elif channels == 3:
+    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # elif channels == 4:
+    #     image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+    # else:
+    #     raise RuntimeError(
+    #         f"Unsupported number of channels. Saving .{image_format.extension} images is only supported for "
+    #         f"grayscale, RGB, and RGBA images."
+    #     )
+
+    # Image.fromarray(image).save(output_file_path, format=image_format, quality=lossy_compression_quality, lossless=use_lossless_compression)
+
+
+    params = []
+    if image_format == 'jpg':
+        params = [
+            cv2.IMWRITE_JPEG_QUALITY,
+            lossy_compression_quality,
+            cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
+            cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
+            cv2.IMWRITE_JPEG_PROGRESSIVE,
+            1, # jpeg_progressive
+        ]
+    elif image_format == "webp":
+        params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else lossy_compression_quality]
+    else:
+        params = []
+
+    # the bit depth depends on the image format and settings
+    precision = "u8"
+
+    if precision == "u8":
+        image = to_uint8(image, normalized=True)
+    elif precision == "u16":
+        image = to_uint16(image, normalized=True)
+    elif precision == "f32":
+        # chainner images are always f32
+        pass
+
+    cv_save_image(output_file_path, image, params)
+
 
 
 def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
     """
     given a zip path, read images out of the zip, apply auto levels, add the image to upscale queue
     """
-    print("preprocess_worker_zip entering")
+    print(f"preprocess_worker_zip entering aal={auto_adjust_levels}")
 
     with zipfile.ZipFile(input_zip_path, 'r') as input_zip:
         # Create a new zip file in write mode for the resized images
@@ -201,13 +327,19 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
                 image_data = file_in_zip.read()
 
                 try:
-                    with Image.open(io.BytesIO(image_data)) as img:
-                        image = _read_pil(img)
-                        if auto_adjust_levels:
-                            image = enhance_contrast(image)
-                        else:
-                            image = image.astype('float32')
-                        upscale_queue.put((image, file_name, True))
+                    # with Image.open(io.BytesIO(image_data)) as img:
+                    image_bytes = io.BytesIO(image_data)
+                    # image = _read_pil(img)
+                    image = _read_cv(image_bytes)
+                    if auto_adjust_levels:
+                        image = enhance_contrast(image)
+                    else:
+                        # TODO ???
+                        # image = image.astype('float32')
+                        # print("?!?!?!?!?")
+                        # image = np.array(Image.fromarray(image).convert("L")).astype('float32')
+                        pass
+                    upscale_queue.put((image, file_name, True))
                 except:
                     # skip non-images
                     # TODO copy non-images. copy queue?
@@ -242,8 +374,8 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
                         if auto_adjust_levels:
                             image = enhance_contrast(image)
                         else:
-                            image = image.astype('float32')
-                        upscale_queue.put((image, filename_rel))
+                            image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
+                        upscale_queue.put((image, filename_rel, True))
             elif filename.lower().endswith(('.zip', '.cbz')):  # TODO if archive
                 if upscale_archives:
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
@@ -264,13 +396,18 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
 
     if input_image_path.lower().endswith(IMAGE_EXTENSIONS):
         os.makedirs(os.path.dirname(output_image_path), exist_ok=True)
-        with Image.open(input_image_path) as img:
-            image = _read_pil(img)
-            if auto_adjust_levels:
-                image = enhance_contrast(image)
-            else:
-                image = image.astype('float32')
-            upscale_queue.put((image, None))
+        # with Image.open(input_image_path) as img:
+        image = _read_cv_from_path(input_image_path)
+        # image = _read_pil(img)
+        if auto_adjust_levels:
+            image = enhance_contrast(image)
+        else:
+            print("why?")
+            # image_p = Image.fromarray(image).convert("L")
+            # image_array = np.array(image_p).astype('float32')
+            # image_array = np.maximum(image_array - 0, 0) / (255 - 0)
+            # image_array = np.clip(image_array, 0, 1)
+        upscale_queue.put((image, None, True))
     upscale_queue.put(SENTINEL)
 
 
@@ -301,7 +438,7 @@ def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, los
             if image is None:
                 break
             if is_image:
-                image = postprocess_image(image)
+                # image = postprocess_image(image)
                 save_image_zip(image, str(Path(file_name).with_suffix(f'.{image_format}')), output_zip, image_format, lossy_compression_quality, use_lossless_compression)
             else:  # copy file
                 output_zip.writestr(file_name, image)
@@ -329,10 +466,10 @@ def postprocess_worker_image(postprocess_queue, output_file_path, image_format, 
     wait for postprocess queue, for each queue entry, save the image to the output file path
     """
     while True:
-        image, _ = postprocess_queue.get()
+        image, _, _ = postprocess_queue.get()
         if image is None:
             break
-        image = postprocess_image(image)
+        # image = postprocess_image(image)
         save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression)
 
 
