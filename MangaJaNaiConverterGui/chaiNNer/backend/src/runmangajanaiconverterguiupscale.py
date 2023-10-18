@@ -12,13 +12,8 @@ from json import dumps as stringify
 from typing import Dict, List, Optional, Tuple, TypedDict, Union
 from nodes.utils.utils import get_h_w_c
 from pathlib import Path
+from ctypes import windll
 
-import psutil
-from sanic import Sanic
-from sanic.log import access_logger, logger
-from sanic.request import Request
-from sanic.response import json
-from sanic_cors import CORS
 import numpy as np
 from PIL import Image
 import io
@@ -79,6 +74,11 @@ import argparse
 import zipfile
 import time
 from multiprocessing import Queue, Process, Manager
+
+
+def get_system_codepage():
+    return windll.kernel32.GetConsoleOutputCP()
+
 
 def enhance_contrast(image):
     # print('1', image[199][501], np.min(image), np.max(image))
@@ -217,6 +217,7 @@ def postprocess_image(image):
     return to_uint8(image, normalized=True)
 
 def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression):
+    # sys.stdout.reconfigure(encoding='utf-8')  # TODO remove
     print(f"save image to zip: {file_name}", flush=True)
 
     params = []
@@ -248,7 +249,6 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
     # cv_save_image(output_file_path, image, params)
 
     # Convert the resized image back to bytes
-    print('params',params)
     _, buf_img = cv2.imencode(f".{image_format}", image, params)
     output_buffer = io.BytesIO(buf_img)
     upscaled_image_data = output_buffer.getvalue()
@@ -318,11 +318,17 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
         # Create a new zip file in write mode for the resized images
         #with zipfile.ZipFile(output_zip_path, 'w') as output_zip:
         # Iterate through the files in the input zip
-        for file_name in input_zip.namelist():
+        for filename in input_zip.namelist():
+            decoded_filename = filename
+            try:
+                decoded_filename = decoded_filename.encode('cp437').decode(f'cp{system_codepage}')
+            except:
+                pass
+
             # Open the file inside the input zip
-            with input_zip.open(file_name) as file_in_zip:
+            with input_zip.open(filename) as file_in_zip:
                 # Read the image data
-                # load_queue.put((file_in_zip.read(), file_name))
+                # load_queue.put((file_in_zip.read(), filename))
 
                 image_data = file_in_zip.read()
 
@@ -339,12 +345,10 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
                         # print("?!?!?!?!?")
                         # image = np.array(Image.fromarray(image).convert("L")).astype('float32')
                         pass
-                    upscale_queue.put((image, file_name, True))
+                    upscale_queue.put((image, decoded_filename, True))
                 except:
-                    # skip non-images
-                    # TODO copy non-images. copy queue?
-                    print(f"could not read as image, copying file to zip instead of upscaling: {file_name}")
-                    upscale_queue.put((image_data, file_name, False))
+                    print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}")
+                    upscale_queue.put((image_data, decoded_filename, False))
                     pass
     upscale_queue.put(SENTINEL)
 
@@ -563,7 +567,7 @@ auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compre
     upscale_process.join()
     postprocess_process.join()
 
-
+sys.stdout.reconfigure(encoding='utf-8')
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--input-file', required=False)
@@ -582,6 +586,7 @@ parser.add_argument('--color-model-path', required=False)
 
 args = parser.parse_args()
 print(args)
+print(args.input_file)
 
 
 SENTINEL = (None, None, None)
@@ -590,12 +595,16 @@ ZIP_EXTENSIONS = ('.zip', '.cbz')
 ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS # TODO .rar .cbr .7z
 color_model = None
 grayscale_model = None
+system_codepage = get_system_codepage()
 
 if args.color_model_path:
     color_model, dirname, basename = load_model_node(args.color_model_path)
 
 if args.grayscale_model_path:
     grayscale_model, dirname, basename = load_model_node(args.grayscale_model_path)
+
+
+
 
 if __name__ == '__main__':
     #gc.disable() #TODO!!!!!!!!!!!!

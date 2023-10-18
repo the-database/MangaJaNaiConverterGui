@@ -417,6 +417,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\chaiNNer");
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
                 // Create a StreamWriter to write the output to a log file
                 using (var outputFile = new StreamWriter("error.log", append: true))
@@ -436,6 +438,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         {
                             outputFile.WriteLine(e.Data); // Write the output to the log file
                             ConsoleText += e.Data + "\n";
+                            Debug.WriteLine(e.Data);
                         }
                     };
 
