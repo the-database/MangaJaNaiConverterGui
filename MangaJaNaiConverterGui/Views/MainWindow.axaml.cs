@@ -30,11 +30,17 @@ namespace MangaJaNaiConverterGui.Views
             var outputFileNameTextBox = this.FindControl<TextBox>("OutputFileNameTextBox");
             var inputFolderNameTextBox = this.FindControl<TextBox>("InputFolderNameTextBox");
             var outputFolderNameTextBox = this.FindControl<TextBox>("OutputFolderNameTextBox");
+            var grayscaleModelFilePathTextBox = this.FindControl<TextBox>("GrayscaleModelFilePathTextBox");
+            var colorModelFilePathTextBox = this.FindControl<TextBox>("ColorModelFilePathTextBox");
 
             inputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFilePath);
             outputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFilePath);
             inputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFolderPath);
             outputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFolderPath);
+            grayscaleModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetGrayscaleModelFilePath);
+            colorModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetColorModelFilePath);
+
+
         }
 
         private void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -183,6 +189,42 @@ namespace MangaJaNaiConverterGui.Views
             }
         }
 
+        public void SetGrayscaleModelFilePath(object? sender, DragEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                var files = e.Data.GetFiles().ToList();
+
+
+                if (files.Count > 0)
+                {
+                    var filePath = files[0].TryGetLocalPath();
+                    if (File.Exists(filePath))
+                    {
+                        vm.GrayscaleModelFilePath = filePath;
+                    }
+                }
+            }
+        }
+
+        public void SetColorModelFilePath(object? sender, DragEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                var files = e.Data.GetFiles().ToList();
+
+
+                if (files.Count > 0)
+                {
+                    var filePath = files[0].TryGetLocalPath();
+                    if (File.Exists(filePath))
+                    {
+                        vm.ColorModelFilePath = filePath;
+                    }
+                }
+            }
+        }
+
         private async void OpenOutputFileButtonClick(object? sender, RoutedEventArgs e)
         {
             // Get top level from the current control. Alternatively, you can use Window reference instead.
@@ -265,16 +307,18 @@ namespace MangaJaNaiConverterGui.Views
             // Get top level from the current control. Alternatively, you can use Window reference instead.
             var topLevel = TopLevel.GetTopLevel(this);
 
+            var storageProvider = topLevel.StorageProvider;
+
             // Start async operation to open the dialog.
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Open Video File",
+                Title = "Open Model File for Grayscale Images",
                 AllowMultiple = false,
                 FileTypeFilter = new FilePickerFileType[] 
                 { 
                     new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
                 },
-
+                SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(@".\chaiNNer\models"))),
             });
 
             if (files.Count >= 1)
@@ -295,16 +339,18 @@ namespace MangaJaNaiConverterGui.Views
         {
             // Get top level from the current control. Alternatively, you can use Window reference instead.
             var topLevel = TopLevel.GetTopLevel(this);
+            var storageProvider = topLevel.StorageProvider;
 
             // Start async operation to open the dialog.
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = "Open Video File",
+                Title = "Open Model File for Color Images",
                 AllowMultiple = false,
                 FileTypeFilter = new FilePickerFileType[]
                 {
                     new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
                 },
+                SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(@".\chaiNNer\models"))),
             });
 
             if (files.Count >= 1)
