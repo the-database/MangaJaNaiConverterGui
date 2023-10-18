@@ -94,8 +94,8 @@
           Padding="5">
           <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
-              <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels</CheckBox>
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of the image  if necessary. This is recommend when upscaling images which appear to be faded. This will have no effect on images with sufficient contrast. </TextBlock>
+              <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
+              <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
