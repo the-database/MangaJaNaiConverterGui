@@ -47,7 +47,7 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
-                //vm.CancelUpscale();
+                vm.CancelUpscale();
             }
         }
 
