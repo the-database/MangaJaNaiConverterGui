@@ -378,7 +378,7 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
                         # image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
                         pass
                     upscale_queue.put((image, filename_rel, True))
-            elif filename.lower().endswith(('.zip', '.cbz')):  # TODO if archive
+            elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
                 if upscale_archives:
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
                     upscale_zip_file(os.path.join(root, filename), os.path.join(output_folder_path, filename_rel), auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression) # TODO custom output extension
@@ -530,7 +530,7 @@ auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compre
         print(f"file exists, skip: {output_file}")
         return
 
-    if input_file.lower().endswith('.zip'):  # TODO if archive
+    if input_file.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
         upscale_zip_file(input_file, output_file, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression)
     elif input_file.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
         upscale_image_file(input_file, output_file, overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression)
@@ -586,7 +586,8 @@ print(args)
 
 SENTINEL = (None, None, None)
 IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
-ARCHIVE_EXTENSIONS = ('.zip', '.cbz')
+ZIP_EXTENSIONS = ('.zip', '.cbz')
+ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS # TODO .rar .cbr .7z
 color_model = None
 grayscale_model = None
 
