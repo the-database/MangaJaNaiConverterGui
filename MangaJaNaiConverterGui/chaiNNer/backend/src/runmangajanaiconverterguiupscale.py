@@ -282,14 +282,14 @@ def save_image(image, output_file_path, image_format, lossy_compression_quality,
     if image_format == 'jpg':
         params = [
             cv2.IMWRITE_JPEG_QUALITY,
-            lossy_compression_quality,
+            int(lossy_compression_quality),
             cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
             cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
             cv2.IMWRITE_JPEG_PROGRESSIVE,
             1, # jpeg_progressive
         ]
     elif image_format == "webp":
-        params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else lossy_compression_quality]
+        params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else int(lossy_compression_quality)]
     else:
         params = []
 
@@ -369,13 +369,15 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
             if filename.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
                 if upscale_images:
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-                    with Image.open(os.path.join(root, filename)) as img:
-                        image = _read_pil(img)
-                        if auto_adjust_levels:
-                            image = enhance_contrast(image)
-                        else:
-                            image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
-                        upscale_queue.put((image, filename_rel, True))
+                    image = _read_cv_from_path(os.path.join(root, filename))
+                    # with Image.open(os.path.join(root, filename)) as img:
+                        # image = _read_pil(img)
+                    if auto_adjust_levels:
+                        image = enhance_contrast(image)
+                    else:
+                        # image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
+                        pass
+                    upscale_queue.put((image, filename_rel, True))
             elif filename.lower().endswith(('.zip', '.cbz')):  # TODO if archive
                 if upscale_archives:
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
@@ -452,7 +454,7 @@ def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lo
     """
     print("postprocess_worker_folder entering")
     while True:
-        image, file_name = postprocess_queue.get()
+        image, file_name, _ = postprocess_queue.get()
         if image is None:
             break
         image = postprocess_image(image)
