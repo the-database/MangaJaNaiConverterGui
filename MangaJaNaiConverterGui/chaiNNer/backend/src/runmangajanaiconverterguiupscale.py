@@ -194,6 +194,22 @@ def _read_cv_from_path(path):
     return img
 
 
+def cv_image_is_grayscale(image):
+
+    # Convert the image to grayscale
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Calculate the mean pixel value for each channel
+    image_mean = np.mean(image, axis=(0, 1))
+    gray_image_mean = np.mean(gray_image)
+
+    # Define a threshold for considering it grayscale
+    threshold = 5  # Adjust the threshold as needed
+
+    return np.all(np.abs(image_mean - gray_image_mean) < threshold)
+
+
+
 def _read_pil(im) -> np.ndarray | None:
     img = np.array(im)
     _, _, c = get_h_w_c(img)
@@ -205,11 +221,15 @@ def _read_pil(im) -> np.ndarray | None:
     return img
 
 
-def ai_upscale_image(image):
+def ai_upscale_image(image, is_grayscale):
     # print(f"ai_upscale_image")
-    if grayscale_model is not None:
-        # TODO estimate vs no_tiling benchmark
-        return upscale_image_node(image, grayscale_model, ESTIMATE, False)  # TODO color vs grayscale model
+    if is_grayscale:
+        if grayscale_model is not None:
+            # TODO estimate vs no_tiling benchmark
+            return upscale_image_node(image, grayscale_model, ESTIMATE, False)
+    else:
+        if color_model is not None:
+            return upscale_image_node(image, color_model, ESTIMATE, False)
     return image
 
 def postprocess_image(image):
@@ -337,6 +357,10 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
                     image_bytes = io.BytesIO(image_data)
                     # image = _read_pil(img)
                     image = _read_cv(image_bytes)
+
+                    is_grayscale = cv_image_is_grayscale(image)
+                    print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
+
                     if auto_adjust_levels:
                         image = enhance_contrast(image)
                     else:
@@ -345,10 +369,10 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
                         # print("?!?!?!?!?")
                         # image = np.array(Image.fromarray(image).convert("L")).astype('float32')
                         pass
-                    upscale_queue.put((image, decoded_filename, True))
+                    upscale_queue.put((image, decoded_filename, True, is_grayscale))
                 except:
                     print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}")
-                    upscale_queue.put((image_data, decoded_filename, False))
+                    upscale_queue.put((image_data, decoded_filename, False, False))
                     pass
     upscale_queue.put(SENTINEL)
 
@@ -374,6 +398,9 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
                 if upscale_images:
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
                     image = _read_cv_from_path(os.path.join(root, filename))
+
+                    is_grayscale = cv_image_is_grayscale(image)
+
                     # with Image.open(os.path.join(root, filename)) as img:
                         # image = _read_pil(img)
                     if auto_adjust_levels:
@@ -381,7 +408,7 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
                     else:
                         # image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
                         pass
-                    upscale_queue.put((image, filename_rel, True))
+                    upscale_queue.put((image, filename_rel, True, is_grayscale))
             elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
                 if upscale_archives:
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
@@ -404,6 +431,10 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
         os.makedirs(os.path.dirname(output_image_path), exist_ok=True)
         # with Image.open(input_image_path) as img:
         image = _read_cv_from_path(input_image_path)
+
+        is_grayscale = cv_image_is_grayscale(image)
+        print(f"grayscale? {is_grayscale} {input_image_path}")
+
         # image = _read_pil(img)
         if auto_adjust_levels:
             image = enhance_contrast(image)
@@ -413,7 +444,7 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
             # image_array = np.array(image_p).astype('float32')
             # image_array = np.maximum(image_array - 0, 0) / (255 - 0)
             # image_array = np.clip(image_array, 0, 1)
-        upscale_queue.put((image, None, True))
+        upscale_queue.put((image, None, True, is_grayscale))
     upscale_queue.put(SENTINEL)
 
 
@@ -423,13 +454,13 @@ def upscale_worker(upscale_queue, postprocess_queue):
     """
     print("upscale_worker entering")
     while True:
-        image, file_name, is_image = upscale_queue.get()
+        image, file_name, is_image, is_grayscale = upscale_queue.get()
         if image is None:
             break
 
         if is_image:
-            image = ai_upscale_image(image)
-        postprocess_queue.put((image, file_name, is_image))
+            image = ai_upscale_image(image, is_grayscale)
+        postprocess_queue.put((image, file_name, is_image, is_grayscale))
     postprocess_queue.put(SENTINEL)
     print("upscale_worker exiting")
 
@@ -440,7 +471,7 @@ def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, los
     print("postprocess_worker_zip entering")
     with zipfile.ZipFile(output_zip_path, 'w') as output_zip:
         while True:
-            image, file_name, is_image = postprocess_queue.get()
+            image, file_name, is_image, is_grayscale = postprocess_queue.get()
             if image is None:
                 break
             if is_image:
@@ -458,7 +489,7 @@ def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lo
     """
     print("postprocess_worker_folder entering")
     while True:
-        image, file_name, _ = postprocess_queue.get()
+        image, file_name, _, _ = postprocess_queue.get()
         if image is None:
             break
         image = postprocess_image(image)
@@ -472,7 +503,7 @@ def postprocess_worker_image(postprocess_queue, output_file_path, image_format, 
     wait for postprocess queue, for each queue entry, save the image to the output file path
     """
     while True:
-        image, _, _ = postprocess_queue.get()
+        image, _, _, _ = postprocess_queue.get()
         if image is None:
             break
         # image = postprocess_image(image)
@@ -589,7 +620,7 @@ print(args)
 print(args.input_file)
 
 
-SENTINEL = (None, None, None)
+SENTINEL = (None, None, None, None)
 IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
 ZIP_EXTENSIONS = ('.zip', '.cbz')
 ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS # TODO .rar .cbr .7z
