@@ -292,13 +292,18 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        private string _consoleText = string.Empty;
-        public string ConsoleText
+        public string ConsoleText => string.Join("\n", ConsoleQueue);
+
+        private static readonly int CONSOLE_QUEUE_CAPACITY = 1000;
+
+        private Queue<string> _consoleQueue = new(CONSOLE_QUEUE_CAPACITY);
+        public Queue<string> ConsoleQueue
         {
-            get => _consoleText;
+            get => this._consoleQueue;
             set
             {
-                this.RaiseAndSetIfChanged(ref _consoleText, value);
+                this.RaiseAndSetIfChanged(ref _consoleQueue, value);
+                this.RaisePropertyChanged(nameof(ConsoleText));
             }
         }
 
@@ -313,25 +318,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        //private string _leftStatus = string.Empty;
         public string LeftStatus => !Valid ? ValidationText.Replace("\n", " ") : $"{InputStatusText} selected for upscaling.";
-        //{
-          //  get => _leftStatus;
-            //set
-            //{
-              //  this.RaiseAndSetIfChanged(ref _leftStatus, value);
-            //}
-        //}
-
-        //private string _rightStatus = string.Empty;
-        public string RightStatus => UpscaleEnabled ? "Ready to upscale." : Upscaling ? " Upscaling..." : "Not ready to upscale.";
-        //{
-        //get => _rightStatus;
-        //set
-        //{
-        //      this.RaiseAndSetIfChanged(ref _rightStatus, value);
-        //  }
-        //}
 
         private int _progressCurrentFile = 0;
         public int ProgressCurrentFile
@@ -378,7 +365,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             var task = Task.Run(async () =>
             {
                 ct.ThrowIfCancellationRequested();
-                ConsoleText = "";
+                ConsoleQueueClear();
                 Upscaling = true;
                 ProgressCurrentFile = 0;
                 ProgressCurrentFileInArchive = 0;
@@ -414,7 +401,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
 
                 var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
-                ConsoleText += $"Upscaling with command: {cmd}\n";
+                //ConsoleText += $"Upscaling with command: {cmd}\n";
+                ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
                 Valid = true;
@@ -434,11 +422,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                 _cancellationTokenSource.Dispose();
                 Upscaling = false;
             }
-
-
-
-
-
         }
 
         public void CancelUpscale()
@@ -693,7 +676,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                         if (!string.IsNullOrEmpty(e.Data))
                         {
                             outputFile.WriteLine(e.Data); // Write the output to the log file
-                            ConsoleText += e.Data + "\n";
+                            //ConsoleText += e.Data + "\n";
+                            ConsoleQueueEnqueue(e.Data);
                         }
                     };
 
@@ -724,7 +708,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                             else
                             {
                                 outputFile.WriteLine(e.Data); // Write the output to the log file
-                                ConsoleText += e.Data + "\n";
+                                //ConsoleText += e.Data + "\n";
+                                ConsoleQueueEnqueue(e.Data);
                                 Debug.WriteLine(e.Data);
                             }
                         }
@@ -737,6 +722,22 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
                 
             }
+        }
+
+        private void ConsoleQueueClear()
+        {
+            ConsoleQueue.Clear();
+            this.RaisePropertyChanged(nameof(ConsoleText));
+        }
+
+        private void ConsoleQueueEnqueue(string value)
+        {
+            while (ConsoleQueue.Count > CONSOLE_QUEUE_CAPACITY)
+            {
+                ConsoleQueue.Dequeue();
+            }
+            ConsoleQueue.Enqueue(value);
+            this.RaisePropertyChanged(nameof(ConsoleText));
         }
     }
 }
