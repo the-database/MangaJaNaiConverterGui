@@ -263,7 +263,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaiseAndSetIfChanged(ref _valid, value);
                 this.RaisePropertyChanged(nameof(UpscaleEnabled));
                 this.RaisePropertyChanged(nameof(LeftStatus));
-                this.RaisePropertyChanged(nameof(RightStatus));
             }
         }
 
@@ -277,7 +276,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaiseAndSetIfChanged(ref _upscaling, value);
                 this.RaisePropertyChanged(nameof(UpscaleEnabled));
                 this.RaisePropertyChanged(nameof(LeftStatus));
-                this.RaisePropertyChanged(nameof(RightStatus));
             }
         }
 
