@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -294,8 +295,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private static readonly int CONSOLE_QUEUE_CAPACITY = 1000;
 
-        private Queue<string> _consoleQueue = new(CONSOLE_QUEUE_CAPACITY);
-        public Queue<string> ConsoleQueue
+        private ConcurrentQueue<string> _consoleQueue = new();
+        public ConcurrentQueue<string> ConsoleQueue
         {
             get => this._consoleQueue;
             set
@@ -732,7 +733,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             while (ConsoleQueue.Count > CONSOLE_QUEUE_CAPACITY)
             {
-                ConsoleQueue.Dequeue();
+                ConsoleQueue.TryDequeue(out var _);
             }
             ConsoleQueue.Enqueue(value);
             this.RaisePropertyChanged(nameof(ConsoleText));
