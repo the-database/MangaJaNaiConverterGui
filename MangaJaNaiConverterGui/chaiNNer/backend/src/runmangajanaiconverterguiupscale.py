@@ -361,15 +361,19 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
     print("preprocess_worker_folder entering")
     for root, dirs, files in os.walk(input_folder_path):
         for filename in files:
+
             # for output file, create dirs if necessary, or skip if file exists and overwrite not enabled
             filename_rel = os.path.relpath(os.path.join(root, filename), input_folder_path)
-            output_file_path = Path(os.path.join(output_folder_path, filename_rel)).with_suffix(f'.{image_format}')
-            if not overwrite_existing_files and os.path.isfile(output_file_path):
-                print(f"file exists, skip: {output_file_path}")
-                continue
+            output_file_path = Path(os.path.join(output_folder_path, filename_rel))
 
             if filename.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
                 if upscale_images:
+                    output_file_path = output_file_path.with_suffix(f'.{image_format}')
+                    print(f"preprocess_worker_folder overwrite={overwrite_existing_files} outfilepath={output_file_path} isfile={os.path.isfile(output_file_path)}", flush=True)
+                    if not overwrite_existing_files and os.path.isfile(output_file_path):
+                        print(f"file exists, skip: {output_file_path}")
+                        continue
+
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
                     image = _read_cv_from_path(os.path.join(root, filename))
 
@@ -391,7 +395,11 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
                     upscale_queue.put((image, filename_rel, True, is_grayscale))
             elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
                 if upscale_archives:
+                    if not overwrite_existing_files and os.path.isfile(output_file_path):
+                        print(f"file exists, skip: {output_file_path}")
+                        continue
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
+
                     upscale_zip_file(os.path.join(root, filename), os.path.join(output_folder_path, filename_rel),
                         auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
                         lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
@@ -625,15 +633,15 @@ parser.add_argument('--input-file', required=False)
 parser.add_argument('--output-file', required=False)
 parser.add_argument('--input-folder', required=False)
 parser.add_argument('--output-folder', required=False)
-parser.add_argument('--upscale-archives', type=bool, action=argparse.BooleanOptionalAction)
-parser.add_argument('--upscale-images', type=bool, action=argparse.BooleanOptionalAction)
-parser.add_argument('--overwrite-existing-files', type=bool, action=argparse.BooleanOptionalAction)
-parser.add_argument('--auto-adjust-levels', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('--upscale-archives', type=bool, action=argparse.BooleanOptionalAction, default=False)
+parser.add_argument('--upscale-images', type=bool, action=argparse.BooleanOptionalAction, default=False)
+parser.add_argument('--overwrite-existing-files', type=bool, action=argparse.BooleanOptionalAction, default=False)
+parser.add_argument('--auto-adjust-levels', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--resize-height-before-upscale', required=False, type=int, default=0)
 parser.add_argument('--resize-factor-before-upscale', required=False, type=float, default=100)
 parser.add_argument('--image-format')
 parser.add_argument('--lossy-compression-quality')
-parser.add_argument('--use-lossless-compression', action=argparse.BooleanOptionalAction)
+parser.add_argument('--use-lossless-compression', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--grayscale-model-path', required=False)
 parser.add_argument('--color-model-path', required=False)
 parser.add_argument('--resize-height-after-upscale', required=False, type=int, default=0)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -14,14 +15,34 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class MainWindowViewModel : ViewModelBase
     {
+        private static readonly List<string> IMAGE_EXTENSIONS = new() { ".png", ".jpg", ".jpeg", ".webp", ".bmp" };
+        private static readonly List<string> ZIP_EXTENSIONS = new() { ".zip", ".cbz" };
+
         public MainWindowViewModel() 
         {
-            this.WhenAnyValue(x => x.InputFilePath, x => x.OutputFilePath,
-                                x => x.InputFolderPath, x => x.OutputFolderPath,
-                                x => x.SelectedTabIndex).Subscribe(x =>
-                                {
-                                    Validate();
-                                });
+            var g1 = this.WhenAnyValue
+            (
+                x => x.InputFilePath,
+                x => x.OutputFilePath,
+                x => x.InputFolderPath,
+                x => x.OutputFolderPath
+            );
+
+            var g2 = this.WhenAnyValue
+            (
+                x => x.SelectedTabIndex,
+                x => x.UpscaleImages,
+                x => x.UpscaleArchives,
+                x => x.OverwriteExistingFiles,
+                x => x.WebpSelected,
+                x => x.PngSelected,
+                x => x.JpegSelected
+            );
+
+            g1.CombineLatest(g2).Subscribe(x =>
+            {
+                Validate();
+            });
         }
 
         private CancellationTokenSource? _cancellationTokenSource;
@@ -37,6 +58,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (_selectedTabIndex != value)
                 {
                     this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
+                    this.RaisePropertyChanged(nameof(InputStatusText));
                 }
             }
         }
@@ -46,7 +68,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string InputFilePath
         {
             get => _inputFilePath;
-            set => this.RaiseAndSetIfChanged(ref _inputFilePath, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _inputFilePath, value);
+                this.RaisePropertyChanged(nameof(InputStatusText));
+            }
         }
 
         private string _inputFolderPath = string.Empty;
@@ -54,7 +80,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string InputFolderPath
         {
             get => _inputFolderPath;
-            set => this.RaiseAndSetIfChanged(ref _inputFolderPath, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _inputFolderPath, value);
+                this.RaisePropertyChanged(nameof(InputStatusText));
+            }
         }
 
         private string _outputFilePath = string.Empty;
@@ -189,6 +219,8 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private string ImageFormat => WebpSelected ? "webp" : PngSelected ? "png" : "jpg";
+
         public bool ShowUseLosslessCompression => WebpSelected;
 
         private bool _useLosslessCompression = false;
@@ -230,6 +262,8 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _valid, value);
                 this.RaisePropertyChanged(nameof(UpscaleEnabled));
+                this.RaisePropertyChanged(nameof(LeftStatus));
+                this.RaisePropertyChanged(nameof(RightStatus));
             }
         }
 
@@ -242,6 +276,8 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _upscaling, value);
                 this.RaisePropertyChanged(nameof(UpscaleEnabled));
+                this.RaisePropertyChanged(nameof(LeftStatus));
+                this.RaisePropertyChanged(nameof(RightStatus));
             }
         }
 
@@ -252,6 +288,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _validationText, value);
+                this.RaisePropertyChanged(nameof(LeftStatus));
             }
         }
 
@@ -265,11 +302,41 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private string _inputStatusText = string.Empty;
+        public string InputStatusText
+        {
+            get => _inputStatusText;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _inputStatusText, value);
+                this.RaisePropertyChanged(nameof(LeftStatus));
+            }
+        }
+
+        //private string _leftStatus = string.Empty;
+        public string LeftStatus => !Valid ? ValidationText.Replace("\n", " ") : $"{InputStatusText} selected for upscaling.";
+        //{
+          //  get => _leftStatus;
+            //set
+            //{
+              //  this.RaiseAndSetIfChanged(ref _leftStatus, value);
+            //}
+        //}
+
+        //private string _rightStatus = string.Empty;
+        public string RightStatus => UpscaleEnabled ? "Ready to upscale." : Upscaling ? " Upscaling..." : "Not ready to upscale.";
+        //{
+            //get => _rightStatus;
+            //set
+            //{
+          //      this.RaiseAndSetIfChanged(ref _rightStatus, value);
+          //  }
+        //}
+
         public bool UpscaleEnabled => Valid && !Upscaling;
 
         public async Task RunUpscale()
         {
-            // TODO use embedded python
             _cancellationTokenSource = new CancellationTokenSource();
             var ct = _cancellationTokenSource.Token;
 
@@ -301,9 +368,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                     flags.Append("--use-lossless-compression ");
                 }
 
-                var imageFormat = WebpSelected ? "webp" : PngSelected ? "png" : "jpeg";
+                var inputArgs = $"--input-file \"{InputFilePath}\" --output-file \"{OutputFilePath}\"";
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --input-file ""{InputFilePath}"" --output-file ""{OutputFilePath}"" --input-folder ""{InputFolderPath}"" --output-folder ""{OutputFolderPath}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {imageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
+                if (SelectedTabIndex == 1)
+                {
+                    inputArgs = $"--input-folder \"{InputFolderPath}\" --output-folder \"{OutputFolderPath}\"";
+                }
+
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleText += $"Upscaling with command: {cmd}\n";
                 await RunCommand($@" /C {cmd}");
 
@@ -367,16 +439,151 @@ namespace MangaJaNaiConverterGui.ViewModels
             PngSelected = false;
         }
 
+        private void CheckInputs()
+        {
+            if (Valid)
+            {
+                var overwriteText = OverwriteExistingFiles ? "overwritten" : "skipped";
+
+                // input file
+                if (SelectedTabIndex == 0)
+                {
+                    StringBuilder status = new();
+                    var skipFiles = 0;
+
+                    if (File.Exists(OutputFilePath))
+                    {
+                        if (IMAGE_EXTENSIONS.Any(x => OutputFilePath.ToLower().EndsWith(x)))
+                        {
+                            status.Append($" (1 image already exists and will be {overwriteText})");
+                            if (!OverwriteExistingFiles)
+                            {
+                                skipFiles++;
+                            }
+                        }
+                        else if (ZIP_EXTENSIONS.Any(x => OutputFilePath.ToLower().EndsWith(x)))
+                        {
+                            status.Append($" (1 archive already exists and will be {overwriteText})");
+                            if (!OverwriteExistingFiles)
+                            {
+                                skipFiles++;
+                            }
+                        }
+                        else
+                        {
+                            status.Append($" (1 file already exists and will be {overwriteText})");
+                        }
+                    }
+
+                    var s = skipFiles > 0 ? "s" : "";
+                    if (IMAGE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    {
+                        status.Insert(0, $"{1 - skipFiles} image{s}");
+                    }
+                    else if (ZIP_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    {
+                        status.Insert(0, $"{1 - skipFiles} archive{s}");
+                    }
+                    else
+                    {
+                        status.Insert(0, "0 files");
+                    }
+
+                    InputStatusText = status.ToString();
+                }
+                else  // input folder
+                {
+                    List<string> statuses = new();
+                    var existImageCount = 0;
+                    var existArchiveCount = 0;
+
+                    if (UpscaleImages)
+                    {
+                        var images = Directory.EnumerateFiles(InputFolderPath, "*.*", SearchOption.AllDirectories)
+                            .Where(file => IMAGE_EXTENSIONS.Any(ext => file.ToLower().EndsWith(ext)));
+                        var imagesCount = 0;
+
+                        foreach (var inputImagePath in images)
+                        {
+                            var outputImagePath = Path.ChangeExtension(Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputImagePath)), ImageFormat);
+
+                            // if out file exists, exist count ++
+                            // if overwrite image OR out file doesn't exist, count image++
+                            var fileExists = File.Exists(outputImagePath);
+
+                            if (fileExists)
+                            {
+                                existImageCount++;
+                            }
+
+                            if (!fileExists || OverwriteExistingFiles)
+                            {
+                                imagesCount++;
+                            }
+                            
+                        }
+
+                        var imageS = imagesCount == 1 ? "" : "s";
+                        var existImageS = existImageCount == 1 ? "" : "s";
+
+                        statuses.Add($"{imagesCount} image{imageS} ({existImageCount} image{existImageS} already exist and will be {overwriteText})");
+                    }
+                    if (UpscaleArchives)
+                    {
+                        var archives = Directory.EnumerateFiles(InputFolderPath, "*.*", SearchOption.AllDirectories)
+                            .Where(file => ZIP_EXTENSIONS.Any(ext => file.ToLower().EndsWith(ext)));
+                        var archivesCount = 0;
+
+                        foreach (var inputArchivePath in archives)
+                        {
+                            var outputArchivePath = Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputArchivePath));
+                            var fileExists = File.Exists(outputArchivePath); 
+
+                            if (fileExists)
+                            {
+                                existArchiveCount++;
+                            }
+
+                            if (!fileExists || OverwriteExistingFiles)
+                            {
+                                archivesCount++;
+                            }
+                        }
+
+                        var archiveS = archivesCount == 1 ? "" : "s";
+                        var existArchiveS = existArchiveCount == 1 ? "" : "s";
+                        statuses.Add($"{archivesCount} archive{archiveS} ({existArchiveCount} archive{existArchiveS} already exist and will be {overwriteText})");
+                    }
+
+                    if (!UpscaleArchives && !UpscaleImages)
+                    {
+                        InputStatusText = "0 files";
+                    }
+                    else
+                    {
+                        InputStatusText = $"{string.Join(" and ", statuses)}";
+                    }
+
+                }
+            }
+        }
+
         public void Validate()
         {
             var valid = true;
             var validationText = new List<string>();
             if (SelectedTabIndex == 0)
             {
-                if (!File.Exists(InputFilePath))
+
+                if (string.IsNullOrWhiteSpace(InputFilePath))
                 {
                     valid = false;
                     validationText.Add("Input File is required.");
+                }
+                else if (!File.Exists(InputFilePath))
+                {
+                    valid = false;
+                    validationText.Add("Input File does not exist.");
                 }
 
                 if (string.IsNullOrWhiteSpace(OutputFilePath))
@@ -401,6 +608,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
 
             Valid = valid;
+            CheckInputs();
             ValidationText = string.Join("\n", validationText);
         }
 

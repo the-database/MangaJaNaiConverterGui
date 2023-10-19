@@ -15,12 +15,19 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+  <DockPanel>
+    <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
+      <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
+      <TextBlock Margin="10,10,10,0" DockPanel.Dock="Right" FontSize="10" Text="{Binding RightStatus}" />
+      <Rectangle />
+    </DockPanel>
+
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
       <StackPanel Margin="20">
         <TextBlock FontWeight="Bold" Text="Manga Paths"></TextBlock>
         <Border Margin="0,10,0,0"
           CornerRadius="5"
-          BorderBrush="#33888888" BorderThickness="1" 
+          BorderBrush="#33888888" BorderThickness="1"
           Padding="5">
           <StackPanel>
 
@@ -49,7 +56,7 @@
                     <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding InputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
                     <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
                     <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below. 
+                      Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below.
                     </TextBlock>
                   </StackPanel>
 
@@ -102,7 +109,7 @@
               <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
               <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Resize each image to this height before upscaling, set to 0 to disable. 
+                Resize each image to this height before upscaling, set to 0 to disable.
               </TextBlock>
             </StackPanel>
 
@@ -150,7 +157,7 @@
               <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
               <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Resize each image to this height after upscaling, set to 0 to disable. 
+                Resize each image to this height after upscaling, set to 0 to disable.
               </TextBlock>
             </StackPanel>
 
@@ -159,7 +166,7 @@
               <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
               <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. 
+                Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified.
               </TextBlock>
             </StackPanel>
 
@@ -169,9 +176,9 @@
               <ToggleButton IsChecked="{Binding PngSelected}" Content="PNG" Command="{Binding SetPngSelected}" />
               <ToggleButton IsChecked="{Binding JpegSelected}" Content="JPEG" Command="{Binding SetJpegSelected}" />
               <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
-<Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
-<Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
-        </TextBlock>
+  <Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
+  <Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
+          </TextBlock>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
@@ -180,13 +187,13 @@
                 Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
               </TextBlock>
             </StackPanel>
-            
+
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
               <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
               <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Quality level for compression. Note that a quality level of 100 is still lossy. 
+                Quality level for compression. Note that a quality level of 100 is still lossy.
               </TextBlock>
             </StackPanel>
 
@@ -198,15 +205,14 @@
           <Button Margin="10,40,0,0" Content="Cancel" FontWeight="Bold" Background="Red" IsEnabled="{Binding Upscaling}" Command="{Binding CancelUpscale}"></Button>
         </StackPanel>
 
-
-        <TextBlock Margin="0,20,0,0" Text="{Binding ValidationText}" />
-
         <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Console"></TextBlock>
         <ScrollViewer x:Name="ConsoleScrollViewer" Margin="0,10,0,0" Height="500" HorizontalScrollBarVisibility="Auto" Background="#111111" PropertyChanged="ConsoleScrollViewer_PropertyChanged">
           <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" Foreground="Gray" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
         </ScrollViewer>
 
-     </StackPanel>
-     </ScrollViewer>
+      </StackPanel>
+    </ScrollViewer>
+
+  </DockPanel>
 
 </Window>
