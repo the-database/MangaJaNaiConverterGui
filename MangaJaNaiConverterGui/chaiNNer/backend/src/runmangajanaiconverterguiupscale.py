@@ -303,7 +303,9 @@ resize_height_before_upscale, resize_factor_before_upscale):
         # Create a new zip file in write mode for the resized images
         #with zipfile.ZipFile(output_zip_path, 'w') as output_zip:
         # Iterate through the files in the input zip
-        for filename in input_zip.namelist():
+        namelist = input_zip.namelist()
+        print(f"TOTALZIP={len(namelist)}")
+        for filename in namelist:
             decoded_filename = filename
             try:
                 decoded_filename = decoded_filename.encode('cp437').decode(f'cp{system_codepage}')
@@ -344,7 +346,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
                         pass
                     upscale_queue.put((image, decoded_filename, True, is_grayscale))
                 except:
-                    print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}")
+                    print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
                     upscale_queue.put((image_data, decoded_filename, False, False))
                     pass
     upscale_queue.put(SENTINEL)
@@ -469,7 +471,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
     """
     wait for postprocess queue, for each queue entry, save the image to the zip file
     """
-    print("postprocess_worker_zip entering")
+    # print("postprocess_worker_zip entering")
     with zipfile.ZipFile(output_zip_path, 'w') as output_zip:
         while True:
             image, file_name, is_image, is_grayscale = postprocess_queue.get()
@@ -481,8 +483,10 @@ resize_height_after_upscale, resize_factor_after_upscale):
                 lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
             else:  # copy file
                 output_zip.writestr(file_name, image)
+            print(f"PROGRESS=postprocess_worker_zip_image", flush=True)
+        print(f"PROGRESS=postprocess_worker_zip_archive", flush=True)
 
-    print("postprocess_worker_zip exiting")
+    # print("postprocess_worker_zip exiting")
 
 
 def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lossy_compression_quality, use_lossless_compression,
@@ -498,6 +502,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
         image = postprocess_image(image)
         save_image(image, os.path.join(output_folder, str(Path(file_name).with_suffix(f'.{image_format}'))), image_format,
             lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
+        print(f"PROGRESS=postprocess_worker_folder", flush=True)
 
     print("postprocess_worker_folder exiting")
 
@@ -513,8 +518,8 @@ resize_height_after_upscale, resize_factor_after_upscale):
             break
         # image = postprocess_image(image)
 
-
         save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
+        print(f"PROGRESS=postprocess_worker_image", flush=True)
 
 
 def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, resize_height_before_upscale,

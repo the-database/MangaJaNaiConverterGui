@@ -18,7 +18,27 @@
   <DockPanel>
     <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
       <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
-      <TextBlock Margin="10,10,10,0" DockPanel.Dock="Right" FontSize="10" Text="{Binding RightStatus}" />
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+        <!-- progress within current archive -->
+        <ProgressBar  Margin="5,0,0,0" Height="20"
+                      Minimum="0" 
+                      Maximum="{Binding ProgressTotalFilesInCurrentArchive}" 
+                      Value="{Binding ProgressCurrentFileInArchive}"
+                      ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
+                      FontSize="10"
+                      ShowProgressText="True"
+                      IsVisible="{Binding ShowArchiveProgressBar}" />
+
+        <!-- total progress across all files -->
+        <ProgressBar  Margin="5,0,5,0" Height="20"
+                      Minimum="0"
+                      Maximum="{Binding ProgressTotalFiles}" 
+                      Value="{Binding ProgressCurrentFile}"
+                      ProgressTextFormat="{}{0:0} / {3:0} total files"
+                      FontSize="10"
+                      ShowProgressText="True"/>
+      </StackPanel>
+      
       <Rectangle />
     </DockPanel>
 

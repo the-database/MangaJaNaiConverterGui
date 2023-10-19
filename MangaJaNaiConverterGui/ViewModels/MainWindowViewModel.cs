@@ -326,12 +326,47 @@ namespace MangaJaNaiConverterGui.ViewModels
         //private string _rightStatus = string.Empty;
         public string RightStatus => UpscaleEnabled ? "Ready to upscale." : Upscaling ? " Upscaling..." : "Not ready to upscale.";
         //{
-            //get => _rightStatus;
-            //set
-            //{
-          //      this.RaiseAndSetIfChanged(ref _rightStatus, value);
-          //  }
+        //get => _rightStatus;
+        //set
+        //{
+        //      this.RaiseAndSetIfChanged(ref _rightStatus, value);
+        //  }
         //}
+
+        private int _progressCurrentFile = 0;
+        public int ProgressCurrentFile
+        {
+            get => _progressCurrentFile;
+            set => this.RaiseAndSetIfChanged(ref _progressCurrentFile, value);
+        }
+
+        private int _progressTotalFiles = 0;
+        public int ProgressTotalFiles
+        {
+            get => _progressTotalFiles;
+            set => this.RaiseAndSetIfChanged(ref _progressTotalFiles, value);
+        }
+
+        private int _progressCurrentFileInCurrentArchive = 0;
+        public int ProgressCurrentFileInArchive
+        {
+            get => _progressCurrentFileInCurrentArchive;
+            set => this.RaiseAndSetIfChanged(ref _progressCurrentFileInCurrentArchive, value);
+        }
+
+        private int _progressTotalFilesInCurrentArchive = 0;
+        public int ProgressTotalFilesInCurrentArchive
+        {
+            get => _progressTotalFilesInCurrentArchive;
+            set => this.RaiseAndSetIfChanged(ref _progressTotalFilesInCurrentArchive, value);
+        }
+
+        private bool _showArchiveProgressBar = false;
+        public bool ShowArchiveProgressBar
+        {
+            get => _showArchiveProgressBar;
+            set => this.RaiseAndSetIfChanged(ref _showArchiveProgressBar, value);
+        }
 
         public bool UpscaleEnabled => Valid && !Upscaling;
 
@@ -345,6 +380,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ct.ThrowIfCancellationRequested();
                 ConsoleText = "";
                 Upscaling = true;
+                ProgressCurrentFile = 0;
+                ProgressCurrentFileInArchive = 0;
+                ShowArchiveProgressBar = false;
 
                 var flags = new StringBuilder();
                 if (UpscaleArchives)
@@ -441,7 +479,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private void CheckInputs()
         {
-            if (Valid)
+            if (Valid && !Upscaling)
             {
                 var overwriteText = OverwriteExistingFiles ? "overwritten" : "skipped";
 
@@ -490,12 +528,18 @@ namespace MangaJaNaiConverterGui.ViewModels
                     }
 
                     InputStatusText = status.ToString();
+                    ProgressCurrentFile = 0;
+                    ProgressTotalFiles = 1 - skipFiles;
+                    ProgressCurrentFileInArchive = 0;
+                    ProgressTotalFilesInCurrentArchive = 0;
+                    ShowArchiveProgressBar = false;
                 }
                 else  // input folder
                 {
                     List<string> statuses = new();
                     var existImageCount = 0;
                     var existArchiveCount = 0;
+                    var totalFileCount = 0;
 
                     if (UpscaleImages)
                     {
@@ -527,6 +571,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         var existImageS = existImageCount == 1 ? "" : "s";
 
                         statuses.Add($"{imagesCount} image{imageS} ({existImageCount} image{existImageS} already exist and will be {overwriteText})");
+                        totalFileCount += imagesCount;
                     }
                     if (UpscaleArchives)
                     {
@@ -553,6 +598,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         var archiveS = archivesCount == 1 ? "" : "s";
                         var existArchiveS = existArchiveCount == 1 ? "" : "s";
                         statuses.Add($"{archivesCount} archive{archiveS} ({existArchiveCount} archive{existArchiveS} already exist and will be {overwriteText})");
+                        totalFileCount += archivesCount;
                     }
 
                     if (!UpscaleArchives && !UpscaleImages)
@@ -563,6 +609,12 @@ namespace MangaJaNaiConverterGui.ViewModels
                     {
                         InputStatusText = $"{string.Join(" and ", statuses)}";
                     }
+
+                    ProgressCurrentFile = 0;
+                    ProgressTotalFiles = totalFileCount;
+                    ProgressCurrentFileInArchive = 0;
+                    ProgressTotalFilesInCurrentArchive = 0;
+                    ShowArchiveProgressBar = false;
 
                 }
             }
@@ -594,10 +646,15 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             else
             {
-                if (!Directory.Exists(InputFolderPath))
+                if (string.IsNullOrWhiteSpace(InputFolderPath))
                 {
                     valid = false;
                     validationText.Add("Input Folder is required.");
+                }
+                else if (!Directory.Exists(InputFolderPath))
+                {
+                    valid = false;
+                    validationText.Add("Input Folder does not exist.");
                 }
 
                 if (string.IsNullOrWhiteSpace(OutputFolderPath))
@@ -644,9 +701,32 @@ namespace MangaJaNaiConverterGui.ViewModels
                     {
                         if (!string.IsNullOrEmpty(e.Data))
                         {
-                            outputFile.WriteLine(e.Data); // Write the output to the log file
-                            ConsoleText += e.Data + "\n";
-                            Debug.WriteLine(e.Data);
+                            if (e.Data.StartsWith("PROGRESS="))
+                            {
+                                if (e.Data.Contains("_zip_image"))
+                                {
+                                    ShowArchiveProgressBar = true;
+                                    ProgressCurrentFileInArchive++;
+                                }
+                                else
+                                {
+                                    ProgressCurrentFile++;
+                                }
+                            }
+                            else if (e.Data.StartsWith("TOTALZIP="))
+                            {
+                                if (int.TryParse(e.Data.Replace("TOTALZIP=", ""), out var total))
+                                {
+                                    ProgressCurrentFileInArchive = 0;
+                                    ProgressTotalFilesInCurrentArchive = total;
+                                }
+                            }
+                            else
+                            {
+                                outputFile.WriteLine(e.Data); // Write the output to the log file
+                                ConsoleText += e.Data + "\n";
+                                Debug.WriteLine(e.Data);
+                            }
                         }
                     };
 
