@@ -16,31 +16,50 @@
     </Design.DataContext>
 
   <DockPanel>
-    <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
-      <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
-      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-        <!-- progress within current archive -->
-        <ProgressBar  Margin="5,0,0,0" Height="20"
-                      Minimum="0" 
-                      Maximum="{Binding ProgressTotalFilesInCurrentArchive}" 
-                      Value="{Binding ProgressCurrentFileInArchive}"
-                      ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
-                      FontSize="10"
-                      ShowProgressText="True"
-                      IsVisible="{Binding ShowArchiveProgressBar}" />
 
-        <!-- total progress across all files -->
-        <ProgressBar  Margin="5,0,5,0" Height="20"
-                      Minimum="0"
-                      Maximum="{Binding ProgressTotalFiles}" 
-                      Value="{Binding ProgressCurrentFile}"
-                      ProgressTextFormat="{}{0:0} / {3:0} total files"
-                      FontSize="10"
-                      ShowProgressText="True"/>
+    <StackPanel DockPanel.Dock="Bottom">
+
+      <StackPanel Orientation="Horizontal">
+        <Button Margin="20,20,0,20" Content="Upscale" FontWeight="Bold" Background="Green" IsEnabled="{Binding UpscaleEnabled}" Command="{Binding RunUpscale}"></Button>
+        <Button Margin="20,20,0,20" Content="Cancel" FontWeight="Bold" Background="Red" IsEnabled="{Binding Upscaling}" Command="{Binding CancelUpscale}"></Button>
       </StackPanel>
-      
-      <Rectangle />
-    </DockPanel>
+
+      <StackPanel IsVisible="{Binding ShowConsole}" >
+        <TextBlock Margin="20,10,0,0" FontWeight="Bold" Text="Console"></TextBlock>
+        <ScrollViewer x:Name="ConsoleScrollViewer" Margin="0,10,0,0" Background="#111111" Height="500" Width="500" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+          <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
+        </ScrollViewer>
+      </StackPanel>
+
+      <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
+
+        <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <!-- progress within current archive -->
+          <ProgressBar  Margin="5,0,0,0" Height="20"
+                        Minimum="0"
+                        Maximum="{Binding ProgressTotalFilesInCurrentArchive}"
+                        Value="{Binding ProgressCurrentFileInArchive}"
+                        ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
+                        FontSize="10"
+                        ShowProgressText="True"
+                        IsVisible="{Binding ShowArchiveProgressBar}" />
+
+          <!-- total progress across all files -->
+          <ProgressBar  Margin="5,0,5,0" Height="20"
+                        Minimum="0"
+                        Maximum="{Binding ProgressTotalFiles}"
+                        Value="{Binding ProgressCurrentFile}"
+                        ProgressTextFormat="{}{0:0} / {3:0} total files"
+                        FontSize="10"
+                        ShowProgressText="True"/>
+
+          <ToggleButton IsChecked="{Binding ShowConsole}" Content="Console" FontSize="10" Margin="5,0,5,0" />
+        </StackPanel>
+
+        <Rectangle />
+      </DockPanel>
+    </StackPanel>
 
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
       <StackPanel Margin="20">
@@ -223,16 +242,6 @@
 
           </StackPanel>
         </Border>
-
-        <StackPanel Orientation="Horizontal">
-          <Button Margin="0,40,0,0" Content="Upscale" FontWeight="Bold" Background="Green" IsEnabled="{Binding UpscaleEnabled}" Command="{Binding RunUpscale}"></Button>
-          <Button Margin="10,40,0,0" Content="Cancel" FontWeight="Bold" Background="Red" IsEnabled="{Binding Upscaling}" Command="{Binding CancelUpscale}"></Button>
-        </StackPanel>
-
-        <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Console"></TextBlock>
-        <ScrollViewer x:Name="ConsoleScrollViewer" Margin="0,10,0,0" Height="500" HorizontalScrollBarVisibility="Auto" Background="#111111" PropertyChanged="ConsoleScrollViewer_PropertyChanged">
-          <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" Foreground="Gray" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
-        </ScrollViewer>
 
       </StackPanel>
     </ScrollViewer>

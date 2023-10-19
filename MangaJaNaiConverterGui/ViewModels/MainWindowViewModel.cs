@@ -306,6 +306,13 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private bool _showConsole = false;
+        public bool ShowConsole
+        {
+            get => _showConsole;
+            set => this.RaiseAndSetIfChanged(ref _showConsole, value);
+        }
+
         private string _inputStatusText = string.Empty;
         public string InputStatusText
         {
