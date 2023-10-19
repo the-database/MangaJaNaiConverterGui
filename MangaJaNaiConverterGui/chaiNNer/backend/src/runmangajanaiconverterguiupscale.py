@@ -297,7 +297,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
     """
     given a zip path, read images out of the zip, apply auto levels, add the image to upscale queue
     """
-    print(f"preprocess_worker_zip entering aal={auto_adjust_levels}")
+    # print(f"preprocess_worker_zip entering aal={auto_adjust_levels}")
 
     with zipfile.ZipFile(input_zip_path, 'r') as input_zip:
         # Create a new zip file in write mode for the resized images
@@ -334,7 +334,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
                         image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
                     is_grayscale = cv_image_is_grayscale(image)
-                    print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
+                    # print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
 
                     if is_grayscale and auto_adjust_levels:
                         image = enhance_contrast(image)
@@ -351,7 +351,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
                     pass
     upscale_queue.put(SENTINEL)
 
-    print("preprocess_worker_zip exiting")
+    # print("preprocess_worker_zip exiting")
 
 
 def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_path, upscale_images, upscale_archives,
@@ -360,7 +360,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
     """
     given a folder path, recursively iterate the folder
     """
-    print("preprocess_worker_folder entering")
+    # print("preprocess_worker_folder entering")
     for root, dirs, files in os.walk(input_folder_path):
         for filename in files:
 
@@ -371,9 +371,9 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
             if filename.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
                 if upscale_images:
                     output_file_path = output_file_path.with_suffix(f'.{image_format}')
-                    print(f"preprocess_worker_folder overwrite={overwrite_existing_files} outfilepath={output_file_path} isfile={os.path.isfile(output_file_path)}", flush=True)
+                    # print(f"preprocess_worker_folder overwrite={overwrite_existing_files} outfilepath={output_file_path} isfile={os.path.isfile(output_file_path)}", flush=True)
                     if not overwrite_existing_files and os.path.isfile(output_file_path):
-                        print(f"file exists, skip: {output_file_path}")
+                        print(f"file exists, skip: {output_file_path}", flush=True)
                         continue
 
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
@@ -398,7 +398,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
             elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
                 if upscale_archives:
                     if not overwrite_existing_files and os.path.isfile(output_file_path):
-                        print(f"file exists, skip: {output_file_path}")
+                        print(f"file exists, skip: {output_file_path}", flush=True)
                         continue
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
 
@@ -407,7 +407,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
                         lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
                         resize_factor_after_upscale) # TODO custom output extension
     upscale_queue.put(SENTINEL)
-    print("preprocess_worker_folder exiting")
+    # print("preprocess_worker_folder exiting")
 
 
 def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels,
@@ -418,7 +418,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
 
     if input_image_path.lower().endswith(IMAGE_EXTENSIONS):
         if not overwrite_existing_files and os.path.isfile(output_image_path):
-            print(f"file exists, skip: {output_image_path}")
+            print(f"file exists, skip: {output_image_path}", flush=True)
             return
 
     if input_image_path.lower().endswith(IMAGE_EXTENSIONS):
@@ -435,17 +435,10 @@ resize_height_before_upscale, resize_factor_before_upscale):
             image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
         is_grayscale = cv_image_is_grayscale(image)
-        print(f"grayscale? {is_grayscale} {input_image_path}")
 
-        # image = _read_pil(img)
         if is_grayscale and auto_adjust_levels:
             image = enhance_contrast(image)
-        else:
-            print("why?")
-            # image_p = Image.fromarray(image).convert("L")
-            # image_array = np.array(image_p).astype('float32')
-            # image_array = np.maximum(image_array - 0, 0) / (255 - 0)
-            # image_array = np.clip(image_array, 0, 1)
+
         upscale_queue.put((image, None, True, is_grayscale))
     upscale_queue.put(SENTINEL)
 
@@ -454,7 +447,7 @@ def upscale_worker(upscale_queue, postprocess_queue):
     """
     wait for upscale queue, for each queue entry, upscale image and add result to postprocess queue
     """
-    print("upscale_worker entering")
+    # print("upscale_worker entering")
     while True:
         image, file_name, is_image, is_grayscale = upscale_queue.get()
         if image is None:
@@ -464,7 +457,7 @@ def upscale_worker(upscale_queue, postprocess_queue):
             image = ai_upscale_image(image, is_grayscale)
         postprocess_queue.put((image, file_name, is_image, is_grayscale))
     postprocess_queue.put(SENTINEL)
-    print("upscale_worker exiting")
+    # print("upscale_worker exiting")
 
 def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, lossy_compression_quality, use_lossless_compression,
 resize_height_after_upscale, resize_factor_after_upscale):
@@ -486,15 +479,13 @@ resize_height_after_upscale, resize_factor_after_upscale):
             print(f"PROGRESS=postprocess_worker_zip_image", flush=True)
         print(f"PROGRESS=postprocess_worker_zip_archive", flush=True)
 
-    # print("postprocess_worker_zip exiting")
-
 
 def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lossy_compression_quality, use_lossless_compression,
 resize_height_after_upscale, resize_factor_after_upscale):
     """
     wait for postprocess queue, for each queue entry, save the image to the output folder
     """
-    print("postprocess_worker_folder entering")
+    # print("postprocess_worker_folder entering")
     while True:
         image, file_name, _, _ = postprocess_queue.get()
         if image is None:
@@ -504,7 +495,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
             lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
         print(f"PROGRESS=postprocess_worker_folder", flush=True)
 
-    print("postprocess_worker_folder exiting")
+    # print("postprocess_worker_folder exiting")
 
 
 def postprocess_worker_image(postprocess_queue, output_file_path, image_format, lossy_compression_quality, use_lossless_compression,
@@ -585,7 +576,7 @@ image_format, lossy_compression_quality, use_lossless_compression,
 resize_height_after_upscale, resize_factor_after_upscale):
 
     if not overwrite_existing_files and os.path.isfile(output_file):
-        print(f"file exists, skip: {output_file}")
+        print(f"file exists, skip: {output_file}", flush=True)
         return
 
     if input_file.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
@@ -603,7 +594,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
 def upscale_folder(input_folder, output_folder, upscale_images, upscale_archives, overwrite_existing_files,
 auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
 lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale):
-    print("upscale_folder: entering")
+    # print("upscale_folder: entering")
 
     # preprocess_queue = Queue(maxsize=1)
     upscale_queue = Queue(maxsize=1)
