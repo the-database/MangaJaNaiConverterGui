@@ -1,17 +1,19 @@
 import sys
+import functools
+import os
 from pathlib import Path
 from ctypes import windll
 import io
 import cv2
-import time
 from tqdm import tqdm
-from multiprocessing.pool import ThreadPool as Pool
 from PIL import Image, ImageOps
 import numpy as np
 import argparse
 import zipfile
 import time
 from multiprocessing import Queue, Process, Manager
+from wand.image import Image as WandImage
+from wand.display import display
 
 from nodes.utils.utils import get_h_w_c
 from nodes.impl.image_utils import cv_save_image, to_uint8, to_uint16
@@ -26,6 +28,15 @@ from nodes.impl.upscale.auto_split_tiles import (
     estimate_tile_size,
     parse_tile_size_input,
 )
+
+
+def mitchell_resize_wand(image, new_size):
+    with WandImage.from_array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)) as img:
+        img.transform_colorspace("rgb")
+        img.resize(*new_size)
+        img.transform_colorspace("srgb")
+        arr = np.array(img)
+        return cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
 
 
 def get_system_codepage():
@@ -92,7 +103,8 @@ def enhance_contrast(image):
     image_array = np.maximum(image_array - new_black_level, 0) / (new_white_level - new_black_level)
     image_array = np.clip(image_array, 0, 1)
 
-    return image_array
+    # gray_image =
+    return cv2.cvtColor(image_array, cv2.COLOR_GRAY2BGR)
 
 
 def _read_cv(img_stream):
@@ -184,12 +196,15 @@ def ai_upscale_image(image, is_grayscale):
             return upscale_image_node(image, color_model, ESTIMATE, False)
     return image
 
+
 def postprocess_image(image):
     # print(f"postprocess_image")
     return to_uint8(image, normalized=True)
 
-def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression):
-    # sys.stdout.reconfigure(encoding='utf-8')  # TODO remove
+
+def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
+
     print(f"save image to zip: {file_name}", flush=True)
 
     params = []
@@ -218,7 +233,13 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
         # chainner images are always f32
         pass
 
-    # cv_save_image(output_file_path, image, params)
+    # resize after upscale
+    if resize_height_after_upscale != 0:
+        h, w = image.shape[:2]
+        image = mitchell_resize_wand(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale))
+    elif resize_factor_after_upscale != 1:
+        h, w = image.shape[:2]
+        image = mitchell_resize_wand(image, (round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)))
 
     # Convert the resized image back to bytes
     _, buf_img = cv2.imencode(f".{image_format}", image, params)
@@ -229,26 +250,9 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
     output_zip.writestr(file_name, upscaled_image_data)
 
 
-def save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression):
-    print(f"save image: {output_file_path}")
-
-    # channels = get_h_w_c(image)[2]
-    # print(f"channels = {channels}")
-    # if channels == 1:
-    #     # PIL supports grayscale images just fine, so we don't need to do any conversion
-    #     pass
-    # elif channels == 3:
-    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # elif channels == 4:
-    #     image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
-    # else:
-    #     raise RuntimeError(
-    #         f"Unsupported number of channels. Saving .{image_format.extension} images is only supported for "
-    #         f"grayscale, RGB, and RGBA images."
-    #     )
-
-    # Image.fromarray(image).save(output_file_path, format=image_format, quality=lossy_compression_quality, lossless=use_lossless_compression)
-
+def save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
+    print(f"save image: {output_file_path}", flush=True)
 
     params = []
     if image_format == 'jpg':
@@ -276,11 +280,20 @@ def save_image(image, output_file_path, image_format, lossy_compression_quality,
         # chainner images are always f32
         pass
 
+    # resize after upscale
+    if resize_height_after_upscale != 0:
+        h, w = image.shape[:2]
+        image = mitchell_resize_wand(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale))
+    elif resize_factor_after_upscale != 1:
+        h, w = image.shape[:2]
+        image = mitchell_resize_wand(image, (round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)))
+
     cv_save_image(output_file_path, image, params)
 
 
 
-def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
+def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels,
+resize_height_before_upscale, resize_factor_before_upscale):
     """
     given a zip path, read images out of the zip, apply auto levels, add the image to upscale queue
     """
@@ -310,6 +323,14 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
                     # image = _read_pil(img)
                     image = _read_cv(image_bytes)
 
+                    # resize before upscale
+                    if resize_height_before_upscale != 0:
+                        h, w = image.shape[:2]
+                        image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
+                    elif resize_factor_before_upscale != 1:
+                        h, w = image.shape[:2]
+                        image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
+
                     is_grayscale = cv_image_is_grayscale(image)
                     print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
 
@@ -332,7 +353,8 @@ def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels):
 
 
 def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_path, upscale_images, upscale_archives,
-overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
+overwrite_existing_files, auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
+lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale):
     """
     given a folder path, recursively iterate the folder
     """
@@ -351,10 +373,16 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
                     image = _read_cv_from_path(os.path.join(root, filename))
 
+                    # resize before upscale
+                    if resize_height_before_upscale != 0:
+                        h, w = image.shape[:2]
+                        image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
+                    elif resize_factor_before_upscale != 1:
+                        h, w = image.shape[:2]
+                        image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
+
                     is_grayscale = cv_image_is_grayscale(image)
 
-                    # with Image.open(os.path.join(root, filename)) as img:
-                        # image = _read_pil(img)
                     if is_grayscale and auto_adjust_levels:
                         image = enhance_contrast(image)
                     else:
@@ -364,12 +392,16 @@ overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_qu
             elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
                 if upscale_archives:
                     os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
-                    upscale_zip_file(os.path.join(root, filename), os.path.join(output_folder_path, filename_rel), auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression) # TODO custom output extension
+                    upscale_zip_file(os.path.join(root, filename), os.path.join(output_folder_path, filename_rel),
+                        auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
+                        lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
+                        resize_factor_after_upscale) # TODO custom output extension
     upscale_queue.put(SENTINEL)
     print("preprocess_worker_folder exiting")
 
 
-def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels):
+def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels,
+resize_height_before_upscale, resize_factor_before_upscale):
     """
     given an image path, apply auto levels and add to upscale queue
     """
@@ -383,6 +415,14 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
         os.makedirs(os.path.dirname(output_image_path), exist_ok=True)
         # with Image.open(input_image_path) as img:
         image = _read_cv_from_path(input_image_path)
+
+        # resize before upscale
+        if resize_height_before_upscale != 0:
+            h, w = image.shape[:2]
+            image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
+        elif resize_factor_before_upscale != 1:
+            h, w = image.shape[:2]
+            image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
         is_grayscale = cv_image_is_grayscale(image)
         print(f"grayscale? {is_grayscale} {input_image_path}")
@@ -416,7 +456,8 @@ def upscale_worker(upscale_queue, postprocess_queue):
     postprocess_queue.put(SENTINEL)
     print("upscale_worker exiting")
 
-def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, lossy_compression_quality, use_lossless_compression):
+def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
     """
     wait for postprocess queue, for each queue entry, save the image to the zip file
     """
@@ -428,14 +469,16 @@ def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, los
                 break
             if is_image:
                 # image = postprocess_image(image)
-                save_image_zip(image, str(Path(file_name).with_suffix(f'.{image_format}')), output_zip, image_format, lossy_compression_quality, use_lossless_compression)
+                save_image_zip(image, str(Path(file_name).with_suffix(f'.{image_format}')), output_zip, image_format,
+                lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
             else:  # copy file
                 output_zip.writestr(file_name, image)
 
     print("postprocess_worker_zip exiting")
 
 
-def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lossy_compression_quality, use_lossless_compression):
+def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
     """
     wait for postprocess queue, for each queue entry, save the image to the output folder
     """
@@ -445,12 +488,14 @@ def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lo
         if image is None:
             break
         image = postprocess_image(image)
-        save_image(image, os.path.join(output_folder, str(Path(file_name).with_suffix(f'.{image_format}'))), image_format, lossy_compression_quality, use_lossless_compression)
+        save_image(image, os.path.join(output_folder, str(Path(file_name).with_suffix(f'.{image_format}'))), image_format,
+            lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
 
     print("postprocess_worker_folder exiting")
 
 
-def postprocess_worker_image(postprocess_queue, output_file_path, image_format, lossy_compression_quality, use_lossless_compression):
+def postprocess_worker_image(postprocess_queue, output_file_path, image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
     """
     wait for postprocess queue, for each queue entry, save the image to the output file path
     """
@@ -459,18 +504,22 @@ def postprocess_worker_image(postprocess_queue, output_file_path, image_format, 
         if image is None:
             break
         # image = postprocess_image(image)
-        save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression)
 
 
-def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
+        save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
+
+
+def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, resize_height_before_upscale,
+resize_factor_before_upscale, image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
     # TODO accept multiple paths to reuse simple queues?
-    # print("hello?",flush=True)
-    # preprocess_queue = Queue(maxsize=1)
+
     upscale_queue = Queue(maxsize=1)
     postprocess_queue = Queue(maxsize=1)
 
     # start preprocess zip process
-    preprocess_process = Process(target=preprocess_worker_zip, args=(upscale_queue, input_zip_path, auto_adjust_levels))
+    preprocess_process = Process(target=preprocess_worker_zip, args=(upscale_queue, input_zip_path, auto_adjust_levels,
+        resize_height_before_upscale, resize_factor_before_upscale))
     preprocess_process.start()
 
     # start upscale process
@@ -478,7 +527,8 @@ def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, image_
     upscale_process.start()
 
     # start postprocess zip process
-    postprocess_process = Process(target=postprocess_worker_zip, args=(postprocess_queue, output_zip_path, image_format, lossy_compression_quality, use_lossless_compression))
+    postprocess_process = Process(target=postprocess_worker_zip, args=(postprocess_queue, output_zip_path, image_format, lossy_compression_quality,
+        use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale))
     postprocess_process.start()
 
     # wait for all processes
@@ -487,21 +537,27 @@ def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, image_
     postprocess_process.join()
 
 
-def upscale_image_file(input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
-    # preprocess_queue = Queue(maxsize=1)
+def upscale_image_file(input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels,
+resize_height_before_upscale, resize_factor_before_upscale, image_format, lossy_compression_quality,
+use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale):
+
     upscale_queue = Queue(maxsize=1)
     postprocess_queue = Queue(maxsize=1)
 
-    # start preprocess zip process
-    preprocess_process = Process(target=preprocess_worker_image, args=(upscale_queue, input_image_path, output_image_path, overwrite_existing_files, auto_adjust_levels))
+    # start preprocess image process
+    preprocess_process = Process(target=preprocess_worker_image, args=(upscale_queue, input_image_path,
+        output_image_path, overwrite_existing_files, auto_adjust_levels, resize_height_before_upscale,
+        resize_factor_before_upscale))
     preprocess_process.start()
 
     # start upscale process
     upscale_process = Process(target=upscale_worker, args=(upscale_queue, postprocess_queue))
     upscale_process.start()
 
-    # start postprocess zip process
-    postprocess_process = Process(target=postprocess_worker_image, args=(postprocess_queue, output_image_path, image_format, lossy_compression_quality, use_lossless_compression))
+    # start postprocess image process
+    postprocess_process = Process(target=postprocess_worker_image, args=(postprocess_queue, output_image_path,
+        image_format, lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
+        resize_factor_after_upscale))
     postprocess_process.start()
 
     # wait for all processes
@@ -511,20 +567,29 @@ def upscale_image_file(input_image_path, output_image_path, overwrite_existing_f
 
 
 def upscale_file(input_file, output_file, overwrite_existing_files,
-auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
+auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale,
+image_format, lossy_compression_quality, use_lossless_compression,
+resize_height_after_upscale, resize_factor_after_upscale):
 
     if not overwrite_existing_files and os.path.isfile(output_file):
         print(f"file exists, skip: {output_file}")
         return
 
     if input_file.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
-        upscale_zip_file(input_file, output_file, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression)
+        upscale_zip_file(input_file, output_file, auto_adjust_levels,
+            resize_height_before_upscale, resize_factor_before_upscale,
+            image_format, lossy_compression_quality, use_lossless_compression,
+            resize_height_after_upscale, resize_factor_after_upscale)
     elif input_file.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
-        upscale_image_file(input_file, output_file, overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression)
+        upscale_image_file(input_file, output_file, overwrite_existing_files,
+            auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale,
+            image_format, lossy_compression_quality, use_lossless_compression,
+            resize_height_after_upscale, resize_factor_after_upscale)
 
 
 def upscale_folder(input_folder, output_folder, upscale_images, upscale_archives, overwrite_existing_files,
-auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression):
+auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
+lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale):
     print("upscale_folder: entering")
 
     # preprocess_queue = Queue(maxsize=1)
@@ -533,7 +598,9 @@ auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compre
 
     # start preprocess folder process
     preprocess_process = Process(target=preprocess_worker_folder, args=(upscale_queue, input_folder, output_folder,
-        upscale_images, upscale_archives, overwrite_existing_files, auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compression))
+        upscale_images, upscale_archives, overwrite_existing_files, auto_adjust_levels, resize_height_before_upscale,
+        resize_factor_before_upscale, image_format, lossy_compression_quality, use_lossless_compression,
+        resize_height_after_upscale, resize_factor_after_upscale))
     preprocess_process.start()
 
     # start upscale process
@@ -542,7 +609,8 @@ auto_adjust_levels, image_format, lossy_compression_quality, use_lossless_compre
 
     # start postprocess folder process
     postprocess_process = Process(target=postprocess_worker_folder, args=(postprocess_queue, output_folder,
-        image_format, lossy_compression_quality, use_lossless_compression))
+        image_format, lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
+        resize_factor_after_upscale))
     postprocess_process.start()
 
     # wait for all processes
@@ -557,15 +625,19 @@ parser.add_argument('--input-file', required=False)
 parser.add_argument('--output-file', required=False)
 parser.add_argument('--input-folder', required=False)
 parser.add_argument('--output-folder', required=False)
-parser.add_argument('--upscale-archives', action=argparse.BooleanOptionalAction)
-parser.add_argument('--upscale-images', action=argparse.BooleanOptionalAction)
-parser.add_argument('--overwrite-existing-files', action=argparse.BooleanOptionalAction)
-parser.add_argument('--auto-adjust-levels', action=argparse.BooleanOptionalAction)
+parser.add_argument('--upscale-archives', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('--upscale-images', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('--overwrite-existing-files', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('--auto-adjust-levels', type=bool, action=argparse.BooleanOptionalAction)
+parser.add_argument('--resize-height-before-upscale', required=False, type=int, default=0)
+parser.add_argument('--resize-factor-before-upscale', required=False, type=float, default=100)
 parser.add_argument('--image-format')
 parser.add_argument('--lossy-compression-quality')
 parser.add_argument('--use-lossless-compression', action=argparse.BooleanOptionalAction)
 parser.add_argument('--grayscale-model-path', required=False)
 parser.add_argument('--color-model-path', required=False)
+parser.add_argument('--resize-height-after-upscale', required=False, type=int, default=0)
+parser.add_argument('--resize-factor-after-upscale', required=False, type=float, default=100)
 
 args = parser.parse_args()
 print(args)
@@ -595,9 +667,15 @@ if __name__ == '__main__':
     start_time = time.time()
 
     if args.input_folder:
-        upscale_folder(args.input_folder, args.output_folder, args.upscale_images, args.upscale_archives, args.overwrite_existing_files, args.auto_adjust_levels, args.image_format, args.lossy_compression_quality, bool(args.use_lossless_compression))
+        upscale_folder(args.input_folder, args.output_folder, args.upscale_images, args.upscale_archives,
+            args.overwrite_existing_files, args.auto_adjust_levels, args.resize_height_before_upscale,
+            args.resize_factor_before_upscale, args.image_format, args.lossy_compression_quality,
+            args.use_lossless_compression, args.resize_height_after_upscale, args.resize_factor_after_upscale)
     elif args.input_file:
-        upscale_file(args.input_file, args.output_file, args.overwrite_existing_files, args.auto_adjust_levels, args.image_format, args.lossy_compression_quality, bool(args.use_lossless_compression))
+        upscale_file(args.input_file, args.output_file, args.overwrite_existing_files, args.auto_adjust_levels,
+            args.resize_height_before_upscale, args.resize_factor_before_upscale, args.image_format,
+            args.lossy_compression_quality, args.use_lossless_compression, args.resize_height_after_upscale,
+            args.resize_factor_after_upscale)
 
 
     # # Record the end time

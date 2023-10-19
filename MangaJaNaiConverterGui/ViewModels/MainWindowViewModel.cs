@@ -303,7 +303,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                 var imageFormat = WebpSelected ? "webp" : PngSelected ? "png" : "jpeg";
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --input-file ""{InputFilePath}"" --output-file ""{OutputFilePath}"" --input-folder ""{InputFolderPath}"" --output-folder ""{OutputFolderPath}"" --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {imageFormat} --lossy-compression-quality {LossyCompressionQuality} {flags}";
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --input-file ""{InputFilePath}"" --output-file ""{OutputFilePath}"" --input-folder ""{InputFolderPath}"" --output-folder ""{OutputFolderPath}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {imageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleText += $"Upscaling with command: {cmd}\n";
                 await RunCommand($@" /C {cmd}");
 
