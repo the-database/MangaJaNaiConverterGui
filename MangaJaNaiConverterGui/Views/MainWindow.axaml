@@ -7,7 +7,7 @@
         xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         x:Class="MangaJaNaiConverterGui.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/logo.ico"
         Title="MangaJaNaiConverterGui"
         Width="1920"
         Height="1080">
@@ -68,8 +68,12 @@
                         FontSize="10"
                         ShowProgressText="True"/>
 
-          <ToggleButton IsChecked="{Binding ShowConsole}" FontSize="10" Margin="5,0,5,0" ToolTip.Tip="Toggle Console">
-            <materialIcons:MaterialIcon Kind="Console" />
+          <ToggleButton IsChecked="{Binding ShowConsole}" FontSize="10" Margin="5,0,5,0">
+            <StackPanel Orientation="Horizontal">
+              <materialIcons:MaterialIcon Kind="Console" VerticalAlignment="Center" />
+              <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">Console</TextBlock>
+            </StackPanel>
+
           </ToggleButton>
         </StackPanel>
 
@@ -88,7 +92,13 @@
           <StackPanel>
 
             <TabControl SelectedIndex="{Binding SelectedTabIndex}">
-              <TabItem Header="Single File Upscale" VerticalContentAlignment="Center" FontSize="16">
+              <TabItem VerticalContentAlignment="Center" FontSize="16">
+                <TabItem.Header>
+                  <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="File" />
+                    <TextBlock Margin="5,0,5,0">Single File Upscale</TextBlock>
+                  </StackPanel>
+                </TabItem.Header>
                 <StackPanel>
                   <StackPanel Orientation="Horizontal" Margin="0,20,0,10">
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
@@ -105,7 +115,13 @@
                   </StackPanel>
                 </StackPanel>
               </TabItem>
-              <TabItem Header="Batch Folder Upscale" VerticalAlignment="Center" FontSize="16">
+              <TabItem VerticalAlignment="Center" FontSize="16">
+                <TabItem.Header>
+                  <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="Folder" />
+                    <TextBlock Margin="5,0,5,0">Batch Folder Upscale</TextBlock>
+                  </StackPanel>
+                </TabItem.Header>
                 <StackPanel>
                   <StackPanel Orientation="Horizontal" Margin="0,20,0,10">
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
