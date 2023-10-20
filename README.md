@@ -2,7 +2,7 @@
 [![Discord](https://img.shields.io/discord/1121653618173546546?label=Discord&logo=Discord&logoColor=white)](https://discord.gg/EeFfZUBvxj)
 
 ## Overview
-This project provides a Windows GUI for upscaling manga images and archives with PyTorch and ONNX models. It includes a set of models optimized for upscaling manga with Japanese and English text. It also utilizes linear light downscaling to minimize halftone artifacts when downscaling. 
+This project provides a Windows GUI for upscaling manga images and archives with PyTorch and ONNX models. It includes a set of models optimized for upscaling manga with Japanese and English text, but many other models are also supported. It also utilizes linear light downscaling to minimize halftone artifacts when downscaling. 
 
 ![image](https://github.com/the-database/MangaJaNaiConverterGui/assets/25811902/f98fbdbb-1f1a-4682-b266-e2d21151e72c)
 
