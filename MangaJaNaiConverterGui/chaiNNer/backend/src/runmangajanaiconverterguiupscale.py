@@ -31,6 +31,7 @@ from nodes.impl.upscale.auto_split_tiles import (
 
 
 def mitchell_resize_wand(image, new_size):
+    #print(f"mitchell_resize_wand {new_size}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", flush=True)
     with WandImage.from_array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)) as img:
         img.transform_colorspace("rgb")
         img.resize(*new_size)
@@ -237,7 +238,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
     if resize_height_after_upscale != 0:
         h, w = image.shape[:2]
         image = mitchell_resize_wand(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale))
-    elif resize_factor_after_upscale != 1:
+    elif resize_factor_after_upscale != 100:
         h, w = image.shape[:2]
         image = mitchell_resize_wand(image, (round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)))
 
@@ -284,7 +285,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
     if resize_height_after_upscale != 0:
         h, w = image.shape[:2]
         image = mitchell_resize_wand(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale))
-    elif resize_factor_after_upscale != 1:
+    elif resize_factor_after_upscale != 100:
         h, w = image.shape[:2]
         image = mitchell_resize_wand(image, (round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)))
 
@@ -328,7 +329,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
                     if resize_height_before_upscale != 0:
                         h, w = image.shape[:2]
                         image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
-                    elif resize_factor_before_upscale != 1:
+                    elif resize_factor_before_upscale != 100:
                         h, w = image.shape[:2]
                         image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
@@ -382,7 +383,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
                     if resize_height_before_upscale != 0:
                         h, w = image.shape[:2]
                         image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
-                    elif resize_factor_before_upscale != 1:
+                    elif resize_factor_before_upscale != 100:
                         h, w = image.shape[:2]
                         image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
@@ -429,7 +430,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
         if resize_height_before_upscale != 0:
             h, w = image.shape[:2]
             image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
-        elif resize_factor_before_upscale != 1:
+        elif resize_factor_before_upscale != 100:
             h, w = image.shape[:2]
             image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
