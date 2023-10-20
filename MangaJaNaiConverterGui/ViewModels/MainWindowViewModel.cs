@@ -406,8 +406,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     inputArgs = $"--input-folder \"{InputFolderPath}\" --output-folder \"{OutputFolderPath}\"";
                 }
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{GrayscaleModelFilePath}"" --color-model-path ""{ColorModelFilePath}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
-                //ConsoleText += $"Upscaling with command: {cmd}\n";
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{Path.GetFullPath(GrayscaleModelFilePath)}"" --color-model-path ""{Path.GetFullPath(ColorModelFilePath)}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -655,6 +654,11 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             Valid = valid;
             CheckInputs();
+            if (ProgressTotalFiles == 0)
+            {
+                Valid = false;
+                validationText.Add($"{InputStatusText} selected for upscaling. At least one file must be selected.");
+            }
             ValidationText = string.Join("\n", validationText);
         }
 
@@ -682,7 +686,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                         if (!string.IsNullOrEmpty(e.Data))
                         {
                             outputFile.WriteLine(e.Data); // Write the output to the log file
-                            //ConsoleText += e.Data + "\n";
                             ConsoleQueueEnqueue(e.Data);
                         }
                     };
@@ -707,6 +710,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                             {
                                 if (int.TryParse(e.Data.Replace("TOTALZIP=", ""), out var total))
                                 {
+                                    ShowArchiveProgressBar = true;
                                     ProgressCurrentFileInArchive = 0;
                                     ProgressTotalFilesInCurrentArchive = total;
                                 }
@@ -714,7 +718,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                             else
                             {
                                 outputFile.WriteLine(e.Data); // Write the output to the log file
-                                //ConsoleText += e.Data + "\n";
                                 ConsoleQueueEnqueue(e.Data);
                                 Debug.WriteLine(e.Data);
                             }

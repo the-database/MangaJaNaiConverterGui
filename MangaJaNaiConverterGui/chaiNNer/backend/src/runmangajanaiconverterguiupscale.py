@@ -298,13 +298,12 @@ resize_height_before_upscale, resize_factor_before_upscale):
     given a zip path, read images out of the zip, apply auto levels, add the image to upscale queue
     """
     # print(f"preprocess_worker_zip entering aal={auto_adjust_levels}")
-
     with zipfile.ZipFile(input_zip_path, 'r') as input_zip:
         # Create a new zip file in write mode for the resized images
         #with zipfile.ZipFile(output_zip_path, 'w') as output_zip:
         # Iterate through the files in the input zip
         namelist = input_zip.namelist()
-        print(f"TOTALZIP={len(namelist)}")
+        print(f"TOTALZIP={len(namelist)}", flush=True)
         for filename in namelist:
             decoded_filename = filename
             try:
