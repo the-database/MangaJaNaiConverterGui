@@ -161,6 +161,11 @@ def _read_cv_from_path(path):
 
 def cv_image_is_grayscale(image):
 
+    _, _, c = get_h_w_c(image)
+
+    if c == 1:
+        return True
+
     # Convert the image to grayscale
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
