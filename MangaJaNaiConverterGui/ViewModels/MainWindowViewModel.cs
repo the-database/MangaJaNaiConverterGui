@@ -495,19 +495,31 @@ namespace MangaJaNaiConverterGui.ViewModels
                     StringBuilder status = new();
                     var skipFiles = 0;
 
-                    var outputFilePath = Path.Join(Path.GetFullPath(OutputFolderPath), OutputFilename);
+                    
 
-                    if (File.Exists(outputFilePath))
+                    if (IMAGE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x))) 
                     {
-                        if (IMAGE_EXTENSIONS.Any(x => outputFilePath.ToLower().EndsWith(x)))
-                        {
+                        var outputFilePath = Path.ChangeExtension(
+                                                Path.Join(
+                                                    Path.GetFullPath(OutputFolderPath), 
+                                                    OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(InputFilePath))), 
+                                                ImageFormat);
+                        if (File.Exists(outputFilePath)) {
                             status.Append($" (1 image already exists and will be {overwriteText})");
                             if (!OverwriteExistingFiles)
                             {
                                 skipFiles++;
                             }
                         }
-                        else if (ZIP_EXTENSIONS.Any(x => outputFilePath.ToLower().EndsWith(x)))
+                    }
+                    else if (ZIP_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    {
+                        var outputFilePath = Path.ChangeExtension(
+                                                Path.Join(
+                                                    Path.GetFullPath(OutputFolderPath),
+                                                    OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(InputFilePath))),
+                                                "cbz");
+                        if (File.Exists(outputFilePath))
                         {
                             status.Append($" (1 archive already exists and will be {overwriteText})");
                             if (!OverwriteExistingFiles)
@@ -515,10 +527,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                                 skipFiles++;
                             }
                         }
-                        else
-                        {
-                            status.Append($" (1 file already exists and will be {overwriteText})");
-                        }
+                    }
+                    else
+                    {
+                        // TODO ???
                     }
 
                     var s = skipFiles > 0 ? "s" : "";
@@ -557,8 +569,12 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                         foreach (var inputImagePath in images)
                         {
-                            var outputImagePath = Path.ChangeExtension(Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputImagePath)), ImageFormat);
-
+                            //var outputImagePath = Path.ChangeExtension(Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputImagePath)), ImageFormat);
+                            var outputImagePath = Path.ChangeExtension(
+                                                    Path.Join(
+                                                        Path.GetFullPath(OutputFolderPath),
+                                                        OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))),
+                                                    ImageFormat);
                             // if out file exists, exist count ++
                             // if overwrite image OR out file doesn't exist, count image++
                             var fileExists = File.Exists(outputImagePath);
@@ -572,7 +588,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                             {
                                 imagesCount++;
                             }
-                            
                         }
 
                         var imageS = imagesCount == 1 ? "" : "s";
@@ -589,7 +604,12 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                         foreach (var inputArchivePath in archives)
                         {
-                            var outputArchivePath = Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputArchivePath));
+                            //var outputArchivePath = Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputArchivePath));
+                            var outputArchivePath = Path.ChangeExtension(
+                                                    Path.Join(
+                                                        Path.GetFullPath(OutputFolderPath),
+                                                        OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
+                                                    "cbz");
                             var fileExists = File.Exists(outputArchivePath); 
 
                             if (fileExists)
