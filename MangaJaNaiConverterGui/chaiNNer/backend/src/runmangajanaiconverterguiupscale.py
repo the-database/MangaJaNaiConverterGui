@@ -10,6 +10,7 @@ from PIL import Image, ImageOps
 import numpy as np
 import argparse
 import zipfile
+import rarfile
 import time
 from multiprocessing import Queue, Process, Manager
 from wand.image import Image as WandImage
@@ -297,66 +298,82 @@ resize_height_after_upscale, resize_factor_after_upscale):
     cv_save_image(output_file_path, image, params)
 
 
-
-def preprocess_worker_zip(upscale_queue, input_zip_path, auto_adjust_levels,
+def preprocess_worker_archive(upscale_queue, input_archive_path, auto_adjust_levels,
 resize_height_before_upscale, resize_factor_before_upscale):
     """
-    given a zip path, read images out of the zip, apply auto levels, add the image to upscale queue
+    given a zip or rar path, read images out of the archive, apply auto levels, add the image to upscale queue
     """
-    # print(f"preprocess_worker_zip entering aal={auto_adjust_levels}")
-    with zipfile.ZipFile(input_zip_path, 'r') as input_zip:
+
+    if input_archive_path.endswith(ZIP_EXTENSIONS):
+        with zipfile.ZipFile(input_archive_path, 'r') as input_zip:
+            preprocess_worker_archive_file(upscale_queue, input_zip, auto_adjust_levels,
+                                    resize_height_before_upscale, resize_factor_before_upscale)
+    elif input_archive_path.endswith(RAR_EXTENSIONS):
+        with rarfile.RarFile(input_archive_path, 'r') as input_rar:
+            preprocess_worker_archive_file(upscale_queue, input_rar, auto_adjust_levels,
+                                    resize_height_before_upscale, resize_factor_before_upscale)
+
+
+def preprocess_worker_archive_file(upscale_queue, input_archive, auto_adjust_levels,
+resize_height_before_upscale, resize_factor_before_upscale):
+    """
+    given an input zip or rar archive, read images out of the archive, apply auto levels, add the image to upscale queue
+    """
+    # print(f"preprocess_worker_archive entering aal={auto_adjust_levels}")
+    # with zipfile.ZipFile(input_zip_path, 'r') as input_zip:
         # Create a new zip file in write mode for the resized images
         #with zipfile.ZipFile(output_zip_path, 'w') as output_zip:
         # Iterate through the files in the input zip
-        namelist = input_zip.namelist()
-        print(f"TOTALZIP={len(namelist)}", flush=True)
-        for filename in namelist:
-            decoded_filename = filename
-            try:
-                decoded_filename = decoded_filename.encode('cp437').decode(f'cp{system_codepage}')
-            except:
-                pass
+    namelist = input_archive.namelist()
+    print(f"TOTALZIP={len(namelist)}", flush=True)
+    for filename in namelist:
+        decoded_filename = filename
+        try:
+            decoded_filename = decoded_filename.encode('cp437').decode(f'cp{system_codepage}')
+        except:
+            pass
 
-            # Open the file inside the input zip
-            with input_zip.open(filename) as file_in_zip:
+        # Open the file inside the input zip
+        try:
+            with input_archive.open(filename) as file_in_archive:
                 # Read the image data
-                # load_queue.put((file_in_zip.read(), filename))
+                # load_queue.put((file_in_archive.read(), filename))
 
-                image_data = file_in_zip.read()
+                image_data = file_in_archive.read()
 
-                try:
-                    # with Image.open(io.BytesIO(image_data)) as img:
-                    image_bytes = io.BytesIO(image_data)
-                    # image = _read_pil(img)
-                    image = _read_cv(image_bytes)
 
-                    # resize before upscale
-                    if resize_height_before_upscale != 0:
-                        h, w = image.shape[:2]
-                        image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
-                    elif resize_factor_before_upscale != 100:
-                        h, w = image.shape[:2]
-                        image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
+                # with Image.open(io.BytesIO(image_data)) as img:
+                image_bytes = io.BytesIO(image_data)
+                # image = _read_pil(img)
+                image = _read_cv(image_bytes)
 
-                    is_grayscale = cv_image_is_grayscale(image)
-                    # print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
+                # resize before upscale
+                if resize_height_before_upscale != 0:
+                    h, w = image.shape[:2]
+                    image = mitchell_resize_wand(image, (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
+                elif resize_factor_before_upscale != 100:
+                    h, w = image.shape[:2]
+                    image = mitchell_resize_wand(image, (round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
-                    if is_grayscale and auto_adjust_levels:
-                        image = enhance_contrast(image)
-                    else:
-                        # TODO ???
-                        # image = image.astype('float32')
-                        # print("?!?!?!?!?")
-                        # image = np.array(Image.fromarray(image).convert("L")).astype('float32')
-                        pass
-                    upscale_queue.put((image, decoded_filename, True, is_grayscale))
-                except:
-                    print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
-                    upscale_queue.put((image_data, decoded_filename, False, False))
+                is_grayscale = cv_image_is_grayscale(image)
+                # print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
+
+                if is_grayscale and auto_adjust_levels:
+                    image = enhance_contrast(image)
+                else:
+                    # TODO ???
+                    # image = image.astype('float32')
+                    # print("?!?!?!?!?")
+                    # image = np.array(Image.fromarray(image).convert("L")).astype('float32')
                     pass
+                upscale_queue.put((image, decoded_filename, True, is_grayscale))
+        except:
+            print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
+            upscale_queue.put((image_data, decoded_filename, False, False))
+            pass
     upscale_queue.put(SENTINEL)
 
-    # print("preprocess_worker_zip exiting")
+    # print("preprocess_worker_archive exiting")
 
 
 def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_path, output_filename, upscale_images, upscale_archives,
@@ -410,7 +427,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
                         continue
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
 
-                    upscale_zip_file(os.path.join(root, filename), output_file_path,
+                    upscale_archive_file(os.path.join(root, filename), output_file_path,
                         auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
                         lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
                         resize_factor_after_upscale) # TODO custom output extension
@@ -521,7 +538,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
         print(f"PROGRESS=postprocess_worker_image", flush=True)
 
 
-def upscale_zip_file(input_zip_path, output_zip_path, auto_adjust_levels, resize_height_before_upscale,
+def upscale_archive_file(input_zip_path, output_zip_path, auto_adjust_levels, resize_height_before_upscale,
 resize_factor_before_upscale, image_format, lossy_compression_quality, use_lossless_compression,
 resize_height_after_upscale, resize_factor_after_upscale):
     # TODO accept multiple paths to reuse simple queues?
@@ -530,7 +547,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
     postprocess_queue = Queue(maxsize=1)
 
     # start preprocess zip process
-    preprocess_process = Process(target=preprocess_worker_zip, args=(upscale_queue, input_zip_path, auto_adjust_levels,
+    preprocess_process = Process(target=preprocess_worker_archive, args=(upscale_queue, input_zip_path, auto_adjust_levels,
         resize_height_before_upscale, resize_factor_before_upscale))
     preprocess_process.start()
 
@@ -586,18 +603,19 @@ resize_height_after_upscale, resize_factor_after_upscale):
     input_file_base = Path(input_file_path).stem
 
 
-    if input_file_path.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
+    if input_file_path.lower().endswith(ARCHIVE_EXTENSIONS):
 
         output_file_path = str(Path(os.path.join(output_folder_path, output_filename.replace('%filename%', input_file_base))).with_suffix('.cbz'))
         if not overwrite_existing_files and os.path.isfile(output_file_path):
             print(f"file exists, skip: {output_file_path}", flush=True)
             return
 
-        upscale_zip_file(input_file_path, output_file_path, auto_adjust_levels,
+        upscale_archive_file(input_file_path, output_file_path, auto_adjust_levels,
             resize_height_before_upscale, resize_factor_before_upscale,
             image_format, lossy_compression_quality, use_lossless_compression,
             resize_height_after_upscale, resize_factor_after_upscale)
-    elif input_file_path.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
+
+    elif input_file_path.lower().endswith(IMAGE_EXTENSIONS):
 
         output_file_path = str(Path(os.path.join(output_folder_path, output_filename.replace('%filename%', input_file_base))).with_suffix(f'.{image_format}'))
         if not overwrite_existing_files and os.path.isfile(output_file_path):
@@ -669,7 +687,8 @@ print(args)
 SENTINEL = (None, None, None, None)
 IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
 ZIP_EXTENSIONS = ('.zip', '.cbz')
-ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS # TODO .rar .cbr .7z
+RAR_EXTENSIONS = ('.rar', '.cbr')
+ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS + RAR_EXTENSIONS
 color_model = None
 grayscale_model = None
 system_codepage = get_system_codepage()

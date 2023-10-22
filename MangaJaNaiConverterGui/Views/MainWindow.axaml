@@ -189,8 +189,8 @@
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                   <TextBlock Margin="0,0,5,0">Output Filename</TextBlock>
                   <TextBox Text="{Binding OutputFilename}" Margin="0,0,5,0" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
-                  <SelectableTextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                    The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension.
+                  <SelectableTextBlock Foreground="Gray" Width="600" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                    The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension. Archives will be output with .cbz extension; images will be output with the extension of the image format selected below. 
                   </SelectableTextBlock>
                 </StackPanel>
 

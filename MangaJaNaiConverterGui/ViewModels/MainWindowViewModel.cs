@@ -19,7 +19,7 @@ namespace MangaJaNaiConverterGui.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private static readonly List<string> IMAGE_EXTENSIONS = new() { ".png", ".jpg", ".jpeg", ".webp", ".bmp" };
-        private static readonly List<string> ZIP_EXTENSIONS = new() { ".zip", ".cbz" };
+        private static readonly List<string> ARCHIVE_EXTENSIONS = new() { ".zip", ".cbz", ".rar", ".cbr"};
 
         public MainWindowViewModel() 
         {
@@ -422,7 +422,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                     inputArgs = $"--input-folder-path \"{InputFolderPath}\" ";
                 }
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{Path.GetFullPath(GrayscaleModelFilePath)}"" --color-model-path ""{Path.GetFullPath(ColorModelFilePath)}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
+                var grayscaleModelFilePath = string.IsNullOrWhiteSpace(GrayscaleModelFilePath) ? GrayscaleModelFilePath : Path.GetFullPath(GrayscaleModelFilePath);
+                var colorModelFilePath = string.IsNullOrWhiteSpace(ColorModelFilePath) ? ColorModelFilePath : Path.GetFullPath(ColorModelFilePath);
+
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{grayscaleModelFilePath}"" --color-model-path ""{colorModelFilePath}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -512,7 +515,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                             }
                         }
                     }
-                    else if (ZIP_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    else if (ARCHIVE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
                     {
                         var outputFilePath = Path.ChangeExtension(
                                                 Path.Join(
@@ -538,7 +541,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     {
                         status.Insert(0, $"{1 - skipFiles} image{s}");
                     }
-                    else if (ZIP_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    else if (ARCHIVE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
                     {
                         status.Insert(0, $"{1 - skipFiles} archive{s}");
                     }
@@ -569,7 +572,6 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                         foreach (var inputImagePath in images)
                         {
-                            //var outputImagePath = Path.ChangeExtension(Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputImagePath)), ImageFormat);
                             var outputImagePath = Path.ChangeExtension(
                                                     Path.Join(
                                                         Path.GetFullPath(OutputFolderPath),
@@ -599,17 +601,16 @@ namespace MangaJaNaiConverterGui.ViewModels
                     if (UpscaleArchives)
                     {
                         var archives = Directory.EnumerateFiles(InputFolderPath, "*.*", SearchOption.AllDirectories)
-                            .Where(file => ZIP_EXTENSIONS.Any(ext => file.ToLower().EndsWith(ext)));
+                            .Where(file => ARCHIVE_EXTENSIONS.Any(ext => file.ToLower().EndsWith(ext)));
                         var archivesCount = 0;
 
                         foreach (var inputArchivePath in archives)
                         {
-                            //var outputArchivePath = Path.Join(OutputFolderPath, Path.GetRelativePath(InputFolderPath, inputArchivePath));
                             var outputArchivePath = Path.ChangeExtension(
-                                                    Path.Join(
-                                                        Path.GetFullPath(OutputFolderPath),
-                                                        OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
-                                                    "cbz");
+                                                        Path.Join(
+                                                            Path.GetFullPath(OutputFolderPath),
+                                                            OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
+                                                        "cbz");
                             var fileExists = File.Exists(outputArchivePath); 
 
                             if (fileExists)
