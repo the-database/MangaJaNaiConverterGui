@@ -34,7 +34,7 @@ namespace MangaJaNaiConverterGui.Views
             var colorModelFilePathTextBox = this.FindControl<TextBox>("ColorModelFilePathTextBox");
 
             inputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFilePath);
-            outputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFilePath);
+            //outputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFilePath);
             inputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFolderPath);
             outputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFolderPath);
             grayscaleModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetGrayscaleModelFilePath);
@@ -134,7 +134,7 @@ namespace MangaJaNaiConverterGui.Views
                 }
             }
         }
-
+        /*
         public void SetOutputFilePath(object? sender, DragEventArgs e)
         {
             if (DataContext is MainWindowViewModel vm)
@@ -151,7 +151,7 @@ namespace MangaJaNaiConverterGui.Views
                     }
                 }
             }
-        }
+        }*/
 
         public void SetInputFolderPath(object? sender, DragEventArgs e)
         {
@@ -224,7 +224,7 @@ namespace MangaJaNaiConverterGui.Views
                 }
             }
         }
-
+        /*
         private async void OpenOutputFileButtonClick(object? sender, RoutedEventArgs e)
         {
             // Get top level from the current control. Alternatively, you can use Window reference instead.
@@ -248,7 +248,7 @@ namespace MangaJaNaiConverterGui.Views
                     vm.OutputFilePath = file.TryGetLocalPath() ?? "";
                 }
             }
-        }
+        }*/
 
         private async void OpenInputFolderButtonClick(object? sender, RoutedEventArgs e)
         {

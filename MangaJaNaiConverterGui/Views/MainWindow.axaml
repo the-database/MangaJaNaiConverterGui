@@ -12,6 +12,32 @@
         Width="1920"
         Height="1080">
 
+  <Window.Styles>
+    <Style Selector="TabControl[TabStripPlacement=Top]">
+      <!-- Override styled behaviour -->
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.border">
+      <!--
+      Margin="0,10,0,0"
+                CornerRadius="5"
+                BorderBrush="#33888888" BorderThickness="1"
+                Padding="5"
+      -->
+      <Setter Property="Margin" Value="0,10,0,0" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="BorderBrush" Value="#33888888" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="10" />
+    </Style>
+  </Window.Styles>
+  
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
@@ -83,37 +109,31 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
       <StackPanel Margin="20">
-        <TextBlock FontWeight="Bold" Text="Manga Paths"></TextBlock>
-        <Border Margin="0,10,0,0"
-                CornerRadius="5"
-                BorderBrush="#33888888" BorderThickness="1"
-                Padding="5"
+        <TextBlock FontWeight="Bold" Text="Input and Output"></TextBlock>
+        <Border Classes="border"
                 IsEnabled="{Binding !Upscaling}">
           <StackPanel>
 
-            <TabControl SelectedIndex="{Binding SelectedTabIndex}">
-              <TabItem VerticalContentAlignment="Center" FontSize="16">
+            <TabControl SelectedIndex="{Binding SelectedTabIndex}" Margin="0">
+              <TabItem VerticalContentAlignment="Center" FontSize="16" Margin="0">
                 <TabItem.Header>
                   <StackPanel Orientation="Horizontal">
                     <materialIcons:MaterialIcon Kind="File" />
                     <TextBlock Margin="5,0,5,0">Single File Upscale</TextBlock>
                   </StackPanel>
                 </TabItem.Header>
-                <StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="0,20,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
-                    <TextBox x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding InputFilePath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
-                    <Button Content="Select File" Click="OpenInputFileButtonClick" />
-                    <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Path of the image or archive file (such as zip or cbz) to upscale. If an archive file is selected, each image in the archive will be upscaled and saved to a new archive.</TextBlock>
-                  </StackPanel>
+                <Border Classes="border">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
+                      <TextBox x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding InputFilePath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True"/>
+                      <Button Content="Select File" Click="OpenInputFileButtonClick" />
+                      <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Path of the image or archive file (such as zip or cbz) to upscale. If an archive file is selected, each image in the archive will be upscaled and saved to a new archive.</TextBlock>
+                    </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output File</TextBlock>
-                    <TextBox x:Name="OutputFileNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFilePath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
-                    <Button Content="Select File" Click="OpenOutputFileButtonClick" />
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Path to save the upscaled the image or archive file.</TextBlock>
                   </StackPanel>
-                </StackPanel>
+                </Border>
+
               </TabItem>
               <TabItem VerticalAlignment="Center" FontSize="16">
                 <TabItem.Header>
@@ -123,55 +143,101 @@
                   </StackPanel>
                 </TabItem.Header>
                 <StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="0,20,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
-                    <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding InputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
-                    <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
-                    <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below.
-                    </TextBlock>
-                  </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
-                    <TextBox x:Name="OutputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
-                    <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
-                    <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Path of the folder to save the upscaled images or archives.
-                    </TextBlock>
-                  </StackPanel>
+                  <Border Classes="border">
+                    <StackPanel>
+                      <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                        <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
+                        <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding InputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                        <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
+                        <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                          Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below.
+                        </TextBlock>
+                      </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <CheckBox Margin="0,0,5,0" IsChecked="{Binding UpscaleArchives}">Upscale Archives</CheckBox>
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Archive files found in the selected Input Folder will be upscaled.
-                    </TextBlock>
-                  </StackPanel>
+                      <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                        <CheckBox Margin="0,0,5,0" IsChecked="{Binding UpscaleArchives}">Upscale Archives</CheckBox>
+                        <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                          Archive files (*.zip, *.cbz, *.rar, *.cbr) found in the selected Input Folder will be upscaled.
+                        </TextBlock>
+                      </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                    <CheckBox IsChecked="{Binding UpscaleImages}">Upscale Images</CheckBox>
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Image files found in the selected Input Folder will be upscaled.
-                    </TextBlock>
-                  </StackPanel>
+                      <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                        <CheckBox IsChecked="{Binding UpscaleImages}">Upscale Images</CheckBox>
+                        <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                          Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp) found in the selected Input Folder will be upscaled.
+                        </TextBlock>
+                      </StackPanel>
+                    </StackPanel>
+                  </Border>                  
 
                 </StackPanel>
               </TabItem>
             </TabControl>
 
-            <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-              <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding OverwriteExistingFiles}">Overwrite Existing Files</CheckBox>
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If unchecked, upscaling will be skipped for files that already exist in the output path. If checked, any files that already exist in the output path will be overwritten without warning. Use with caution.</TextBlock>
+            <Border Classes="border">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
+                  <TextBox x:Name="OutputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFolderPath}" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                  <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
+                  <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                    Path of the folder to save the upscaled image(s) or archive(s).
+                  </TextBlock>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                  <TextBlock Margin="0,0,5,0">Output Filename</TextBlock>
+                  <TextBox Text="{Binding OutputFilename}" Margin="0,0,5,0" IsReadOnly="False" Width="800" DragDrop.AllowDrop="True" />
+                  <SelectableTextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                    The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension.
+                  </SelectableTextBlock>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding OverwriteExistingFiles}">Allow Files in Output Path to be Overwritten</CheckBox>
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If unchecked, upscaling will be skipped for files that already exist in the output path. If checked, any files that already exist in the output path will be overwritten without warning. Use with caution.</TextBlock>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            
+
+            <Border Classes="border">
+              <StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Image Format</TextBlock>
+              <ToggleButton IsChecked="{Binding WebpSelected}" Content="WebP" Command="{Binding SetWebpSelected}" />
+              <ToggleButton IsChecked="{Binding PngSelected}" Content="PNG" Command="{Binding SetPngSelected}" />
+              <ToggleButton IsChecked="{Binding JpegSelected}" Content="JPEG" Command="{Binding SetJpegSelected}" />
+              <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
+  <Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
+  <Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
+          </TextBlock>
             </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
+              <CheckBox Margin="0,0,5,0" IsChecked="{Binding UseLosslessCompression}">Use Lossless Compression</CheckBox>
+              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
+              </TextBlock>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
+              <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
+              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                Quality level for compression. Note that a quality level of 100 is still lossy.
+              </TextBlock>
+            </StackPanel>
+              </StackPanel>
+            </Border>
+            
           </StackPanel>
         </Border>
 
         <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Preprocessing"></TextBlock>
-        <Border Margin="0,10,0,0"
-                CornerRadius="5"
-                BorderBrush="#33888888" BorderThickness="1"
-                Padding="5"
-                IsEnabled="{Binding !Upscaling}">
+        <Border Classes="border" IsEnabled="{Binding !Upscaling}">
           <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
               <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
@@ -198,11 +264,7 @@
         </Border>
 
         <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Upscaling"></TextBlock>
-        <Border Margin="0,10,0,0"
-                CornerRadius="5"
-                BorderBrush="#33888888" BorderThickness="1"
-                Padding="5"
-                IsEnabled="{Binding !Upscaling}">
+        <Border Classes="border" IsEnabled="{Binding !Upscaling}">
           <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Grayscale Model Path</TextBlock>
@@ -221,11 +283,7 @@
         </Border>
 
         <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Postprocessing"></TextBlock>
-        <Border Margin="0,10,0,0"
-                CornerRadius="5"
-                BorderBrush="#33888888" BorderThickness="1"
-                Padding="5"
-                IsEnabled="{Binding !Upscaling}">
+        <Border Classes="border" IsEnabled="{Binding !Upscaling}">
           <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height After Upscale</TextBlock>
@@ -242,33 +300,6 @@
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
               <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                 Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified.
-              </TextBlock>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
-              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Image Format</TextBlock>
-              <ToggleButton IsChecked="{Binding WebpSelected}" Content="WebP" Command="{Binding SetWebpSelected}" />
-              <ToggleButton IsChecked="{Binding PngSelected}" Content="PNG" Command="{Binding SetPngSelected}" />
-              <ToggleButton IsChecked="{Binding JpegSelected}" Content="JPEG" Command="{Binding SetJpegSelected}" />
-              <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
-  <Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
-  <Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
-          </TextBlock>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
-              <CheckBox Margin="0,0,5,0" IsChecked="{Binding UseLosslessCompression}">Use Lossless Compression</CheckBox>
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
-              </TextBlock>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
-              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
-              <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
-              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Quality level for compression. Note that a quality level of 100 is still lossy.
               </TextBlock>
             </StackPanel>
 

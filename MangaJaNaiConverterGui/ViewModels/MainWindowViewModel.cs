@@ -1,7 +1,9 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Data;
+using ReactiveUI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,7 +26,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             var g1 = this.WhenAnyValue
             (
                 x => x.InputFilePath,
-                x => x.OutputFilePath,
+                x => x.OutputFilename,
                 x => x.InputFolderPath,
                 x => x.OutputFolderPath
             );
@@ -60,6 +62,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
                     this.RaisePropertyChanged(nameof(InputStatusText));
+                    
                 }
             }
         }
@@ -73,6 +76,11 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _inputFilePath, value);
                 this.RaisePropertyChanged(nameof(InputStatusText));
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new DataValidationException("Input File is required.");
+                }
             }
         }
 
@@ -87,13 +95,21 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaisePropertyChanged(nameof(InputStatusText));
             }
         }
-
+        /*
         private string _outputFilePath = string.Empty;
         [DataMember]
         public string OutputFilePath
         {
             get => _outputFilePath;
             set => this.RaiseAndSetIfChanged(ref _outputFilePath, value);
+        }*/
+
+        private string _outputFilename = "%filename%-mangajanai";
+        [DataMember]
+        public string OutputFilename
+        {
+            get => _outputFilename;
+            set => this.RaiseAndSetIfChanged(ref _outputFilename, value);
         }
 
         private string _outputFolderPath = string.Empty;
@@ -399,14 +415,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                     flags.Append("--use-lossless-compression ");
                 }
 
-                var inputArgs = $"--input-file \"{InputFilePath}\" --output-file \"{OutputFilePath}\"";
+                var inputArgs = $"--input-file-path \"{InputFilePath}\" ";
 
                 if (SelectedTabIndex == 1)
                 {
-                    inputArgs = $"--input-folder \"{InputFolderPath}\" --output-folder \"{OutputFolderPath}\"";
+                    inputArgs = $"--input-folder-path \"{InputFolderPath}\" ";
                 }
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{Path.GetFullPath(GrayscaleModelFilePath)}"" --color-model-path ""{Path.GetFullPath(ColorModelFilePath)}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{Path.GetFullPath(GrayscaleModelFilePath)}"" --color-model-path ""{Path.GetFullPath(ColorModelFilePath)}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -416,6 +432,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             try
             {
                 await task;
+                Validate();
             }
             catch (OperationCanceledException e)
             {
@@ -440,6 +457,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     _runningProcess.Kill(true);
                     _runningProcess = null; // Clear the reference to the terminated process
                 }
+                Validate();
             }
             catch { }
         }
@@ -477,9 +495,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                     StringBuilder status = new();
                     var skipFiles = 0;
 
-                    if (File.Exists(OutputFilePath))
+                    var outputFilePath = Path.Join(Path.GetFullPath(OutputFolderPath), OutputFilename);
+
+                    if (File.Exists(outputFilePath))
                     {
-                        if (IMAGE_EXTENSIONS.Any(x => OutputFilePath.ToLower().EndsWith(x)))
+                        if (IMAGE_EXTENSIONS.Any(x => outputFilePath.ToLower().EndsWith(x)))
                         {
                             status.Append($" (1 image already exists and will be {overwriteText})");
                             if (!OverwriteExistingFiles)
@@ -487,7 +507,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                                 skipFiles++;
                             }
                         }
-                        else if (ZIP_EXTENSIONS.Any(x => OutputFilePath.ToLower().EndsWith(x)))
+                        else if (ZIP_EXTENSIONS.Any(x => outputFilePath.ToLower().EndsWith(x)))
                         {
                             status.Append($" (1 archive already exists and will be {overwriteText})");
                             if (!OverwriteExistingFiles)
@@ -626,11 +646,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                     validationText.Add("Input File does not exist.");
                 }
 
-                if (string.IsNullOrWhiteSpace(OutputFilePath))
-                {
-                    valid = false;
-                    validationText.Add("Output File is required.");
-                }
             }
             else
             {
@@ -644,12 +659,18 @@ namespace MangaJaNaiConverterGui.ViewModels
                     valid = false;
                     validationText.Add("Input Folder does not exist.");
                 }
+            }
 
-                if (string.IsNullOrWhiteSpace(OutputFolderPath))
-                {
-                    valid = false;
-                    validationText.Add("Output Folder is required.");
-                }
+            if (string.IsNullOrWhiteSpace(OutputFilename))
+            {
+                valid = false;
+                validationText.Add("Output Filename is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(OutputFolderPath))
+            {
+                valid = false;
+                validationText.Add("Output Folder is required.");
             }
 
             Valid = valid;

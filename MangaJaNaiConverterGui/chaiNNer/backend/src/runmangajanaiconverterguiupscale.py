@@ -359,23 +359,25 @@ resize_height_before_upscale, resize_factor_before_upscale):
     # print("preprocess_worker_zip exiting")
 
 
-def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_path, upscale_images, upscale_archives,
+def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_path, output_filename, upscale_images, upscale_archives,
 overwrite_existing_files, auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
 lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale):
     """
     given a folder path, recursively iterate the folder
     """
-    # print("preprocess_worker_folder entering")
+    print(f"preprocess_worker_folder entering {input_folder_path} {output_folder_path} {output_filename}", flush=True)
     for root, dirs, files in os.walk(input_folder_path):
         for filename in files:
 
             # for output file, create dirs if necessary, or skip if file exists and overwrite not enabled
+            input_file_base = Path(filename).stem
             filename_rel = os.path.relpath(os.path.join(root, filename), input_folder_path)
-            output_file_path = Path(os.path.join(output_folder_path, filename_rel))
+            output_filename_rel = os.path.join(os.path.dirname(filename_rel), output_filename.replace('%filename%', input_file_base))
+            output_file_path = Path(os.path.join(output_folder_path, output_filename_rel))
 
             if filename.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
                 if upscale_images:
-                    output_file_path = output_file_path.with_suffix(f'.{image_format}')
+                    output_file_path = str(output_file_path.with_suffix(f'.{image_format}')).replace('%filename%', input_file_base)
                     # print(f"preprocess_worker_folder overwrite={overwrite_existing_files} outfilepath={output_file_path} isfile={os.path.isfile(output_file_path)}", flush=True)
                     if not overwrite_existing_files and os.path.isfile(output_file_path):
                         print(f"file exists, skip: {output_file_path}", flush=True)
@@ -399,15 +401,16 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
                     else:
                         # image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
                         pass
-                    upscale_queue.put((image, filename_rel, True, is_grayscale))
+                    upscale_queue.put((image, output_filename_rel, True, is_grayscale))
             elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
                 if upscale_archives:
+                    output_file_path = str(output_file_path.with_suffix('.cbz'))
                     if not overwrite_existing_files and os.path.isfile(output_file_path):
                         print(f"file exists, skip: {output_file_path}", flush=True)
                         continue
-                    os.makedirs(os.path.dirname(os.path.join(output_folder_path, filename_rel)), exist_ok=True)
+                    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
 
-                    upscale_zip_file(os.path.join(root, filename), os.path.join(output_folder_path, filename_rel),
+                    upscale_zip_file(os.path.join(root, filename), output_file_path,
                         auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
                         lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
                         resize_factor_after_upscale) # TODO custom output extension
@@ -575,28 +578,39 @@ use_lossless_compression, resize_height_after_upscale, resize_factor_after_upsca
     postprocess_process.join()
 
 
-def upscale_file(input_file, output_file, overwrite_existing_files,
+def upscale_file(input_file_path, output_folder_path, output_filename, overwrite_existing_files,
 auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale,
 image_format, lossy_compression_quality, use_lossless_compression,
 resize_height_after_upscale, resize_factor_after_upscale):
 
-    if not overwrite_existing_files and os.path.isfile(output_file):
-        print(f"file exists, skip: {output_file}", flush=True)
-        return
+    input_file_base = Path(input_file_path).stem
 
-    if input_file.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
-        upscale_zip_file(input_file, output_file, auto_adjust_levels,
+
+    if input_file_path.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
+
+        output_file_path = str(Path(os.path.join(output_folder_path, output_filename.replace('%filename%', input_file_base))).with_suffix('.cbz'))
+        if not overwrite_existing_files and os.path.isfile(output_file_path):
+            print(f"file exists, skip: {output_file_path}", flush=True)
+            return
+
+        upscale_zip_file(input_file_path, output_file_path, auto_adjust_levels,
             resize_height_before_upscale, resize_factor_before_upscale,
             image_format, lossy_compression_quality, use_lossless_compression,
             resize_height_after_upscale, resize_factor_after_upscale)
-    elif input_file.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
-        upscale_image_file(input_file, output_file, overwrite_existing_files,
+    elif input_file_path.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
+
+        output_file_path = str(Path(os.path.join(output_folder_path, output_filename.replace('%filename%', input_file_base))).with_suffix(f'.{image_format}'))
+        if not overwrite_existing_files and os.path.isfile(output_file_path):
+            print(f"file exists, skip: {output_file_path}", flush=True)
+            return
+
+        upscale_image_file(input_file_path, output_file_path, overwrite_existing_files,
             auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale,
             image_format, lossy_compression_quality, use_lossless_compression,
             resize_height_after_upscale, resize_factor_after_upscale)
 
 
-def upscale_folder(input_folder, output_folder, upscale_images, upscale_archives, overwrite_existing_files,
+def upscale_folder(input_folder_path, output_folder_path, output_filename, upscale_images, upscale_archives, overwrite_existing_files,
 auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale, image_format,
 lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale):
     # print("upscale_folder: entering")
@@ -606,8 +620,8 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
     postprocess_queue = Queue(maxsize=1)
 
     # start preprocess folder process
-    preprocess_process = Process(target=preprocess_worker_folder, args=(upscale_queue, input_folder, output_folder,
-        upscale_images, upscale_archives, overwrite_existing_files, auto_adjust_levels, resize_height_before_upscale,
+    preprocess_process = Process(target=preprocess_worker_folder, args=(upscale_queue, input_folder_path, output_folder_path,
+        output_filename, upscale_images, upscale_archives, overwrite_existing_files, auto_adjust_levels, resize_height_before_upscale,
         resize_factor_before_upscale, image_format, lossy_compression_quality, use_lossless_compression,
         resize_height_after_upscale, resize_factor_after_upscale))
     preprocess_process.start()
@@ -617,7 +631,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
     upscale_process.start()
 
     # start postprocess folder process
-    postprocess_process = Process(target=postprocess_worker_folder, args=(postprocess_queue, output_folder,
+    postprocess_process = Process(target=postprocess_worker_folder, args=(postprocess_queue, output_folder_path,
         image_format, lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
         resize_factor_after_upscale))
     postprocess_process.start()
@@ -630,10 +644,10 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
 sys.stdout.reconfigure(encoding='utf-8')
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--input-file', required=False)
-parser.add_argument('--output-file', required=False)
-parser.add_argument('--input-folder', required=False)
-parser.add_argument('--output-folder', required=False)
+parser.add_argument('--input-file-path', required=False)
+parser.add_argument('--output-filename', required=False)
+parser.add_argument('--input-folder-path', required=False)
+parser.add_argument('--output-folder-path', required=False)
 parser.add_argument('--upscale-archives', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--upscale-images', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--overwrite-existing-files', type=bool, action=argparse.BooleanOptionalAction, default=False)
@@ -650,7 +664,6 @@ parser.add_argument('--resize-factor-after-upscale', required=False, type=float,
 
 args = parser.parse_args()
 print(args)
-print(args.input_file)
 
 
 SENTINEL = (None, None, None, None)
@@ -675,13 +688,13 @@ if __name__ == '__main__':
     # Record the start time
     start_time = time.time()
 
-    if args.input_folder:
-        upscale_folder(args.input_folder, args.output_folder, args.upscale_images, args.upscale_archives,
+    if args.input_folder_path:
+        upscale_folder(args.input_folder_path, args.output_folder_path, args.output_filename, args.upscale_images, args.upscale_archives,
             args.overwrite_existing_files, args.auto_adjust_levels, args.resize_height_before_upscale,
             args.resize_factor_before_upscale, args.image_format, args.lossy_compression_quality,
             args.use_lossless_compression, args.resize_height_after_upscale, args.resize_factor_after_upscale)
-    elif args.input_file:
-        upscale_file(args.input_file, args.output_file, args.overwrite_existing_files, args.auto_adjust_levels,
+    elif args.input_file_path:
+        upscale_file(args.input_file_path, args.output_folder_path, args.output_filename, args.overwrite_existing_files, args.auto_adjust_levels,
             args.resize_height_before_upscale, args.resize_factor_before_upscale, args.image_format,
             args.lossy_compression_quality, args.use_lossless_compression, args.resize_height_after_upscale,
             args.resize_factor_after_upscale)
