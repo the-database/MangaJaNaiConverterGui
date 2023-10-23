@@ -76,11 +76,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _inputFilePath, value);
                 this.RaisePropertyChanged(nameof(InputStatusText));
-
-                if (string.IsNullOrEmpty(value))
-                {
-                    throw new DataValidationException("Input File is required.");
-                }
             }
         }
 
@@ -268,6 +263,14 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _showLossySettings;
             set => this.RaiseAndSetIfChanged(ref _showLossySettings, value);
+        }
+
+        private bool _showAdvancedSettings = false;
+        [DataMember]
+        public bool ShowAdvancedSettings
+        {
+            get => _showAdvancedSettings;
+            set => this.RaiseAndSetIfChanged(ref _showAdvancedSettings, value);
         }
 
         private bool _valid = false;
