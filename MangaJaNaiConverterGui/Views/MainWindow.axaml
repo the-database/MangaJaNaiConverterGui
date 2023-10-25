@@ -75,6 +75,16 @@
 
         <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+
+          <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowEstimates}">
+            <TextBlock TextAlignment="Center" Width="140" FontSize="10" Margin="10,10,20,0" Text="{Binding ElapsedTime, StringFormat={}Elapsed Time: {0}}" />
+            <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowArchiveProgressBar}">
+              <TextBlock TextAlignment="Center" Width="220" FontSize="10" Margin="10,10,20,0" Text="{Binding ArchiveEtr, StringFormat=Remaining Time (Current Archive): {0:hh\\:mm\\:ss}}" />
+            </StackPanel>
+            <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="10,10,20,0" Text="{Binding TotalEtr, StringFormat=Remaining Time (Total): {0:hh\\:mm\\:ss}}" />
+            <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="10,10,20,0" Text="{Binding TotalEta, StringFormat={}Estimated Finish Time: {0}}" />
+          </StackPanel>
+          
           <!-- progress within current archive -->
           <ProgressBar  Margin="5,0,0,0" Height="20"
                         Minimum="0"

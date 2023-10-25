@@ -1,4 +1,6 @@
 ﻿using Avalonia.Data;
+using Avalonia.Threading;
+using Progression.Extras;
 using ReactiveUI;
 using System;
 using System.Collections.Concurrent;
@@ -20,6 +22,8 @@ namespace MangaJaNaiConverterGui.ViewModels
     {
         private static readonly List<string> IMAGE_EXTENSIONS = new() { ".png", ".jpg", ".jpeg", ".webp", ".bmp" };
         private static readonly List<string> ARCHIVE_EXTENSIONS = new() { ".zip", ".cbz", ".rar", ".cbr"};
+
+        private readonly DispatcherTimer _timer = new ();
 
         public MainWindowViewModel() 
         {
@@ -46,10 +50,27 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 Validate();
             });
+
+            _timer.Interval = TimeSpan.FromSeconds(1);
+            _timer.Tick += _timer_Tick;
+        }
+
+        private void _timer_Tick(object? sender, EventArgs e)
+        {
+            ElapsedTime = ElapsedTime.Add(TimeSpan.FromSeconds(1));
         }
 
         private CancellationTokenSource? _cancellationTokenSource;
         private Process? _runningProcess = null;
+        private readonly IETACalculator _archiveEtaCalculator = new ETACalculator(2, 3.0);
+        private readonly IETACalculator _totalEtaCalculator = new ETACalculator(2, 3.0);
+
+        public TimeSpan ArchiveEtr => _archiveEtaCalculator.ETAIsAvailable ? _archiveEtaCalculator.ETR : TimeSpan.FromSeconds(0);
+        public string ArchiveEta => _archiveEtaCalculator.ETAIsAvailable ? _archiveEtaCalculator.ETA.ToString("t") : "please wait";
+
+        public TimeSpan TotalEtr => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETR : ArchiveEtr + (ElapsedTime + ArchiveEtr)  * (ProgressTotalFiles - (ProgressCurrentFile + 1));
+
+        public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
 
         private int _selectedTabIndex;
         [DataMember]
@@ -332,6 +353,13 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _showConsole, value);
         }
 
+        private bool _showEstimates = false;
+        public bool ShowEstimates
+        {
+            get => _showEstimates;
+            set => this.RaiseAndSetIfChanged(ref _showEstimates, value);
+        }
+
         private string _inputStatusText = string.Empty;
         public string InputStatusText
         {
@@ -382,6 +410,17 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public bool UpscaleEnabled => Valid && !Upscaling;
 
+        private TimeSpan _elapsedTime = TimeSpan.FromSeconds(0);
+        public TimeSpan ElapsedTime
+        {
+            get => _elapsedTime;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _elapsedTime, value);
+            }
+        }
+
+
         public async Task RunUpscale()
         {
             _cancellationTokenSource = new CancellationTokenSource();
@@ -389,6 +428,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             var task = Task.Run(async () =>
             {
+                ElapsedTime = TimeSpan.FromSeconds(0);
+                ShowEstimates = true;
                 ct.ThrowIfCancellationRequested();
                 ConsoleQueueClear();
                 Upscaling = true;
@@ -437,16 +478,20 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             try
             {
+                _timer.Start();
                 await task;
+                _timer.Stop();
                 Validate();
             }
             catch (OperationCanceledException e)
             {
+                _timer.Stop();
                 Console.WriteLine($"{nameof(OperationCanceledException)} thrown with message: {e.Message}");
                 Upscaling = false;
             }
             finally
             {
+                _timer.Stop();
                 _cancellationTokenSource.Dispose();
                 Upscaling = false;
             }
@@ -745,10 +790,13 @@ namespace MangaJaNaiConverterGui.ViewModels
                                 {
                                     ShowArchiveProgressBar = true;
                                     ProgressCurrentFileInArchive++;
+                                    UpdateEtas();
                                 }
                                 else
                                 {
                                     ProgressCurrentFile++;
+                                    UpdateEtas();
+
                                 }
                             }
                             else if (e.Data.StartsWith("TOTALZIP="))
@@ -758,6 +806,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                                     ShowArchiveProgressBar = true;
                                     ProgressCurrentFileInArchive = 0;
                                     ProgressTotalFilesInCurrentArchive = total;
+                                    UpdateEtas();
                                 }
                             }
                             else
@@ -776,6 +825,16 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
                 
             }
+        }
+
+        private void UpdateEtas()
+        {
+            _archiveEtaCalculator.Update(ProgressCurrentFileInArchive / (float)ProgressTotalFilesInCurrentArchive);
+            _totalEtaCalculator.Update(ProgressCurrentFile / (float)ProgressTotalFiles);
+            this.RaisePropertyChanged(nameof(ArchiveEtr));
+            this.RaisePropertyChanged(nameof(ArchiveEta));
+            this.RaisePropertyChanged(nameof(TotalEtr));
+            this.RaisePropertyChanged(nameof(TotalEta));
         }
 
         private void ConsoleQueueClear()
