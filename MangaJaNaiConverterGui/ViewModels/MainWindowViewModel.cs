@@ -829,8 +829,16 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private void UpdateEtas()
         {
-            _archiveEtaCalculator.Update(ProgressCurrentFileInArchive / (float)ProgressTotalFilesInCurrentArchive);
-            _totalEtaCalculator.Update(ProgressCurrentFile / (float)ProgressTotalFiles);
+            if (ProgressTotalFilesInCurrentArchive > 0)
+            {
+                _archiveEtaCalculator.Update(ProgressCurrentFileInArchive / (float)ProgressTotalFilesInCurrentArchive);
+            }
+            
+            if (ProgressTotalFiles > 0)
+            {
+                _totalEtaCalculator.Update(ProgressCurrentFile / (float)ProgressTotalFiles);
+            }
+            
             this.RaisePropertyChanged(nameof(ArchiveEtr));
             this.RaisePropertyChanged(nameof(ArchiveEta));
             this.RaisePropertyChanged(nameof(TotalEtr));
