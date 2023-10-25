@@ -20,7 +20,6 @@ namespace MangaJaNaiConverterGui.Views
 
         public MainWindow()
         {
-            //InitializeComponent();
             AvaloniaXamlLoader.Load(this);
             this.WhenActivated(disposable => { });
             Resized += MainWindow_Resized;
@@ -34,13 +33,10 @@ namespace MangaJaNaiConverterGui.Views
             var colorModelFilePathTextBox = this.FindControl<TextBox>("ColorModelFilePathTextBox");
 
             inputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFilePath);
-            //outputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFilePath);
             inputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFolderPath);
             outputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFolderPath);
             grayscaleModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetGrayscaleModelFilePath);
             colorModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetColorModelFilePath);
-
-
         }
 
         private void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -105,11 +101,6 @@ namespace MangaJaNaiConverterGui.Views
 
             if (files.Count >= 1)
             {
-                //// Open reading stream from the first file.
-                //await using var stream = await files[0].OpenReadAsync();
-                //using var streamReader = new StreamReader(stream);
-                //// Reads all the content of file as a text.
-                //var fileContent = await streamReader.ReadToEndAsync();
                 if (DataContext is MainWindowViewModel vm)
                 {
                     vm.InputFilePath = files[0].TryGetLocalPath() ?? "";
@@ -134,24 +125,6 @@ namespace MangaJaNaiConverterGui.Views
                 }
             }
         }
-        /*
-        public void SetOutputFilePath(object? sender, DragEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                var files = e.Data.GetFiles().ToList();
-
-
-                if (files.Count > 0)
-                {
-                    var filePath = files[0].TryGetLocalPath();
-                    if (File.Exists(filePath))
-                    {
-                        vm.OutputFilePath = filePath;
-                    }
-                }
-            }
-        }*/
 
         public void SetInputFolderPath(object? sender, DragEventArgs e)
         {
@@ -224,78 +197,63 @@ namespace MangaJaNaiConverterGui.Views
                 }
             }
         }
-        /*
-        private async void OpenOutputFileButtonClick(object? sender, RoutedEventArgs e)
-        {
-            // Get top level from the current control. Alternatively, you can use Window reference instead.
-            var topLevel = TopLevel.GetTopLevel(this);
-
-            // Start async operation to open the dialog.
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = "Save File",
-            });
-
-            if (file is not null)
-            {
-                //// Open reading stream from the first file.
-                //await using var stream = await files[0].OpenReadAsync();
-                //using var streamReader = new StreamReader(stream);
-                //// Reads all the content of file as a text.
-                //var fileContent = await streamReader.ReadToEndAsync();
-                if (DataContext is MainWindowViewModel vm)
-                {
-                    vm.OutputFilePath = file.TryGetLocalPath() ?? "";
-                }
-            }
-        }*/
 
         private async void OpenInputFolderButtonClick(object? sender, RoutedEventArgs e)
         {
-            // Get top level from the current control. Alternatively, you can use Window reference instead.
-            var topLevel = TopLevel.GetTopLevel(this);
-
-            // Start async operation to open the dialog.
-            var files = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            if (DataContext is MainWindowViewModel vm)
             {
-                Title = "Open Folder",
-                AllowMultiple = false
-            });
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = GetTopLevel(this);
 
-            if (files.Count >= 1)
-            {
-                //// Open reading stream from the first file.
-                //await using var stream = await files[0].OpenReadAsync();
-                //using var streamReader = new StreamReader(stream);
-                //// Reads all the content of file as a text.
-                //var fileContent = await streamReader.ReadToEndAsync();
-                if (DataContext is MainWindowViewModel vm)
+                var storageProvider = topLevel.StorageProvider;
+
+                IStorageFolder? suggestedStartLocation = null;
+
+                if (Directory.Exists(vm.InputFolderPath))
                 {
-                    vm.InputFolderPath = files[0].TryGetLocalPath() ?? "";
+                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(vm.InputFolderPath)));
+                }
+
+                // Start async operation to open the dialog.
+                var files = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                {
+                    Title = "Open Folder",
+                    AllowMultiple = false,
+                    SuggestedStartLocation = suggestedStartLocation
+                });
+
+                if (files.Count >= 1)
+                {
+                    vm.InputFolderPath = files[0].TryGetLocalPath() ?? "";   
                 }
             }
         }
 
         private async void OpenOutputFolderButtonClick(object? sender, RoutedEventArgs e)
         {
-            // Get top level from the current control. Alternatively, you can use Window reference instead.
-            var topLevel = TopLevel.GetTopLevel(this);
-
-            // Start async operation to open the dialog.
-            var files = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            if (DataContext is MainWindowViewModel vm)
             {
-                Title = "Open Folder",
-                AllowMultiple = false
-            });
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = GetTopLevel(this);
 
-            if (files.Count >= 1)
-            {
-                //// Open reading stream from the first file.
-                //await using var stream = await files[0].OpenReadAsync();
-                //using var streamReader = new StreamReader(stream);
-                //// Reads all the content of file as a text.
-                //var fileContent = await streamReader.ReadToEndAsync();
-                if (DataContext is MainWindowViewModel vm)
+                var storageProvider = topLevel.StorageProvider;
+
+                IStorageFolder? suggestedStartLocation = null;
+
+                if (Directory.Exists(vm.OutputFolderPath))
+                {
+                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(vm.OutputFolderPath)));
+                }
+
+                // Start async operation to open the dialog.
+                var files = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                {
+                    Title = "Open Folder",
+                    AllowMultiple = false,
+                    SuggestedStartLocation = suggestedStartLocation
+                });
+
+                if (files.Count >= 1)
                 {
                     vm.OutputFolderPath = files[0].TryGetLocalPath() ?? "";
                 }
@@ -304,31 +262,33 @@ namespace MangaJaNaiConverterGui.Views
 
         private async void OpenGrayscaleModelFileButtonClick(object? sender, RoutedEventArgs e)
         {
-            // Get top level from the current control. Alternatively, you can use Window reference instead.
-            var topLevel = TopLevel.GetTopLevel(this);
-
-            var storageProvider = topLevel.StorageProvider;
-
-            // Start async operation to open the dialog.
-            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            if (DataContext is MainWindowViewModel vm)
             {
-                Title = "Open Model File for Grayscale Images",
-                AllowMultiple = false,
-                FileTypeFilter = new FilePickerFileType[] 
-                { 
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = GetTopLevel(this);
+
+                var storageProvider = topLevel.StorageProvider;
+
+                var folderPath = @".\chaiNNer\models";
+
+                if (Directory.Exists(Path.GetDirectoryName(vm.GrayscaleModelFilePath)))
+                {
+                    folderPath = Path.GetDirectoryName(vm.GrayscaleModelFilePath);
+                }
+
+                // Start async operation to open the dialog.
+                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = "Open Model File for Grayscale Images",
+                    AllowMultiple = false,
+                    FileTypeFilter = new FilePickerFileType[]
+                    {
                     new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
-                },
-                SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(@".\chaiNNer\models"))),
-            });
+                    },
+                    SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folderPath))),
+                });
 
-            if (files.Count >= 1)
-            {
-                //// Open reading stream from the first file.
-                //await using var stream = await files[0].OpenReadAsync();
-                //using var streamReader = new StreamReader(stream);
-                //// Reads all the content of file as a text.
-                //var fileContent = await streamReader.ReadToEndAsync();
-                if (DataContext is MainWindowViewModel vm)
+                if (files.Count >= 1)
                 {
                     vm.GrayscaleModelFilePath = files[0].TryGetLocalPath() ?? "";
                 }
@@ -337,30 +297,32 @@ namespace MangaJaNaiConverterGui.Views
 
         private async void OpenColorModelFileButtonClick(object? sender, RoutedEventArgs e)
         {
-            // Get top level from the current control. Alternatively, you can use Window reference instead.
-            var topLevel = TopLevel.GetTopLevel(this);
-            var storageProvider = topLevel.StorageProvider;
-
-            // Start async operation to open the dialog.
-            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            if (DataContext is MainWindowViewModel vm)
             {
-                Title = "Open Model File for Color Images",
-                AllowMultiple = false,
-                FileTypeFilter = new FilePickerFileType[]
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = TopLevel.GetTopLevel(this);
+                var storageProvider = topLevel.StorageProvider;
+
+                var folderPath = @".\chaiNNer\models";
+
+                if (Directory.Exists(Path.GetDirectoryName(vm.ColorModelFilePath)))
                 {
-                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
-                },
-                SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(@".\chaiNNer\models"))),
-            });
+                    folderPath = Path.GetDirectoryName(vm.ColorModelFilePath);
+                }
 
-            if (files.Count >= 1)
-            {
-                //// Open reading stream from the first file.
-                //await using var stream = await files[0].OpenReadAsync();
-                //using var streamReader = new StreamReader(stream);
-                //// Reads all the content of file as a text.
-                //var fileContent = await streamReader.ReadToEndAsync();
-                if (DataContext is MainWindowViewModel vm)
+                // Start async operation to open the dialog.
+                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = "Open Model File for Color Images",
+                    AllowMultiple = false,
+                    FileTypeFilter = new FilePickerFileType[]
+                    {
+                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
+                    },
+                    SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folderPath))),
+                });
+
+                if (files.Count >= 1)
                 {
                     vm.ColorModelFilePath = files[0].TryGetLocalPath() ?? "";
                 }
