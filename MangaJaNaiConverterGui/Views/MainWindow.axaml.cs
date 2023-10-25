@@ -84,28 +84,6 @@ namespace MangaJaNaiConverterGui.Views
             {
                 consoleScrollViewer.Width = Width - 40; // Adjust the width as needed
             }
-
-        }
-
-        private async void OpenInputFileButtonClick(object? sender, RoutedEventArgs e)
-        {
-            // Get top level from the current control. Alternatively, you can use Window reference instead.
-            var topLevel = TopLevel.GetTopLevel(this);
-
-            // Start async operation to open the dialog.
-            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Open Video File",
-                AllowMultiple = false
-            });
-
-            if (files.Count >= 1)
-            {
-                if (DataContext is MainWindowViewModel vm)
-                {
-                    vm.InputFilePath = files[0].TryGetLocalPath() ?? "";
-                }
-            }
         }
 
         public void SetInputFilePath(object? sender, DragEventArgs e)
@@ -194,6 +172,44 @@ namespace MangaJaNaiConverterGui.Views
                     {
                         vm.ColorModelFilePath = filePath;
                     }
+                }
+            }
+        }
+
+        private async void OpenInputFileButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = TopLevel.GetTopLevel(this);
+
+                var storageProvider = topLevel.StorageProvider;
+
+                IStorageFolder? suggestedStartLocation = null;
+
+                var inputFolder = Path.GetDirectoryName(vm.InputFilePath);
+
+                if (Directory.Exists(inputFolder))
+                {
+                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(inputFolder));
+                }
+
+                // Start async operation to open the dialog.
+                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = "Open Image or Archive File",
+                    AllowMultiple = false,
+                    FileTypeFilter = new FilePickerFileType[]
+                    {
+                        new("Image or Archive File") { Patterns = MainWindowViewModel.IMAGE_EXTENSIONS.Concat(MainWindowViewModel.ARCHIVE_EXTENSIONS).Select(x => $"*{x}").ToArray(),
+                            MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
+                    },
+                    SuggestedStartLocation = suggestedStartLocation,
+                });
+
+                if (files.Count >= 1)
+                {
+                    vm.InputFilePath = files[0].TryGetLocalPath() ?? "";
                 }
             }
         }

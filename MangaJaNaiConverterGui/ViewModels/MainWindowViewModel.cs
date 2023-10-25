@@ -20,8 +20,8 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class MainWindowViewModel : ViewModelBase
     {
-        private static readonly List<string> IMAGE_EXTENSIONS = new() { ".png", ".jpg", ".jpeg", ".webp", ".bmp" };
-        private static readonly List<string> ARCHIVE_EXTENSIONS = new() { ".zip", ".cbz", ".rar", ".cbr"};
+        public static readonly List<string> IMAGE_EXTENSIONS = new() { ".png", ".jpg", ".jpeg", ".webp", ".bmp" };
+        public static readonly List<string> ARCHIVE_EXTENSIONS = new() { ".zip", ".cbz", ".rar", ".cbr"};
 
         private readonly DispatcherTimer _timer = new ();
 
@@ -430,6 +430,8 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 ElapsedTime = TimeSpan.FromSeconds(0);
                 ShowEstimates = true;
+                _archiveEtaCalculator.Reset();
+                _totalEtaCalculator.Reset();
                 ct.ThrowIfCancellationRequested();
                 ConsoleQueueClear();
                 Upscaling = true;
