@@ -12,10 +12,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAvalonia.UI.Windowing;
 
 namespace MangaJaNaiConverterGui.Views
 {
-    public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
+    public partial class MainWindow : AppWindow
     {
         private bool _autoScrollConsole = true;
 
@@ -26,7 +27,7 @@ namespace MangaJaNaiConverterGui.Views
             Resized += MainWindow_Resized;
             Closing += MainWindow_Closing;
 
-            this.WhenActivated(action => action(ViewModel!.ShowDialog.RegisterHandler(DoShowDialogAsync)));
+            //this.WhenActivated(action => action(ViewModel!.ShowDialog.RegisterHandler(DoShowDialogAsync)));//TODO
 
 
 
