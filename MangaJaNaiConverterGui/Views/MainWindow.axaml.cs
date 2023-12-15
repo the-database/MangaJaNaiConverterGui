@@ -11,6 +11,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.Views
 {
@@ -21,9 +22,13 @@ namespace MangaJaNaiConverterGui.Views
         public MainWindow()
         {
             AvaloniaXamlLoader.Load(this);
-            this.WhenActivated(disposable => { });
+            //this.WhenActivated(disposable => { });
             Resized += MainWindow_Resized;
             Closing += MainWindow_Closing;
+
+            this.WhenActivated(action => action(ViewModel!.ShowDialog.RegisterHandler(DoShowDialogAsync)));
+
+
 
             var inputFileNameTextBox = this.FindControl<TextBox>("InputFileNameTextBox");
             var outputFileNameTextBox = this.FindControl<TextBox>("OutputFileNameTextBox");
@@ -343,6 +348,18 @@ namespace MangaJaNaiConverterGui.Views
                     vm.ColorModelFilePath = files[0].TryGetLocalPath() ?? "";
                 }
             }
+        }
+
+        private async Task DoShowDialogAsync(InteractionContext<MainWindowViewModel,
+                                        MainWindowViewModel?> interaction)
+        {
+            var dialog = new SettingsWindow
+            {
+                DataContext = interaction.Input
+            };
+
+            var result = await dialog.ShowDialog<MainWindowViewModel?>(this);
+            interaction.SetOutput(result);
         }
     }
 }

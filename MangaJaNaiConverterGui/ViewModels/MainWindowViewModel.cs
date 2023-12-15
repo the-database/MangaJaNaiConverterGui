@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -53,7 +54,12 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += _timer_Tick;
+
+            ShowDialog = new Interaction<MainWindowViewModel, MainWindowViewModel?>();
+
         }
+
+        public Interaction<MainWindowViewModel, MainWindowViewModel?> ShowDialog { get; }
 
         private void _timer_Tick(object? sender, EventArgs e)
         {
@@ -71,6 +77,16 @@ namespace MangaJaNaiConverterGui.ViewModels
         public TimeSpan TotalEtr => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETR : ArchiveEtr + (ElapsedTime + ArchiveEtr)  * (ProgressTotalFiles - (ProgressCurrentFile + 1));
 
         public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
+
+        public string AppVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+
+        private bool _autoUpdate;
+        [DataMember]
+        public bool AutoUpdateEnabled
+        {
+            get => _autoUpdate;
+            set => this.RaiseAndSetIfChanged(ref _autoUpdate, value);
+        }
 
         private int _selectedTabIndex;
         [DataMember]
@@ -111,14 +127,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaisePropertyChanged(nameof(InputStatusText));
             }
         }
-        /*
-        private string _outputFilePath = string.Empty;
-        [DataMember]
-        public string OutputFilePath
-        {
-            get => _outputFilePath;
-            set => this.RaiseAndSetIfChanged(ref _outputFilePath, value);
-        }*/
 
         private string _outputFilename = "%filename%-mangajanai";
         [DataMember]
@@ -351,6 +359,13 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _showConsole;
             set => this.RaiseAndSetIfChanged(ref _showConsole, value);
+        }
+
+        private bool _showAppSettings = false;
+        public bool ShowAppSettings
+        {
+            get => _showAppSettings;
+            set => this.RaiseAndSetIfChanged(ref _showAppSettings, value);
         }
 
         private bool _showEstimates = false;
@@ -827,6 +842,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
                 
             }
+        }
+
+        public async void ShowSettingsDialog()
+        {
+            var result = await ShowDialog.Handle(this);
         }
 
         private void UpdateEtas()
