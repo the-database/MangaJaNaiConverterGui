@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MangaJaNaiConverterGui", "MangaJaNaiConverterGui\MangaJaNaiConverterGui.csproj", "{A0F428F0-2B21-415A-B6F0-23D52FB3300E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MangaJaNaiConverterGui", "MangaJaNaiConverterGui\MangaJaNaiConverterGui.csproj", "{A0F428F0-2B21-415A-B6F0-23D52FB3300E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SevenZipExtractor", "SevenZipExtractor\SevenZipExtractor.csproj", "{E45E8242-84F3-4F83-8746-493B488F72BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{A0F428F0-2B21-415A-B6F0-23D52FB3300E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0F428F0-2B21-415A-B6F0-23D52FB3300E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0F428F0-2B21-415A-B6F0-23D52FB3300E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E45E8242-84F3-4F83-8746-493B488F72BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E45E8242-84F3-4F83-8746-493B488F72BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E45E8242-84F3-4F83-8746-493B488F72BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E45E8242-84F3-4F83-8746-493B488F72BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

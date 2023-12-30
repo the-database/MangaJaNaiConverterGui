@@ -2,6 +2,7 @@
 using Avalonia.Threading;
 using Progression.Extras;
 using ReactiveUI;
+using SevenZipExtractor;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -362,11 +363,32 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         private bool _showAppSettings = false;
-        public bool ShowAppSettings
+        public bool RequestShowAppSettings
         {
             get => _showAppSettings;
-            set => this.RaiseAndSetIfChanged(ref _showAppSettings, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _showAppSettings, value);
+                this.RaisePropertyChanged(nameof(ShowAppSettings));
+                this.RaisePropertyChanged(nameof(ShowMainForm));
+            }
         }
+
+        private bool _isExtractingBackend = false;
+        public bool IsExtractingBackend
+        {
+            get => _isExtractingBackend;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isExtractingBackend, value);
+                this.RaisePropertyChanged(nameof(RequestShowAppSettings));
+                this.RaisePropertyChanged(nameof(ShowMainForm));
+            }
+        }
+
+        public bool ShowAppSettings => RequestShowAppSettings && !IsExtractingBackend;
+
+        public bool ShowMainForm => !RequestShowAppSettings && !IsExtractingBackend;
 
         private bool _showEstimates = false;
         public bool ShowEstimates
@@ -881,6 +903,24 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             ConsoleQueue.Enqueue(value);
             this.RaisePropertyChanged(nameof(ConsoleText));
+        }
+
+        public void CheckAndExtractBackend()
+        {
+            Task.Run(() =>
+            {
+                var backendArchivePath = Path.GetFullPath("./chaiNNer.7z");
+
+                if (File.Exists(backendArchivePath))
+                {
+                    IsExtractingBackend = true;
+                    using ArchiveFile archiveFile = new(backendArchivePath);
+                    archiveFile.Extract(".");
+                    archiveFile.Dispose();
+                    File.Delete(backendArchivePath);
+                    IsExtractingBackend = false;
+                }
+            });
         }
     }
 }

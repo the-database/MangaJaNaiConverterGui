@@ -28,8 +28,14 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.6" />
     <PackageReference Include="Clowd.Squirrel" Version="3.0.210-g5f9f594" />
     <PackageReference Include="FluentAvaloniaUI" Version="2.0.4" />
+    <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\SevenZipExtractor\SevenZipExtractor.csproj" />
   </ItemGroup>
 
 

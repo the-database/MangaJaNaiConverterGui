@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using MangaJaNaiConverterGui.ViewModels;
 using MangaJaNaiConverterGui.Views;
+using NuGet.Versioning;
 using ReactiveUI;
 using Squirrel;
 using System.Threading.Tasks;
@@ -14,7 +15,10 @@ namespace MangaJaNaiConverterGui
     {
         public override void Initialize()
         {
-            SquirrelAwareApp.HandleEvents();
+            SquirrelAwareApp.HandleEvents(
+                onInitialInstall: OnAppInstall,
+                onAppUninstall: OnAppUninstall
+            );
             AvaloniaXamlLoader.Load(this);
         }
 
@@ -27,22 +31,18 @@ namespace MangaJaNaiConverterGui
             
             // Load the saved view model state.
             var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
-            if (state.AutoUpdateEnabled)
-            {
-                await UpdateMyApp();
-            }
             new MainWindow { DataContext = state }.Show();
             base.OnFrameworkInitializationCompleted();
         }
 
-        private static async Task UpdateMyApp()
+        private static void OnAppInstall(SemanticVersion version, IAppTools tools)
         {
-            using var mgr = new UpdateManager("https://github.com/the-database/MangaJaNaiConverterGui/releases");
-            var newVersion = await mgr.UpdateApp();
+            tools.CreateShortcutForThisExe(ShortcutLocation.StartMenu | ShortcutLocation.Desktop);
+        }
 
-            // You must restart to complete the update. 
-            // This can be done later / at any time.
-            if (newVersion != null) UpdateManager.RestartApp();
+        private static void OnAppUninstall(SemanticVersion version, IAppTools tools)
+        {
+            tools.RemoveShortcutForThisExe(ShortcutLocation.StartMenu | ShortcutLocation.Desktop);
         }
     }
 }

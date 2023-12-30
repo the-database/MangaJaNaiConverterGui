@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" 
         xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:hypertext="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
         x:Class="MangaJaNaiConverterGui.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/logo.ico"
@@ -117,7 +118,7 @@
               </StackPanel>
             </ToggleButton>
 
-            <ToggleButton FontSize="10" Margin="5,0,5,0" IsChecked="{Binding ShowAppSettings}">
+            <ToggleButton FontSize="10" Margin="5,0,5,0" IsChecked="{Binding RequestShowAppSettings}">
               <StackPanel Orientation="Horizontal">
                 <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
                 <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">App Settings</TextBlock>
@@ -129,7 +130,7 @@
         </DockPanel>
       </StackPanel>
 
-      <ScrollViewer HorizontalScrollBarVisibility="Auto">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" IsVisible="{Binding ShowMainForm}">
         <StackPanel Margin="20">
           <DockPanel>
             <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Input and Output"></TextBlock>
@@ -140,7 +141,6 @@
           <Border Classes="border"
                   IsEnabled="{Binding !Upscaling}">
             <StackPanel>
-
               <TabControl SelectedIndex="{Binding SelectedTabIndex}" Margin="0">
                 <TabItem VerticalContentAlignment="Center" FontSize="16" Margin="0">
                   <TabItem.Header>
@@ -342,15 +342,12 @@
 
     </DockPanel>
 
-    <!-- Settings Overlay? -->
-    <StackPanel IsVisible="{Binding ShowAppSettings}" Background="#40000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-      <StackPanel Width="1280" Height="720" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Gray">
+    <!-- Settings Overlay -->
+    <StackPanel IsVisible="{Binding ShowAppSettings}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,30">
+      <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
         <DockPanel>
-          <TextBlock DockPanel.Dock="Left" Margin="20,10,0,0" FontWeight="Bold" Text="App Settings"></TextBlock>
-          <ToggleButton DockPanel.Dock="Right" Margin="0,0,20,0" IsChecked="{Binding !ShowAppSettings}">
-            <materialIcons:MaterialIcon Kind="Close" />
-          </ToggleButton>
-          <Rectangle/>
+          <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="App Settings"></TextBlock>
+
         </DockPanel>
 
         <Border Classes="border">
@@ -363,15 +360,27 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-              <TextBlock Text="Current Version"></TextBlock>
-              <TextBlock Text="{Binding AppVersion}"></TextBlock>
-              <Button>Check for Updates</Button>
+              <TextBlock Text="Current Version" VerticalAlignment="Center"></TextBlock>
+              <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0"></TextBlock>
+              <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/AnimeJaNaiConverterGui/releases"/>
             </StackPanel>
           </StackPanel>
+        </Border>
 
+        <Border Classes="border">
+          <ToggleButton DockPanel.Dock="Right" Margin="10,10,0,10" IsChecked="{Binding !RequestShowAppSettings}">
+            <StackPanel Orientation="Horizontal">
+              <materialIcons:MaterialIcon Kind="ArrowBackCircle" />
+              <TextBlock Margin="5,0,0,0">Return</TextBlock>
+            </StackPanel>
+          </ToggleButton>
         </Border>
       </StackPanel>
     </StackPanel>
+
+    <Grid IsVisible="{Binding IsExtractingBackend}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Performing first time setup. This may take several minutes...</TextBlock>
+    </Grid>
   </Grid>
 
 </Window>
