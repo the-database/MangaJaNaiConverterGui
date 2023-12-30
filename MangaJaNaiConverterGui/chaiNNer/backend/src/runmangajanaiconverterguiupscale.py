@@ -384,17 +384,19 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
     """
     print(f"preprocess_worker_folder entering {input_folder_path} {output_folder_path} {output_filename}", flush=True)
     for root, dirs, files in os.walk(input_folder_path):
-        for filename in files:
 
+        for filename in files:
             # for output file, create dirs if necessary, or skip if file exists and overwrite not enabled
             input_file_base = Path(filename).stem
             filename_rel = os.path.relpath(os.path.join(root, filename), input_folder_path)
             output_filename_rel = os.path.join(os.path.dirname(filename_rel), output_filename.replace('%filename%', input_file_base))
             output_file_path = Path(os.path.join(output_folder_path, output_filename_rel))
 
+
             if filename.lower().endswith(IMAGE_EXTENSIONS): # TODO if image
                 if upscale_images:
-                    output_file_path = str(output_file_path.with_suffix(f'.{image_format}')).replace('%filename%', input_file_base)
+                    # output_file_path = str(output_file_path.with_suffix(f'.{image_format}')).replace('%filename%', input_file_base)
+                    output_file_path =  str(Path(f"{output_file_path}.{image_format}")).replace('%filename%', input_file_base) 
                     # print(f"preprocess_worker_folder overwrite={overwrite_existing_files} outfilepath={output_file_path} isfile={os.path.isfile(output_file_path)}", flush=True)
                     if not overwrite_existing_files and os.path.isfile(output_file_path):
                         print(f"file exists, skip: {output_file_path}", flush=True)
@@ -516,7 +518,7 @@ resize_height_after_upscale, resize_factor_after_upscale):
         if image is None:
             break
         image = postprocess_image(image)
-        save_image(image, os.path.join(output_folder, str(Path(file_name).with_suffix(f'.{image_format}'))), image_format,
+        save_image(image, os.path.join(output_folder, str(Path(f"{file_name}.{image_format}"))), image_format,
             lossy_compression_quality, use_lossless_compression, resize_height_after_upscale, resize_factor_after_upscale)
         print(f"PROGRESS=postprocess_worker_folder", flush=True)
 

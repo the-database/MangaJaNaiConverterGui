@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -43,7 +43,7 @@
     <None Update="chaiNNer\models\4x_MangaJaNai_Color_V1RC30booruonly_40k.pth">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="chaiNNer\models\4x_MangaJaNai_Grayscale_V1RC29_40k.pth">
+    <None Update="chaiNNer\models\4x_MangaJaNai_Grayscale_V1RC34_100k.pth">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="chaiNNer\python\python311._pth">
