@@ -6,7 +6,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <Version>0.0.8</Version>
+    <Version>0.0.9</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -48,6 +48,9 @@
     <None Update="chaiNNer\backend\src\runmangajanaiconverterguiupscale.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Content Include="chaiNNer\ImageMagick\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Update="chaiNNer\models\4x_MangaJaNai_Color_V1RC30booruonly_40k.pth">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
