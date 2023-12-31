@@ -17,4 +17,5 @@ This project provides a Windows GUI for upscaling manga images and archives with
 - [AnimeJaNaiConverterGui](https://github.com/the-database/AnimeJaNaiConverterGui): Windows GUI for video upscaling with extremely fast performance
 
 ## Acknowledgments 
-- [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. This project uses its backend for running upscaling models. 
+- [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. This project uses its backend for running upscaling models.
+- [ImageMagick](https://imagemagick.org): Image processing library.
