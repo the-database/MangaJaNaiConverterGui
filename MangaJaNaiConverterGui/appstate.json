@@ -6,7 +6,7 @@
   "InputFolderPath": "",
   "OutputFilename": "%filename%-mangajanai",
   "OutputFolderPath": "",
-  "OverwriteExistingFiles": true,
+  "OverwriteExistingFiles": false,
   "UpscaleImages": true,
   "UpscaleArchives": true,
   "AutoAdjustLevels": true,
