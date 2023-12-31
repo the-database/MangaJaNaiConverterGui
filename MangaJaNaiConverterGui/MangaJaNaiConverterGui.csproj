@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="appstate - Copy.json" />
     <None Remove="Assets\logo.ico" />
   </ItemGroup>
 
