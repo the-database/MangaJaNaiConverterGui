@@ -1,1 +1,26 @@
-{"$type":"MangaJaNaiConverterGui.ViewModels.MainWindowViewModel, MangaJaNaiConverterGui","SelectedTabIndex":0,"InputFilePath":"","InputFolderPath":"","OutputFilePath":"","OutputFolderPath":"","OverwriteExistingFiles":false,"UpscaleImages":false,"UpscaleArchives":true,"AutoAdjustLevels":false,"GrayscaleModelFilePath":"","ColorModelFilePath":"","ResizeHeightBeforeUpscale":"0","ResizeFactorBeforeUpscale":"100","ResizeHeightAfterUpscale":"0","ResizeFactorAfterUpscale":"100","WebpSelected":true,"PngSelected":false,"JpegSelected":false,"UseLosslessCompression":false,"LossyCompressionQuality":"80","ShowLossySettings":true}
+{
+  "$type": "MangaJaNaiConverterGui.ViewModels.MainWindowViewModel, MangaJaNaiConverterGui",
+  "AutoUpdateEnabled": true,
+  "SelectedTabIndex": 0,
+  "InputFilePath": "",
+  "InputFolderPath": "",
+  "OutputFilename": "%filename%-mangajanai",
+  "OutputFolderPath": "",
+  "OverwriteExistingFiles": true,
+  "UpscaleImages": true,
+  "UpscaleArchives": false,
+  "AutoAdjustLevels": false,
+  "GrayscaleModelFilePath": ".\\chaiNNer\\models\\4x_MangaJaNai_Grayscale_V1RC34_100k.pth",
+  "ColorModelFilePath": ".\\chaiNNer\\models\\4x_MangaJaNai_Color_V1RC30booruonly_40k.pth",
+  "ResizeHeightBeforeUpscale": "0",
+  "ResizeFactorBeforeUpscale": "100",
+  "ResizeHeightAfterUpscale": "0",
+  "ResizeFactorAfterUpscale": "100",
+  "WebpSelected": true,
+  "PngSelected": false,
+  "JpegSelected": false,
+  "UseLosslessCompression": false,
+  "LossyCompressionQuality": "80",
+  "ShowLossySettings": true,
+  "ShowAdvancedSettings": false
+}
