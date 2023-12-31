@@ -1,0 +1,188 @@
+
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"  />
+  <meta name="viewport" content="width=device-width, initial-scale=1"  />
+  <title>ImageMagick – Color Thresholding</title>
+  <meta name="application-name" content="ImageMagick" />
+  <meta name="description" content="" />
+  <meta name="application-url" content="https://imagemagick.org" />
+  <meta name="generator" content="PHP" />
+  <meta name="keywords" content="color, thresholding, image processing software" />
+  <meta name="rating" content="GENERAL" />
+  <meta name="robots" content="INDEX, FOLLOW" />
+  <meta name="generator" content="ImageMagick Studio LLC" />
+  <meta name="author" content="ImageMagick Studio LLC" />
+  <meta name="revisit-after" content="2 DAYS" />
+  <meta name="resource-type" content="document" />
+  <meta name="copyright" content="Copyright (c) 1999 ImageMagick Studio LLC" />
+  <meta name="distribution" content="Global" />
+  <meta name="magick-serial" content="P131-S030410-R485315270133-P82224-A6668-G1245-1" />
+  <meta property='og:url' content='../' />
+  <meta property='og:title' content='ImageMagick' />
+  <meta property='og:image' content='../images/logo.png' />
+  <meta property='og:type' content='website' />
+  <meta property='og:site_name' content='ImageMagick' />
+  <meta property='og:description' content="Create, Edit, Compose, or Convert Digital Images" />
+  <meta name="google-site-verification" content="_bMOCDpkx9ZAzBwb2kF3PRHbfUUdFj2uO8Jd1AXArz4" />
+  <link href="color-thresholding.html" rel="canonical" />
+  <link href="../images/wand.png" rel="icon" />
+  <link href="../images/wand.ico" rel="shortcut icon" />
+  <link href="assets/magick.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../"><img class="d-block" id="icon" alt="ImageMagick" width="32" height="32" src="../images/wand.ico"/></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#magick-navbars" aria-controls="magick-navbars" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="magick-navbars">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link " href="../www/download.html">Download</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../www/command-line-tools.html">Tools</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../www/command-line-processing.html">CLI</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../www/develop.html">Develop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" target="_blank" href="https://github.com/ImageMagick/ImageMagick/discussions">Community</a>
+        </li>
+        <li class="nav-item">
+          <iframe src="https://github.com/sponsors/ImageMagick/button" title="Sponsor ImageMagick" height="35" width="107" style="border: 0;"></iframe>
+        </li>
+      </ul>
+      <form class="d-flex form-inline" action="search.html">
+        <input class="form-control me-2" type="text" name="q" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit" name="sa">Search</button>
+      </form>
+    </div>
+  </div>
+  </nav>
+
+  <div class="container">
+    <script async="async" src="https://localhost/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-3129977114552745"
+      data-ad-slot="6345125851"
+      data-full-width-responsive="true"
+      data-ad-format="horizontal"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+
+  </div>
+
+  <main class="container">
+  <div class="magick-template">
+<div class="magick-header">
+<h1 class="text-center">Color Thresholding</h1>
+<p>Use color thresholding to specify a color range and return a black and white image. All colors between the start and stop colors (inclusively) become white and the rest of the image pixels become black. The two colors are separated with a hyphen between them. Thresholding, by default, take place in the sRGB colorspace.  Use the <samp>-colorspace</samp> to perform the thresholding in an alternative colorspaces (currently limited to sRGB, Gray, HSV, HSL, HCL, HSB, and HSW). Start and stop colors can be specified in any colorspace (recognized by ImageMagick), but in general, we advise you specify them in the colorspace corresponding to the <samp>-colorspace</samp> option. For colorspace Gray, be sure to use a start value lower than the stop value. Note that Hue is cyclical -- 0 and 360 are the same. However, a range of colors that spans hue = 0 may still be useful, if the start hue value is higher than the stop hue value.</p>
+
+<p>Caution is advised when mixing the colorspace of the start and stop colors and that of the image. A large range in one colorspace may map to only a narrow range in another colorspace. For example, one might naively think that <samp>sRGB(0,0,0)</samp> to <samp>sRGB(255,255,255)</samp> would produce a white image, catching all colors, even when using -colorspace HSV. But these two colors are black and white and so map only to a range of grayscale as <samp>hsv(0,0%,0%)</samp> and <samp>hsv(0,0%,100%)</samp>. For a color image, you would likely not find too many gray pixels.</p>
+
+<p>To illustrate how color thresholding performs, use this image:</p>
+
+<pre class="code">convert <var>input-image</var> -colorspace <var>XXX</var> -color-threshold <var>"start - stop"</var> <var>output-image</var></pre>
+
+<p>The following are some typical examples of use:</p>
+
+<ul><img class="img-fluid d-block" src="../images/color-thresholding.jpg" alt="[Color Thresholding]" width="265" height="333" name="color-thresholding" /></ul>
+
+<p>Start by choosing one sRGB color (somewhere on the image -- in this case the yellow of the flowers) and offset it low and high to form two sRGB colors. The lower values form the start color and the higher values form the stop color. Begin with <samp>sRGB(183,132,20)</samp>. Offset its values by +-20 to identify the start color (-) and the stop color (+); namely, R=183+-20, G=132+-20, and B=40+-20:</p>
+
+<pre class="code">magick monet.jpg -color-threshold 'sRGB(163,112,0)-sRGB(203,152,40)' monet.gif</pre>
+
+<p>this returns the outline of the yellow flower petals:</p>
+
+<ul><img class="img-fluid d-block" src="../images/color-thresholding-hsv.gif" alt="[Color Thresholding]" width="265" height="333" name="color-thresholding" /></ul>
+
+<p>Now, pick two RGB colors: <samp>sRGB(159,150,0)</samp> and <samp>sRGB(205,100,45):</samp></p>
+
+<pre class="code">magick monet.jpg -color-threshold 'sRGB(159,150,0)-sRGB(205,100,45)' monet.gif</samp></ul>
+
+<ul><img class="img-fluid d-block" src="../images/color-thresholding-rgb.gif" alt="[Color Thresholding]" width="265" height="333" name="color-thresholding" /></ul>
+
+<p>Next, select one sRGB color and convert it to HSV and offset its values low and high to generate the start and stop HSV colors. Use -colorspace HSV to convert the image to HSV. For our HSV example, we pick <samp>sRGB(183,132,20)</samp> and convert to HSV:</p>
+
+<pre class="code">
+magick xc:"srgb(183,132,20)" -colorspace HSV txt:
+# ImageMagick pixel enumeration: 1,1,65535,hsv
+0,0: (41.227,89.071%,71.7647%) #1D51E405B7B7 hsv(41.227,89.071%,71.7647%)
+</pre>
+
+<p>Now, offset its HSV values as H=41+-20, S=89+-10, and V=72+-10, to create the start color (-) and stop color (+):</p>
+
+<pre class="code">magick monet.jpg -colorspace HSV -color-threshold 'hsv(21,79%,62%)-hsv(61,99%,85%)' monet.gif</pre>
+
+<ul><img class="img-fluid d-block" src="../images/color-thresholding-rgb.gif" alt="[Color Thresholding]" width="265" height="333" name="color-thresholding" /></ul>
+
+<p>Next, pick two RGB colors. Use <samp>-colorspace HSV</samp> to convert the image to HSV, and apply the RGB start and stop colors.  Choose <samp>sRGB(158,77,33)</samp> and <samp>sRGB(213,217,2)</samp>:</p>
+
+<pre class="code">magick monet.jpg -colorspace HSV -color-threshold "sRGB(158,77,33)-sRGB(213,217,2)" monet.gif</pre>
+
+<p>Here is the expected results:</p>
+
+<ul><img class="img-fluid d-block" src="../images/color-thresholding-hsv-rgb.gif" alt="[Color Thresholding]" width="265" height="333" name="color-thresholding" /></ul>
+
+<p>Next, choose two sRGB colors and convert them to gray. Now convert the image to gray and use the gray thresholding colors.</p>
+
+<pre class="code">
+magick xc:"sRGB(159,150,0)" -colorspace gray txt:
+# ImageMagick pixel enumeration: 1,1,65535,gray
+0,0: (36259.1) #8DA38DA38DA3 gray(55.3278%)
+
+magick xc:"sRGB(205,100,45)" -colorspace gray txt:
+# ImageMagick pixel enumeration: 1,1,65535,gray
+0,0: (30418.2) #76D276D276D2 gray(46.4152%)
+</pre>
+
+<p>Notice that the start intensity must be smaller than stop intensity:</p>
+
+<pre class="code">magick monet.jpg -colorspace gray -color-threshold 'gray(46.4152%)-gray(55.3278%)' monet.gif</pre>
+
+<p>Here is the results of the color thresholding operation:</p>
+
+<ul><img class="img-fluid d-block" src="../images/color-thresholding-gray.gif" alt="[Color Thresholding]" width="265" height="333" name="Color Thresholding" /></ul>
+</div>
+  </div>
+  </main><!-- /.container -->
+  <footer class="magick-footer">
+    <div class="container-fluid">
+      <a href="../www/security-policy.html">Security</a> •
+      <a href="../www/news.html">News</a>
+     
+      <a href="color-thresholding.html#"><img class="d-inline" id="wand" alt="And Now a Touch of Magick" width="16" height="16" src="../images/wand.ico"/></a>
+     
+      <a href="../www/links.html">Related</a> •
+      <a href="../www/sitemap.html">Sitemap</a>
+   <br/>
+     <a href="../www/support.html">Sponsor</a> •
+     <a href="../www/cite.html">Cite</a> •
+     <a href="http://pgp.mit.edu/pks/lookup?op=get&amp;search=0x89AB63D48277377A">Public Key</a> •
+     <a href="../www/https://imagemagick.org/script/contact.php">Contact Us</a>
+   <br/>
+     <a href="https://github.com/imagemagick/imagemagick" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 512 499.36" width="2%" height="2%" role="img" focusable="false"><title>GitHub</title><path fill="currentColor" fill-rule="evenodd" d="M256 0C114.64 0 0 114.61 0 256c0 113.09 73.34 209 175.08 242.9 12.8 2.35 17.47-5.56 17.47-12.34 0-6.08-.22-22.18-.35-43.54-71.2 15.49-86.2-34.34-86.2-34.34-11.64-29.57-28.42-37.45-28.42-37.45-23.27-15.84 1.73-15.55 1.73-15.55 25.69 1.81 39.21 26.38 39.21 26.38 22.84 39.12 59.92 27.82 74.5 21.27 2.33-16.54 8.94-27.82 16.25-34.22-56.84-6.43-116.6-28.43-116.6-126.49 0-27.95 10-50.8 26.35-68.69-2.63-6.48-11.42-32.5 2.51-67.75 0 0 21.49-6.88 70.4 26.24a242.65 242.65 0 0 1 128.18 0c48.87-33.13 70.33-26.24 70.33-26.24 14 35.25 5.18 61.27 2.55 67.75 16.41 17.9 26.31 40.75 26.31 68.69 0 98.35-59.85 120-116.88 126.32 9.19 7.9 17.38 23.53 17.38 47.41 0 34.22-.31 61.83-.31 70.23 0 6.85 4.61 14.81 17.6 12.31C438.72 464.97 512 369.08 512 256.02 512 114.62 397.37 0 256 0z"/></svg></a> •
+     <a href="https://twitter.com/imagemagick" target="_blank" rel="noopener" aria-label="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 300 300" width="2%" height="2%" role="img" focusable="false"><title>Twitter</title><path d="M178.57 127.15 290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59h89.34M36.01 19.54H76.66l187.13 262.13h-40.66"/></svg></a>
+    <br/>
+    <small>Copyright © 1999 ImageMagick Studio LLC</small>
+    </div>
+  </footer>
+
+  <!-- Javascript assets -->
+  <script src="assets/magick.js" ></script>
+  </body>
+</html>
+<!-- Magick Cache 6th December 2023 12:04 -->

@@ -13,6 +13,7 @@ import zipfile
 import rarfile
 import time
 from multiprocessing import Queue, Process, Manager
+os.environ["MAGICK_HOME"] = r"C:\Users\jsoos\Documents\programming\MangaJaNaiConverterGui\MangaJaNaiConverterGui\chaiNNer\ImageMagick"
 from wand.image import Image as WandImage
 from wand.display import display
 

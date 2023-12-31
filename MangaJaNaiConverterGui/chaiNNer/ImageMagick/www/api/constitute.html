@@ -1,0 +1,355 @@
+
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"  />
+  <meta name="viewport" content="width=device-width, initial-scale=1"  />
+  <title>ImageMagick – MagickCore, C API: Constitute an Image</title>
+  <meta name="application-name" content="ImageMagick" />
+  <meta name="description" content="" />
+  <meta name="application-url" content="https://imagemagick.org" />
+  <meta name="generator" content="PHP" />
+  <meta name="keywords" content="magickcore, c, api:, constitute, an, image, image processing software" />
+  <meta name="rating" content="GENERAL" />
+  <meta name="robots" content="INDEX, FOLLOW" />
+  <meta name="generator" content="ImageMagick Studio LLC" />
+  <meta name="author" content="ImageMagick Studio LLC" />
+  <meta name="revisit-after" content="2 DAYS" />
+  <meta name="resource-type" content="document" />
+  <meta name="copyright" content="Copyright (c) 1999 ImageMagick Studio LLC" />
+  <meta name="distribution" content="Global" />
+  <meta name="magick-serial" content="P131-S030410-R485315270133-P82224-A6668-G1245-1" />
+  <meta property='og:url' content='../../' />
+  <meta property='og:title' content='ImageMagick' />
+  <meta property='og:image' content='../../../images/logo.png' />
+  <meta property='og:type' content='website' />
+  <meta property='og:site_name' content='ImageMagick' />
+  <meta property='og:description' content="Create, Edit, Compose, or Convert Digital Images" />
+  <meta name="google-site-verification" content="_bMOCDpkx9ZAzBwb2kF3PRHbfUUdFj2uO8Jd1AXArz4" />
+  <link href="constitute.html" rel="canonical" />
+  <link href="../../../images/wand.png" rel="icon" />
+  <link href="../../../images/wand.ico" rel="shortcut icon" />
+  <link href="../../assets/magick.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../../"><img class="d-block" id="icon" alt="ImageMagick" width="32" height="32" src="../../../images/wand.ico"/></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#magick-navbars" aria-controls="magick-navbars" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="magick-navbars">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/download.html">Download</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/command-line-tools.html">Tools</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/command-line-processing.html">CLI</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/develop.html">Develop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" target="_blank" href="https://github.com/ImageMagick/ImageMagick/discussions">Community</a>
+        </li>
+        <li class="nav-item">
+          <iframe src="https://github.com/sponsors/ImageMagick/button" title="Sponsor ImageMagick" height="35" width="107" style="border: 0;"></iframe>
+        </li>
+      </ul>
+      <form class="d-flex form-inline" action="https://imagemagick.org/script/search.php">
+        <input class="form-control me-2" type="text" name="q" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit" name="sa">Search</button>
+      </form>
+    </div>
+  </div>
+  </nav>
+
+  <div class="container">
+    <script async="async" src="https://localhost/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-3129977114552745"
+      data-ad-slot="6345125851"
+      data-full-width-responsive="true"
+      data-ad-format="horizontal"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+
+  </div>
+
+  <main class="container">
+  <div class="magick-template">
+<br/>
+<div class="btn-group">
+<button class="btn btn-secondary dropdown-toggle" type="button" id="defaultDropdown" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+  Select API Method
+</button>
+<ul class="dropdown-menu pre-scrollable" aria-labelledby="defaultDropdown">
+  <li><a href="constitute.html#ConstituteImage">ConstituteImage</a></li>
+  <li><a href="constitute.html#PingImage">PingImage</a></li>
+  <li><a href="constitute.html#PingImages">PingImages</a></li>
+  <li><a href="constitute.html#ReadImage">ReadImage</a></li>
+  <li><a href="constitute.html#ReadImages">ReadImages</a></li>
+  <li><a href="constitute.html#WriteImage">WriteImage</a></li>
+</ul>
+</div>
+<br/>
+<br/>
+<div class="magick-header">
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="ConstituteImage">ConstituteImage</a></h2>
+
+<p>ConstituteImage() returns an image from the pixel data you supply. The pixel data must be in scanline order top-to-bottom.  The data can be char, short int, int, float, or double.  Float and double require the pixels to be normalized [0..1], otherwise [0..QuantumRange].  For example, to create a 640x480 image from unsigned red-green-blue character data, use:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>image = ConstituteImage(640,480,"RGB",CharPixel,pixels,&amp;exception);
+</samp></pre>
+
+<p>The format of the ConstituteImage method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>Image *ConstituteImage(const size_t columns,const size_t rows,
+  const char *map,const StorageType storage,const void *pixels,
+  ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>columns</dt>
+<dd>width in pixels of the image. </dd>
+
+<dd> </dd>
+<dt>rows</dt>
+<dd>height in pixels of the image. </dd>
+
+<dd> </dd>
+<dt>map</dt>
+<dd> This string reflects the expected ordering of the pixel array. It can be any combination or order of R = red, G = green, B = blue, A = alpha (0 is transparent), O = opacity (0 is opaque), C = cyan, Y = yellow, M = magenta, K = black, I = intensity (for grayscale), P = pad. </dd>
+
+<dd> </dd>
+<dt>storage</dt>
+<dd>Define the data type of the pixels.  Float and double types are expected to be normalized [0..1] otherwise [0..QuantumRange].  Choose from these types: CharPixel, DoublePixel, FloatPixel, IntegerPixel, LongPixel, QuantumPixel, or ShortPixel. </dd>
+
+<dd> </dd>
+<dt>pixels</dt>
+<dd>This array of values contain the pixel components as defined by map and type.  You must preallocate this array where the expected length varies depending on the values of width, height, map, and type. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="PingImage">PingImage</a></h2>
+
+<p>PingImage() returns all the properties of an image or image sequence except for the pixels.  It is much faster and consumes far less memory than ReadImage().  On failure, a NULL image is returned and exception describes the reason for the failure.</p>
+
+<p>The format of the PingImage method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>Image *PingImage(const ImageInfo *image_info,ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>image_info</dt>
+<dd>Ping the image defined by the file or filename members of this structure. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="PingImages">PingImages</a></h2>
+
+<p>PingImages() pings one or more images and returns them as an image list.</p>
+
+<p>The format of the PingImage method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>Image *PingImages(ImageInfo *image_info,const char *filename,
+  ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>image_info</dt>
+<dd>the image info. </dd>
+
+<dd> </dd>
+<dt>filename</dt>
+<dd>the image filename. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="ReadImage">ReadImage</a></h2>
+
+<p>ReadImage() reads an image or image sequence from a file or file handle. The method returns a NULL if there is a memory shortage or if the image cannot be read.  On failure, a NULL image is returned and exception describes the reason for the failure.</p>
+
+<p>The format of the ReadImage method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>Image *ReadImage(const ImageInfo *image_info,ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>image_info</dt>
+<dd>Read the image defined by the file or filename members of this structure. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="ReadImages">ReadImages</a></h2>
+
+<p>ReadImages() reads one or more images and returns them as an image list.</p>
+
+<p>The format of the ReadImage method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>Image *ReadImages(ImageInfo *image_info,const char *filename,
+  ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>image_info</dt>
+<dd>the image info. </dd>
+
+<dd> </dd>
+<dt>filename</dt>
+<dd>the image filename. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="WriteImage">WriteImage</a></h2>
+
+<p>WriteImage() writes an image or an image sequence to a file or file handle. If writing to a file is on disk, the name is defined by the filename member of the image structure.  WriteImage() returns MagickFalse is there is a memory shortage or if the image cannot be written.  Check the exception member of image to determine the cause for any failure.</p>
+
+<p>The format of the WriteImage method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType WriteImage(const ImageInfo *image_info,Image *image,
+  ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>image_info</dt>
+<dd>the image info. </dd>
+
+<dd> </dd>
+<dt>image</dt>
+<dd>the image. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickCore/constitute_8c.html" id="WriteImages">WriteImages</a></h2>
+
+<p>WriteImages() writes an image sequence into one or more files.  While WriteImage() can write an image sequence, it is limited to writing the sequence into a single file using a format which supports multiple frames.   WriteImages(), however, does not have this limitation, instead it generates multiple output files if necessary (or when requested).  When ImageInfo's adjoin flag is set to MagickFalse, the file name is expected to include a printf-style formatting string for the frame number (e.g. "image02d.png").</p>
+
+<p>The format of the WriteImages method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType WriteImages(const ImageInfo *image_info,Image *images,
+  const char *filename,ExceptionInfo *exception)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>image_info</dt>
+<dd>the image info. </dd>
+
+<dd> </dd>
+<dt>images</dt>
+<dd>the image list. </dd>
+
+<dd> </dd>
+<dt>filename</dt>
+<dd>the image filename. </dd>
+
+<dd> </dd>
+<dt>exception</dt>
+<dd>return any errors or warnings in this structure. </dd>
+
+<dd>  </dd>
+</dl>
+</div>
+  </div>
+  </main><!-- /.container -->
+  <footer class="magick-footer">
+    <div class="container-fluid">
+      <a href="../../www/security-policy.html">Security</a> •
+      <a href="../../www/news.html">News</a>
+     
+      <a href="constitute.html#"><img class="d-inline" id="wand" alt="And Now a Touch of Magick" width="16" height="16" src="../../../images/wand.ico"/></a>
+     
+      <a href="../../www/links.html">Related</a> •
+      <a href="../../www/sitemap.html">Sitemap</a>
+   <br/>
+     <a href="../../www/support.html">Sponsor</a> •
+     <a href="../../www/cite.html">Cite</a> •
+     <a href="http://pgp.mit.edu/pks/lookup?op=get&amp;search=0x89AB63D48277377A">Public Key</a> •
+     <a href="../../www/contact.html">Contact Us</a>
+   <br/>
+     <a href="https://github.com/imagemagick/imagemagick" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 512 499.36" width="2%" height="2%" role="img" focusable="false"><title>GitHub</title><path fill="currentColor" fill-rule="evenodd" d="M256 0C114.64 0 0 114.61 0 256c0 113.09 73.34 209 175.08 242.9 12.8 2.35 17.47-5.56 17.47-12.34 0-6.08-.22-22.18-.35-43.54-71.2 15.49-86.2-34.34-86.2-34.34-11.64-29.57-28.42-37.45-28.42-37.45-23.27-15.84 1.73-15.55 1.73-15.55 25.69 1.81 39.21 26.38 39.21 26.38 22.84 39.12 59.92 27.82 74.5 21.27 2.33-16.54 8.94-27.82 16.25-34.22-56.84-6.43-116.6-28.43-116.6-126.49 0-27.95 10-50.8 26.35-68.69-2.63-6.48-11.42-32.5 2.51-67.75 0 0 21.49-6.88 70.4 26.24a242.65 242.65 0 0 1 128.18 0c48.87-33.13 70.33-26.24 70.33-26.24 14 35.25 5.18 61.27 2.55 67.75 16.41 17.9 26.31 40.75 26.31 68.69 0 98.35-59.85 120-116.88 126.32 9.19 7.9 17.38 23.53 17.38 47.41 0 34.22-.31 61.83-.31 70.23 0 6.85 4.61 14.81 17.6 12.31C438.72 464.97 512 369.08 512 256.02 512 114.62 397.37 0 256 0z"/></svg></a> •
+     <a href="https://twitter.com/imagemagick" target="_blank" rel="noopener" aria-label="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 300 300" width="2%" height="2%" role="img" focusable="false"><title>Twitter</title><path d="M178.57 127.15 290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59h89.34M36.01 19.54H76.66l187.13 262.13h-40.66"/></svg></a>
+    <br/>
+    <small>Copyright © 1999 ImageMagick Studio LLC</small>
+    </div>
+  </footer>
+
+  <!-- Javascript assets -->
+  <script src="../../assets/magick.js" ></script>
+  </body>
+</html>

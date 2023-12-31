@@ -1,0 +1,377 @@
+
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"  />
+  <meta name="viewport" content="width=device-width, initial-scale=1"  />
+  <title>ImageMagick – MagickCore, Low-level C API</title>
+  <meta name="application-name" content="ImageMagick" />
+  <meta name="description" content="" />
+  <meta name="application-url" content="https://imagemagick.org" />
+  <meta name="generator" content="PHP" />
+  <meta name="keywords" content="magickcore, low-level, c, api, image processing software" />
+  <meta name="rating" content="GENERAL" />
+  <meta name="robots" content="INDEX, FOLLOW" />
+  <meta name="generator" content="ImageMagick Studio LLC" />
+  <meta name="author" content="ImageMagick Studio LLC" />
+  <meta name="revisit-after" content="2 DAYS" />
+  <meta name="resource-type" content="document" />
+  <meta name="copyright" content="Copyright (c) 1999 ImageMagick Studio LLC" />
+  <meta name="distribution" content="Global" />
+  <meta name="magick-serial" content="P131-S030410-R485315270133-P82224-A6668-G1245-1" />
+  <meta property='og:url' content='../' />
+  <meta property='og:title' content='ImageMagick' />
+  <meta property='og:image' content='../images/logo.png' />
+  <meta property='og:type' content='website' />
+  <meta property='og:site_name' content='ImageMagick' />
+  <meta property='og:description' content="Create, Edit, Compose, or Convert Digital Images" />
+  <meta name="google-site-verification" content="_bMOCDpkx9ZAzBwb2kF3PRHbfUUdFj2uO8Jd1AXArz4" />
+  <link href="magick-core.html" rel="canonical" />
+  <link href="../images/wand.png" rel="icon" />
+  <link href="../images/wand.ico" rel="shortcut icon" />
+  <link href="assets/magick.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../"><img class="d-block" id="icon" alt="ImageMagick" width="32" height="32" src="../images/wand.ico"/></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#magick-navbars" aria-controls="magick-navbars" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="magick-navbars">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link " href="../www/download.html">Download</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../www/command-line-tools.html">Tools</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../www/command-line-processing.html">CLI</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../www/develop.html">Develop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" target="_blank" href="https://github.com/ImageMagick/ImageMagick/discussions">Community</a>
+        </li>
+        <li class="nav-item">
+          <iframe src="https://github.com/sponsors/ImageMagick/button" title="Sponsor ImageMagick" height="35" width="107" style="border: 0;"></iframe>
+        </li>
+      </ul>
+      <form class="d-flex form-inline" action="search.html">
+        <input class="form-control me-2" type="text" name="q" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit" name="sa">Search</button>
+      </form>
+    </div>
+  </div>
+  </nav>
+
+  <div class="container">
+    <script async="async" src="https://localhost/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-3129977114552745"
+      data-ad-slot="6345125851"
+      data-full-width-responsive="true"
+      data-ad-format="horizontal"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+
+  </div>
+
+  <main class="container">
+  <div class="magick-template">
+<div class="magick-header">
+<h1 class="text-center">MagickCore Image API for C</h1>
+<p  class="lead magick-description">The <a href="api/MagickCore/index.html">MagickCore API</a> is a low-level interface between the C programming language and the ImageMagick image processing libraries and is recommended for wizard-level programmers only.  Unlike the <a href="api/MagickWand/index.html">MagickWand</a> C API which uses only a few opaque types and accessors, with MagickCore you almost exclusively access the structure members directly.  A description of the MagickCore public methods are found here:</p>
+
+<ul>
+  <li><a href="api/magick.html">Initialize or Destroy the ImageMagick Environment</a></li>
+  <li><a href="api/constitute.html">Constitute an Image</a></li>
+  <li><a href="api/composite.html">Composite an Image</a></li>
+  <li><a href="api/image.html">Image Methods</a></li>
+  <li><a href="api/channel.html">Image Channel Methods</a></li>
+  <li><a href="api/color.html">Count the Colors in an Image</a></li>
+  <li><a href="api/colormap.html">Colormap Methods</a></li>
+  <li><a href="api/colorspace.html">Colorspace Methods</a></li>
+  <li><a href="api/distort.html">Image Distortions</a></li>
+  <li><a href="api/layer.html">Dealing with Image Layers</a></li>
+  <li><a href="api/profile.html">Dealing with Image Profiles</a></li>
+  <li><a href="api/quantize.html">Reduce the Number of Unique Colors in an Image</a></li>
+  <li><a href="api/histogram.html">Image Histograms</a></li>
+  <li><a href="api/segment.html">Segment an Image with Thresholding Fuzzy c-Means</a></li>
+  <li><a href="api/resize.html">Resize an Image</a></li>
+  <li><a href="api/transform.html">Transform an Image</a></li>
+  <li><a href="api/shear.html">Shear or Rotate an Image by an Arbitrary Angle</a></li>
+  <li><a href="api/enhance.html">Enhance an Image</a></li>
+  <li><a href="api/effect.html">Add an Effect</a></li>
+  <li><a href="api/morphology.html">Morphological Erosions, Dilations, Openings, and Closings</a></li>
+  <li><a href="api/fx.html">Add a Special Effect</a></li>
+  <li><a href="api/decorate.html">Decorate an Image</a></li>
+  <li><a href="api/attribute.html">Get/Set an Image Attribute</a></li>
+  <li><a href="api/property.html">Get/Set Image Properties</a></li>
+  <li><a href="api/statistic.html">Get Image Statistics</a></li>
+  <li><a href="api/feature.html">Get Image Features</a></li>
+  <li><a href="api/annotate.html">Annotate an Image</a></li>
+  <li><a href="api/paint.html">Paint on an Image</a></li>
+  <li><a href="api/draw.html">Draw on an Image</a></li>
+  <li><a href="api/montage.html">Create an Image Thumbnail</a></li>
+  <li><a href="api/fourier.html">Compute the discrete Fourier transform (DFT)</a></li>
+  <li><a href="api/compare.html">Compare an Image to a Reconstructed Image</a></li>
+  <li><a href="api/vision.html">Computer Vision</a></li>
+  <li><a href="api/display.html">Interactively Display and Edit an Image</a></li>
+  <li><a href="api/animate.html">Interactively Animate an Image Sequence</a></li>
+  <li><a href="api/cipher.html">Convert to and from Cipher Pixels</a></li>
+  <li><a href="api/list.html">Working with Image Lists</a></li>
+  <li><a href="api/image-view.html">Image View Methods</a></li>
+  <li><a href="api/image-cache.html">Image Cache Methods</a></li>
+  <li><a href="api/cache.html">Get or Set Image Pixels</a></li>
+  <li><a href="api/cache-view.html">Working with Cache Views</a></li>
+  <li><a href="api/stream.html">The Pixel FIFO</a></li>
+  <li><a href="api/blob.html">Read or Write Binary Large OBjects</a></li>
+  <li><a href="api/module.html">Loadable Modules</a></li>
+  <li><a href="api/signature.html">Compute a Message Digest for an Image</a></li>
+  <li><a href="api/registry.html">The Image Registry</a></li>
+  <li><a href="api/exception.html">Dealing with Exceptions</a></li>
+  <li><a href="api/memory.html">Memory Allocation</a></li>
+  <li><a href="api/resource.html">Monitor or Limit Resource Consumption</a></li>
+  <li><a href="api/monitor.html">Monitor the Progress of an Image Operation</a></li>
+  <li><a href="api/version.html">Get the Version and Copyrights</a></li>
+  <li><a href="api/mime.html">Mime Methods</a></li>
+  <li><a href="api/deprecate.html">Deprecated Methods</a></li>
+  <li><a href="exception.html">Error and Warning Codes</a></li>
+</ul>
+
+<p>After you write your MagickCore program, compile it like this:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>cc -o core core.c `pkg-config --cflags --libs MagickWand`</samp></pre>
+
+<p>Set the <samp>PKG_CONFIG_PATH</samp> environment variable if ImageMagick is not in your default system path:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig </samp></pre>
+
+<p>Here is a example program that utilizes the MagickCore API to get you started, <a href="https://imagemagick.org/source/core.c">core.c</a>. It reads a GIF image, creates a thumbnail, and writes it to disk in the PNG image format.</p>
+
+<pre class="pre-scrollable bg-light text-dark mx-4"><samp>#include &lt;stdio.h>
+#include &lt;stdlib.h>
+#include &lt;string.h>
+#include &lt;time.h>
+#include &lt;MagickCore/MagickCore.h>
+
+int main(int argc,char **argv)
+{
+  ExceptionInfo
+    *exception;
+
+  Image
+    *image,
+    *images,
+    *resize_image,
+    *thumbnails;
+
+  ImageInfo
+    *image_info;
+
+  if (argc != 3)
+    {
+      (void) fprintf(stdout,"Usage: %s image thumbnail\n",argv[0]);
+      exit(0);
+    }
+  /*
+    Initialize the image info structure and read an image.
+  */
+  MagickCoreGenesis(*argv,MagickTrue);
+  exception=AcquireExceptionInfo();
+  image_info=CloneImageInfo((ImageInfo *) NULL);
+  (void) strcpy(image_info-&gt;filename,argv[1]);
+  images=ReadImage(image_info,exception);
+  if (exception-&gt;severity != UndefinedException)
+    CatchException(exception);
+  if (images == (Image *) NULL)
+    exit(1);
+  /*
+    Convert the image to a thumbnail.
+  */
+  thumbnails=NewImageList();
+  while ((image=RemoveFirstImageFromList(&amp;images)) != (Image *) NULL)
+  {
+    resize_image=ResizeImage(image,106,80,LanczosFilter,exception);
+    if (resize_image == (Image *) NULL)
+      MagickError(exception-&gt;severity,exception-&gt;reason,exception-&gt;description);
+    (void) AppendImageToList(&amp;thumbnails,resize_image);
+    DestroyImage(image);
+  }
+  /*
+    Write the image thumbnail.
+  */
+  (void) strcpy(thumbnails-&gt;filename,argv[2]);
+  WriteImage(image_info,thumbnails,exception);
+  /*
+    Destroy the image thumbnail and exit.
+  */
+  thumbnails=DestroyImageList(thumbnails);
+  image_info=DestroyImageInfo(image_info);
+  exception=DestroyExceptionInfo(exception);
+  MagickCoreTerminus();
+  return(0);
+}</samp></pre>
+<p><a class="anchor" id="image-view"></a>Now lets perform the same contrast enhancement while taking advantage of our dual or quad-core processing system by running the algorithm in parallel utilizing wand views.  The <a href="https://imagemagick.org/source/core/sigmoidal-contrast.c">sigmoidal-contrast.c</a> module reads an image, applies sigmoidal non-linearity contrast control, and writes the result to disk just like the previous contrast enhancement program, but now it does its work in parallel (assumes ImageMagick is built with OpenMP support).</p>
+
+<pre class="pre-scrollable bg-light text-dark mx-4"><samp>#include &lt;stdio.h>
+#include &lt;stdlib.h>
+#include &lt;math.h>
+#include &lt;MagickCore/MagickCore.h>
+
+static MagickBooleanType SigmoidalContrast(ImageView *contrast_view,
+  const ssize_t y,const int id,void *context)
+{
+#define QuantumScale  ((MagickRealType) 1.0/(MagickRealType) QuantumRange)
+#define SigmoidalContrast(x) \
+  (QuantumRange*(1.0/(1+exp(10.0*(0.5-QuantumScale*x)))-0.0066928509)*1.0092503)
+
+  RectangleInfo
+    extent;
+
+  register IndexPacket
+    *indexes;
+
+  register PixelPacket
+    *pixels;
+
+  register ssize_t
+    x;
+
+  extent=GetImageViewExtent(contrast_view);
+  pixels=GetImageViewAuthenticPixels(contrast_view);
+  for (x=0; x &lt; (ssize_t) (extent.width-extent.x); x++)
+  {
+    SetPixelRed(pixels,RoundToQuantum(SigmoidalContrast(GetPixelRed(pixels)));
+    SetPixelGreen(pixels,RoundToQuantum(SigmoidalContrast(GetPixelGreen(pixels)));
+    SetPixelBlue(pixels,RoundToQuantum(SigmoidalContrast(GetPixelBlue(pixels)));
+    SetPixelOpacity(pixels,RoundToQuantum(SigmoidalContrast(GetPixelOpacity(pixels)));
+    pixels++;
+  }
+  indexes=GetImageViewAuthenticIndexes(contrast_view);
+  if (indexes != (IndexPacket *) NULL)
+    for (x=0; x &lt; (ssize_t) (extent.width-extent.x); x++)
+      SetPixelIndex(indexes+x,RoundToQuantum(SigmoidalContrast(GetPixelIndex(indexes+x))));
+  return(MagickTrue);
+}
+
+int main(int argc,char **argv)
+{
+#define ThrowImageException(image) \
+{ \
+ \
+  CatchException(exception); \
+  if (contrast_image != (Image *) NULL) \
+    contrast_image=DestroyImage(contrast_image); \
+  exit(-1); \
+}
+#define ThrowViewException(view) \
+{ \
+  char \
+    *description; \
+ \
+  ExceptionType \
+    severity; \
+ \
+  description=GetImageViewException(view,&amp;severity); \
+  (void) fprintf(stderr,"%s %s %lu %s\n",GetMagickModule(),description); \
+  description=DestroyString(description); \
+  exit(-1); \
+}
+
+  ExceptionInfo
+    *exception;
+
+  Image
+    *contrast_image;
+
+  ImageInfo
+    *image_info;
+
+  ImageView
+    *contrast_view;
+
+  MagickBooleanType
+    status;
+
+  if (argc != 3)
+    {
+      (void) fprintf(stdout,"Usage: %s image sigmoidal-image\n",argv[0]);
+      exit(0);
+    }
+  /*
+    Read an image.
+  */
+  MagickCoreGenesis(*argv,MagickTrue);
+  image_info=AcquireImageInfo();
+  (void) CopyMagickString(image_info->filename,argv[1],MaxTextExtent);
+  exception=AcquireExceptionInfo();
+  contrast_image=ReadImage(image_info,exception);
+  if (contrast_image == (Image *) NULL)
+    ThrowImageException(contrast_image);
+  /*
+    Sigmoidal non-linearity contrast control.
+  */
+  contrast_view=NewImageView(contrast_image);
+  if (contrast_view == (ImageView *) NULL)
+    ThrowImageException(contrast_image);
+  status=UpdateImageViewIterator(contrast_view,SigmoidalContrast,(void *) NULL);
+  if (status == MagickFalse)
+    ThrowImageException(contrast_image);
+  contrast_view=DestroyImageView(contrast_view);
+  /*
+    Write the image then destroy it.
+  */
+  status=WriteImages(image_info,contrast_image,argv[2],exception);
+  if (status == MagickFalse)
+    ThrowImageException(contrast_image);
+  contrast_image=DestroyImage(contrast_image);
+  exception=DestroyExceptionInfo(exception);
+  image_info=DestroyImageInfo(image_info);
+  MagickCoreTerminus();
+  return(0);
+}</samp></pre>
+<p><samp>MagickCoreTerminus()</samp> is a function in the ImageMagick library that is used to clean up and release resources when shutting down an application that uses ImageMagick. This function should be called in the primary thread of the application's process during the shutdown process. It's crucial that this function is invoked only after any threads that are using ImageMagick functions have terminated.</p>
+
+<p>ImageMagick might internally use threads via OpenMP (a method for parallel programming). As a result, it's important to ensure that any function calls into ImageMagick have completed before calling <samp>MagickCoreTerminus()</samp>. This prevents issues with OpenMP worker threads accessing resources that are destroyed by this termination function.</p>
+
+<p>If OpenMP is being used (starting from version 5.0), the OpenMP implementation itself handles starting and stopping worker threads and allocating and freeing resources using its own methods. This means that after calling <samp>MagickCoreTerminus()</samp>, some OpenMP resources and worker threads might still remain allocated. To address this, the function <samp>omp_pause_resource_all(omp_pause_hard)</samp> can be invoked. This function, introduced in OpenMP version 5.0, ensures that any resources allocated by OpenMP (such as threads and thread-specific memory) are freed. It's recommended to call this function after <samp>MagickCoreTerminus()</samp> has completed its execution.</p>
+</div>
+  </div>
+  </main><!-- /.container -->
+  <footer class="magick-footer">
+    <div class="container-fluid">
+      <a href="../www/security-policy.html">Security</a> •
+      <a href="../www/news.html">News</a>
+     
+      <a href="magick-core.html#"><img class="d-inline" id="wand" alt="And Now a Touch of Magick" width="16" height="16" src="../images/wand.ico"/></a>
+     
+      <a href="../www/links.html">Related</a> •
+      <a href="../www/sitemap.html">Sitemap</a>
+   <br/>
+     <a href="../www/support.html">Sponsor</a> •
+     <a href="../www/cite.html">Cite</a> •
+     <a href="http://pgp.mit.edu/pks/lookup?op=get&amp;search=0x89AB63D48277377A">Public Key</a> •
+     <a href="../www/https://imagemagick.org/script/contact.php">Contact Us</a>
+   <br/>
+     <a href="https://github.com/imagemagick/imagemagick" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 512 499.36" width="2%" height="2%" role="img" focusable="false"><title>GitHub</title><path fill="currentColor" fill-rule="evenodd" d="M256 0C114.64 0 0 114.61 0 256c0 113.09 73.34 209 175.08 242.9 12.8 2.35 17.47-5.56 17.47-12.34 0-6.08-.22-22.18-.35-43.54-71.2 15.49-86.2-34.34-86.2-34.34-11.64-29.57-28.42-37.45-28.42-37.45-23.27-15.84 1.73-15.55 1.73-15.55 25.69 1.81 39.21 26.38 39.21 26.38 22.84 39.12 59.92 27.82 74.5 21.27 2.33-16.54 8.94-27.82 16.25-34.22-56.84-6.43-116.6-28.43-116.6-126.49 0-27.95 10-50.8 26.35-68.69-2.63-6.48-11.42-32.5 2.51-67.75 0 0 21.49-6.88 70.4 26.24a242.65 242.65 0 0 1 128.18 0c48.87-33.13 70.33-26.24 70.33-26.24 14 35.25 5.18 61.27 2.55 67.75 16.41 17.9 26.31 40.75 26.31 68.69 0 98.35-59.85 120-116.88 126.32 9.19 7.9 17.38 23.53 17.38 47.41 0 34.22-.31 61.83-.31 70.23 0 6.85 4.61 14.81 17.6 12.31C438.72 464.97 512 369.08 512 256.02 512 114.62 397.37 0 256 0z"/></svg></a> •
+     <a href="https://twitter.com/imagemagick" target="_blank" rel="noopener" aria-label="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 300 300" width="2%" height="2%" role="img" focusable="false"><title>Twitter</title><path d="M178.57 127.15 290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59h89.34M36.01 19.54H76.66l187.13 262.13h-40.66"/></svg></a>
+    <br/>
+    <small>Copyright © 1999 ImageMagick Studio LLC</small>
+    </div>
+  </footer>
+
+  <!-- Javascript assets -->
+  <script src="assets/magick.js" ></script>
+  </body>
+</html>
+<!-- Magick Cache 6th December 2023 11:16 -->

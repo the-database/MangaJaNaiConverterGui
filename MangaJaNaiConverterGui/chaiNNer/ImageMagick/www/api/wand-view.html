@@ -1,0 +1,597 @@
+
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"  />
+  <meta name="viewport" content="width=device-width, initial-scale=1"  />
+  <title>ImageMagick – MagickWand, C API: Wand View Methods</title>
+  <meta name="application-name" content="ImageMagick" />
+  <meta name="description" content="" />
+  <meta name="application-url" content="https://imagemagick.org" />
+  <meta name="generator" content="PHP" />
+  <meta name="keywords" content="magickwc, api:, wview, methods, image processing software" />
+  <meta name="rating" content="GENERAL" />
+  <meta name="robots" content="INDEX, FOLLOW" />
+  <meta name="generator" content="ImageMagick Studio LLC" />
+  <meta name="author" content="ImageMagick Studio LLC" />
+  <meta name="revisit-after" content="2 DAYS" />
+  <meta name="resource-type" content="document" />
+  <meta name="copyright" content="Copyright (c) 1999 ImageMagick Studio LLC" />
+  <meta name="distribution" content="Global" />
+  <meta name="magick-serial" content="P131-S030410-R485315270133-P82224-A6668-G1245-1" />
+  <meta property='og:url' content='../../' />
+  <meta property='og:title' content='ImageMagick' />
+  <meta property='og:image' content='../../../images/logo.png' />
+  <meta property='og:type' content='website' />
+  <meta property='og:site_name' content='ImageMagick' />
+  <meta property='og:description' content="Create, Edit, Compose, or Convert Digital Images" />
+  <meta name="google-site-verification" content="_bMOCDpkx9ZAzBwb2kF3PRHbfUUdFj2uO8Jd1AXArz4" />
+  <link href="wand-view.html" rel="canonical" />
+  <link href="../../../images/wand.png" rel="icon" />
+  <link href="../../../images/wand.ico" rel="shortcut icon" />
+  <link href="../../assets/magick.css" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="../../"><img class="d-block" id="icon" alt="ImageMagick" width="32" height="32" src="../../../images/wand.ico"/></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#magick-navbars" aria-controls="magick-navbars" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="magick-navbars">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/download.html">Download</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/command-line-tools.html">Tools</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/command-line-processing.html">CLI</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="../../www/develop.html">Develop</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" target="_blank" href="https://github.com/ImageMagick/ImageMagick/discussions">Community</a>
+        </li>
+        <li class="nav-item">
+          <iframe src="https://github.com/sponsors/ImageMagick/button" title="Sponsor ImageMagick" height="35" width="107" style="border: 0;"></iframe>
+        </li>
+      </ul>
+      <form class="d-flex form-inline" action="https://imagemagick.org/script/search.php">
+        <input class="form-control me-2" type="text" name="q" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit" name="sa">Search</button>
+      </form>
+    </div>
+  </div>
+  </nav>
+
+  <div class="container">
+    <script async="async" src="https://localhost/pagead/js/adsbygoogle.js"></script>
+    <ins class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-3129977114552745"
+      data-ad-slot="6345125851"
+      data-full-width-responsive="true"
+      data-ad-format="horizontal"></ins>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+
+  </div>
+
+  <main class="container">
+  <div class="magick-template">
+<br/>
+<div class="btn-group">
+<button class="btn btn-secondary dropdown-toggle" type="button" id="defaultDropdown" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+  Select API Method
+</button>
+<ul class="dropdown-menu pre-scrollable" aria-labelledby="defaultDropdown">
+  <li><a href="wand-view.html#CloneWandView">CloneWandView</a></li>
+  <li><a href="wand-view.html#DestroyWandView">DestroyWandView</a></li>
+  <li><a href="wand-view.html#DuplexTransferWandViewIterator">DuplexTransferWandViewIterator</a></li>
+  <li><a href="wand-view.html#GetWandViewException">GetWandViewException</a></li>
+  <li><a href="wand-view.html#GetWandViewExtent">GetWandViewExtent</a></li>
+  <li><a href="wand-view.html#GetWandViewIterator">GetWandViewIterator</a></li>
+  <li><a href="wand-view.html#GetWandViewPixels">GetWandViewPixels</a></li>
+  <li><a href="wand-view.html#GetWandViewWand">GetWandViewWand</a></li>
+  <li><a href="wand-view.html#IsWandView">IsWandView</a></li>
+  <li><a href="wand-view.html#NewWandView">NewWandView</a></li>
+  <li><a href="wand-view.html#NewWandViewExtent">NewWandViewExtent</a></li>
+  <li><a href="wand-view.html#SetWandViewDescription">SetWandViewDescription</a></li>
+  <li><a href="wand-view.html#SetWandViewIterator">SetWandViewIterator</a></li>
+  <li><a href="wand-view.html#TransferWandViewIterator">TransferWandViewIterator</a></li>
+</ul>
+</div>
+<br/>
+<br/>
+<div class="magick-header">
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="CloneWandView">CloneWandView</a></h2>
+
+<p>CloneWandView() makes a copy of the specified wand view.</p>
+
+<p>The format of the CloneWandView method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>WandView *CloneWandView(const WandView *wand_view)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="DestroyWandView">DestroyWandView</a></h2>
+
+<p>DestroyWandView() deallocates memory associated with a wand view.</p>
+
+<p>The format of the DestroyWandView method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>WandView *DestroyWandView(WandView *wand_view)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="DuplexTransferWandViewIterator">DuplexTransferWandViewIterator</a></h2>
+
+<p>DuplexTransferWandViewIterator() iterates over three wand views in parallel and calls your transfer method for each scanline of the view.  The source and duplex pixel extent is not confined to the image canvas-- that is you can include negative offsets or widths or heights that exceed the image dimension.  However, the destination wand view is confined to the image canvas-- that is no negative offsets or widths or heights that exceed the image dimension are permitted.</p>
+
+<p>The callback signature is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType DuplexTransferImageViewMethod(const WandView *source,
+  const WandView *duplex,WandView *destination,const ssize_t y,
+  const int thread_id,void *context)
+</samp></pre>
+
+<p>Use this pragma if the view is not single threaded:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>    #pragma omp critical
+</samp></pre>
+
+<p>to define a section of code in your callback transfer method that must be executed by a single thread at a time.</p>
+
+<p>The format of the DuplexTransferWandViewIterator method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType DuplexTransferWandViewIterator(WandView *source,
+  WandView *duplex,WandView *destination,
+  DuplexTransferWandViewMethod transfer,void *context)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>source</dt>
+<dd>the source wand view. </dd>
+
+<dd> </dd>
+<dt>duplex</dt>
+<dd>the duplex wand view. </dd>
+
+<dd> </dd>
+<dt>destination</dt>
+<dd>the destination wand view. </dd>
+
+<dd> </dd>
+<dt>transfer</dt>
+<dd>the transfer callback method. </dd>
+
+<dd> </dd>
+<dt>context</dt>
+<dd>the user defined context. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="GetWandViewException">GetWandViewException</a></h2>
+
+<p>GetWandViewException() returns the severity, reason, and description of any error that occurs when utilizing a wand view.</p>
+
+<p>The format of the GetWandViewException method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>char *GetWandViewException(const WandView *wand_view,
+  ExceptionType *severity)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the pixel wand_view. </dd>
+
+<dd> </dd>
+<dt>severity</dt>
+<dd>the severity of the error is returned here. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="GetWandViewExtent">GetWandViewExtent</a></h2>
+
+<p>GetWandViewExtent() returns the wand view extent.</p>
+
+<p>The format of the GetWandViewExtent method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>RectangleInfo GetWandViewExtent(const WandView *wand_view)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="GetWandViewIterator">GetWandViewIterator</a></h2>
+
+<p>GetWandViewIterator() iterates over the wand view in parallel and calls your get method for each scanline of the view.  The pixel extent is not confined to the image canvas-- that is you can include negative offsets or widths or heights that exceed the image dimension.  Any updates to the pixels in your callback are ignored.</p>
+
+<p>The callback signature is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType GetImageViewMethod(const WandView *source,
+  const ssize_t y,const int thread_id,void *context)
+</samp></pre>
+
+<p>Use this pragma if the view is not single threaded:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>    #pragma omp critical
+</samp></pre>
+
+<p>to define a section of code in your callback get method that must be executed by a single thread at a time.</p>
+
+<p>The format of the GetWandViewIterator method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType GetWandViewIterator(WandView *source,
+  GetWandViewMethod get,void *context)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>source</dt>
+<dd>the source wand view. </dd>
+
+<dd> </dd>
+<dt>get</dt>
+<dd>the get callback method. </dd>
+
+<dd> </dd>
+<dt>context</dt>
+<dd>the user defined context. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="GetWandViewPixels">GetWandViewPixels</a></h2>
+
+<p>GetWandViewPixels() returns the wand view pixel_wands.</p>
+
+<p>The format of the GetWandViewPixels method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>PixelWand *GetWandViewPixels(const WandView *wand_view)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="GetWandViewWand">GetWandViewWand</a></h2>
+
+<p>GetWandViewWand() returns the magick wand associated with the wand view.</p>
+
+<p>The format of the GetWandViewWand method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickWand *GetWandViewWand(const WandView *wand_view)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="IsWandView">IsWandView</a></h2>
+
+<p>IsWandView() returns MagickTrue if the parameter is verified as a wand view object.</p>
+
+<p>The format of the IsWandView method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType IsWandView(const WandView *wand_view)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="NewWandView">NewWandView</a></h2>
+
+<p>NewWandView() returns a wand view required for all other methods in the Wand View API.</p>
+
+<p>The format of the NewWandView method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>WandView *NewWandView(MagickWand *wand)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand</dt>
+<dd>the wand. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="NewWandViewExtent">NewWandViewExtent</a></h2>
+
+<p>NewWandViewExtent() returns a wand view required for all other methods in the Wand View API.</p>
+
+<p>The format of the NewWandViewExtent method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>WandView *NewWandViewExtent(MagickWand *wand,const ssize_t x,
+  const ssize_t y,const size_t width,const size_t height)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand</dt>
+<dd>the magick wand. </dd>
+
+<dd> </dd>
+<dt>x,y,columns,rows</dt>
+<dd> These values define the perimeter of a extent of pixel_wands view. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="SetWandViewDescription">SetWandViewDescription</a></h2>
+
+<p>SetWandViewDescription() associates a description with an image view.</p>
+
+<p>The format of the SetWandViewDescription method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>void SetWandViewDescription(WandView *image_view,const char *description)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>wand_view</dt>
+<dd>the wand view. </dd>
+
+<dd> </dd>
+<dt>description</dt>
+<dd>the wand view description. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="SetWandViewIterator">SetWandViewIterator</a></h2>
+
+<p>SetWandViewIterator() iterates over the wand view in parallel and calls your set method for each scanline of the view.  The pixel extent is confined to the image canvas-- that is no negative offsets or widths or heights that exceed the image dimension.  The pixels are initially undefined and any settings you make in the callback method are automagically synced back to your image.</p>
+
+<p>The callback signature is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType SetImageViewMethod(ImageView *destination,
+  const ssize_t y,const int thread_id,void *context)
+</samp></pre>
+
+<p>Use this pragma if the view is not single threaded:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>    #pragma omp critical
+</samp></pre>
+
+<p>to define a section of code in your callback set method that must be executed by a single thread at a time.</p>
+
+<p>The format of the SetWandViewIterator method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType SetWandViewIterator(WandView *destination,
+  SetWandViewMethod set,void *context)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>destination</dt>
+<dd>the wand view. </dd>
+
+<dd> </dd>
+<dt>set</dt>
+<dd>the set callback method. </dd>
+
+<dd> </dd>
+<dt>context</dt>
+<dd>the user defined context. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="TransferWandViewIterator">TransferWandViewIterator</a></h2>
+
+<p>TransferWandViewIterator() iterates over two wand views in parallel and calls your transfer method for each scanline of the view.  The source pixel extent is not confined to the image canvas-- that is you can include negative offsets or widths or heights that exceed the image dimension. However, the destination wand view is confined to the image canvas-- that is no negative offsets or widths or heights that exceed the image dimension are permitted.</p>
+
+<p>The callback signature is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType TransferImageViewMethod(const WandView *source,
+  WandView *destination,const ssize_t y,const int thread_id,
+  void *context)
+</samp></pre>
+
+<p>Use this pragma if the view is not single threaded:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>    #pragma omp critical
+</samp></pre>
+
+<p>to define a section of code in your callback transfer method that must be executed by a single thread at a time.</p>
+
+<p>The format of the TransferWandViewIterator method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType TransferWandViewIterator(WandView *source,
+  WandView *destination,TransferWandViewMethod transfer,void *context)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>source</dt>
+<dd>the source wand view. </dd>
+
+<dd> </dd>
+<dt>destination</dt>
+<dd>the destination wand view. </dd>
+
+<dd> </dd>
+<dt>transfer</dt>
+<dd>the transfer callback method. </dd>
+
+<dd> </dd>
+<dt>context</dt>
+<dd>the user defined context. </dd>
+
+<dd>  </dd>
+</dl>
+<h2><a href="../../api/MagickWand/wand-view_8c.html" id="UpdateWandViewIterator">UpdateWandViewIterator</a></h2>
+
+<p>UpdateWandViewIterator() iterates over the wand view in parallel and calls your update method for each scanline of the view.  The pixel extent is confined to the image canvas-- that is no negative offsets or widths or heights that exceed the image dimension are permitted.  Updates to pixels in your callback are automagically synced back to the image.</p>
+
+<p>The callback signature is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType UpdateImageViewMethod(WandView *source,const ssize_t y,
+  const int thread_id,void *context)
+</samp></pre>
+
+<p>Use this pragma if the view is not single threaded:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>    #pragma omp critical
+</samp></pre>
+
+<p>to define a section of code in your callback update method that must be executed by a single thread at a time.</p>
+
+<p>The format of the UpdateWandViewIterator method is:</p>
+
+<pre class="bg-light text-dark mx-4"><samp>MagickBooleanType UpdateWandViewIterator(WandView *source,
+  UpdateWandViewMethod update,void *context)
+</samp></pre>
+
+<p>A description of each parameter follows:</p>
+
+<dd>
+</dd>
+
+<dd> </dd>
+<dl class="dl-horizontal">
+<dt>source</dt>
+<dd>the source wand view. </dd>
+
+<dd> </dd>
+<dt>update</dt>
+<dd>the update callback method. </dd>
+
+<dd> </dd>
+<dt>context</dt>
+<dd>the user defined context. </dd>
+
+<dd>  </dd>
+</dl>
+</div>
+  </div>
+  </main><!-- /.container -->
+  <footer class="magick-footer">
+    <div class="container-fluid">
+      <a href="../../www/security-policy.html">Security</a> •
+      <a href="../../www/news.html">News</a>
+     
+      <a href="wand-view.html#"><img class="d-inline" id="wand" alt="And Now a Touch of Magick" width="16" height="16" src="../../../images/wand.ico"/></a>
+     
+      <a href="../../www/links.html">Related</a> •
+      <a href="../../www/sitemap.html">Sitemap</a>
+   <br/>
+     <a href="../../www/support.html">Sponsor</a> •
+     <a href="../../www/cite.html">Cite</a> •
+     <a href="http://pgp.mit.edu/pks/lookup?op=get&amp;search=0x89AB63D48277377A">Public Key</a> •
+     <a href="../../www/contact.html">Contact Us</a>
+   <br/>
+     <a href="https://github.com/imagemagick/imagemagick" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 512 499.36" width="2%" height="2%" role="img" focusable="false"><title>GitHub</title><path fill="currentColor" fill-rule="evenodd" d="M256 0C114.64 0 0 114.61 0 256c0 113.09 73.34 209 175.08 242.9 12.8 2.35 17.47-5.56 17.47-12.34 0-6.08-.22-22.18-.35-43.54-71.2 15.49-86.2-34.34-86.2-34.34-11.64-29.57-28.42-37.45-28.42-37.45-23.27-15.84 1.73-15.55 1.73-15.55 25.69 1.81 39.21 26.38 39.21 26.38 22.84 39.12 59.92 27.82 74.5 21.27 2.33-16.54 8.94-27.82 16.25-34.22-56.84-6.43-116.6-28.43-116.6-126.49 0-27.95 10-50.8 26.35-68.69-2.63-6.48-11.42-32.5 2.51-67.75 0 0 21.49-6.88 70.4 26.24a242.65 242.65 0 0 1 128.18 0c48.87-33.13 70.33-26.24 70.33-26.24 14 35.25 5.18 61.27 2.55 67.75 16.41 17.9 26.31 40.75 26.31 68.69 0 98.35-59.85 120-116.88 126.32 9.19 7.9 17.38 23.53 17.38 47.41 0 34.22-.31 61.83-.31 70.23 0 6.85 4.61 14.81 17.6 12.31C438.72 464.97 512 369.08 512 256.02 512 114.62 397.37 0 256 0z"/></svg></a> •
+     <a href="https://twitter.com/imagemagick" target="_blank" rel="noopener" aria-label="Twitter"><svg xmlns="http://www.w3.org/2000/svg" class="navbar-nav-svg" viewBox="0 0 300 300" width="2%" height="2%" role="img" focusable="false"><title>Twitter</title><path d="M178.57 127.15 290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59h89.34M36.01 19.54H76.66l187.13 262.13h-40.66"/></svg></a>
+    <br/>
+    <small>Copyright © 1999 ImageMagick Studio LLC</small>
+    </div>
+  </footer>
+
+  <!-- Javascript assets -->
+  <script src="../../assets/magick.js" ></script>
+  </body>
+</html>
