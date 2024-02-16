@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List
 
 import cv2
 import numpy as np
@@ -31,7 +30,7 @@ HSL_LIKE = ColorSpaceDetector(1003, "HSL", [HSL, HSLA])
 LAB_LIKE = ColorSpaceDetector(1004, "L*a*b*", [LAB, LABA])
 LCH_LIKE = ColorSpaceDetector(1005, "L*C*h°", [LCH, LCHA])
 
-ALPHA_PAIRS: Dict[ColorSpace, ColorSpace] = {
+ALPHA_PAIRS: dict[ColorSpace, ColorSpace] = {
     RGB: RGBA,
     YUV: YUVA,
     HSV: HSVA,
@@ -57,7 +56,7 @@ def get_alpha_partner(c: ColorSpace) -> ColorSpace | None:
     return ALPHA_PAIRS.get(c, None)
 
 
-color_spaces: List[ColorSpace] = [
+color_spaces: list[ColorSpace] = [
     RGB,
     RGBA,
     GRAY,
@@ -73,7 +72,7 @@ color_spaces: List[ColorSpace] = [
     LCH,
     LCHA,
 ]
-color_spaces_or_detectors: List[ColorSpace | ColorSpaceDetector] = [
+color_spaces_or_detectors: list[ColorSpace | ColorSpaceDetector] = [
     RGB_LIKE,
     GRAY,
     YUV_LIKE,
@@ -157,7 +156,7 @@ def __cmyk_to_rgb(img: np.ndarray) -> np.ndarray:
 
 
 def __rgb_to_lab(img: np.ndarray) -> np.ndarray:
-    # 0≤L≤100 , −127≤a≤127, −127≤b≤127
+    # 0≤L≤100 , -127≤a≤127, -127≤b≤127
     img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l = img[:, :, 0] / 100  # type: ignore
     a = (img[:, :, 1] + 127) / 254  # type: ignore
@@ -166,7 +165,7 @@ def __rgb_to_lab(img: np.ndarray) -> np.ndarray:
 
 
 def __lab_to_rgb(img: np.ndarray) -> np.ndarray:
-    # 0≤L≤100 , −127≤a≤127, −127≤b≤127
+    # 0≤L≤100 , -127≤a≤127, -127≤b≤127
     l = img[:, :, 2] * 100
     a = img[:, :, 1] * 254 - 127
     b = img[:, :, 0] * 254 - 127
@@ -230,7 +229,7 @@ __CHANNEL_LOST = 1000
 __CHROMA_LOST = 100
 
 
-conversions: List[Conversion] = [
+conversions: list[Conversion] = [
     # RGB and grayscale
     Conversion(
         direction=(RGB, GRAY),

@@ -1,12 +1,12 @@
 # pylint: disable=relative-beyond-top-level
 from __future__ import annotations
 
-from typing import List, Optional, Union
+from typing import Union
 
 import numpy as np
 
 import navi
-from nodes.base_input import BaseInput, ErrorValue
+from api import BaseInput, ErrorValue
 
 from ...impl.color.color import Color
 from ...utils.format import format_color_with_channels, format_image_with_channels
@@ -27,7 +27,7 @@ class ImageInput(BaseInput):
         self,
         label: str = "Image",
         image_type: navi.ExpressionJson = "Image | Color",
-        channels: Union[int, List[int], None] = None,
+        channels: int | list[int] | None = None,
         allow_colors: bool = False,
     ):
         base_type = [navi.Image(channels=channels)]
@@ -36,7 +36,7 @@ class ImageInput(BaseInput):
         image_type = navi.intersect(image_type, base_type)
         super().__init__(image_type, label)
 
-        self.channels: Optional[List[int]] = (
+        self.channels: list[int] | None = (
             [channels] if isinstance(channels, int) else channels
         )
         self.allow_colors: bool = allow_colors
@@ -46,7 +46,7 @@ class ImageInput(BaseInput):
         if self.allow_colors:
             self.associated_type = Union[np.ndarray, Color]
 
-    def enforce(self, value):
+    def enforce(self, value: object):
         if isinstance(value, Color):
             if not self.allow_colors:
                 raise ValueError(
@@ -79,7 +79,7 @@ class ImageInput(BaseInput):
 
         return value
 
-    def get_error_value(self, value) -> ErrorValue:
+    def get_error_value(self, value: object) -> ErrorValue:
         def get_channels(channel: int) -> str:
             if channel == 1:
                 return "Grayscale"

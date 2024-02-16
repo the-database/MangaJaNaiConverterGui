@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from enum import Enum
-from typing import Tuple
 
 import numpy as np
 from PIL import Image
 
 from ..utils.utils import get_h_w_c
-from .image_utils import FillColor, convert_to_BGRA, normalize, to_uint8
+from .image_utils import FillColor, convert_to_bgra, normalize, to_uint8
 
 
 class InterpolationMethod(Enum):
@@ -42,7 +43,7 @@ class RotateSizeChange(Enum):
 
 
 def resize(
-    img: np.ndarray, out_dims: Tuple[int, int], interpolation: InterpolationMethod
+    img: np.ndarray, out_dims: tuple[int, int], interpolation: InterpolationMethod
 ) -> np.ndarray:
     """Perform PIL resize"""
 
@@ -73,7 +74,7 @@ def rotate(
 
     c = get_h_w_c(img)[2]
     if fill == FillColor.TRANSPARENT:
-        img = convert_to_BGRA(img, c)
+        img = convert_to_bgra(img, c)
     fill_color = tuple([x * 255 for x in fill.get_color(c)])
 
     resample = INTERPOLATION_METHODS_MAP[interpolation.interpolation_method]
@@ -83,6 +84,6 @@ def rotate(
         angle,
         resample=resample,  # type: ignore
         expand=bool(expand.value),
-        fillcolor=fill_color,
+        fillcolor=fill_color,  # type: ignore
     )
     return normalize(np.array(pimg))

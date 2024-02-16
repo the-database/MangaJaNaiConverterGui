@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import os
 import platform
 import shutil
 import subprocess
 import sys
 import uuid
+from pathlib import Path
 from tempfile import mkdtemp
-from typing import List
 
 import numpy as np
 from sanic.log import logger
@@ -14,23 +16,18 @@ from ...utils.utils import split_file_path
 from ..image_utils import cv_save_image
 from .format import SRGB_FORMATS, DxgiFormat
 
-# __TEXCONV_DIR = os.path.join(
-#     os.path.dirname(sys.modules["__main__"].__file__), "texconv"  # type: ignore
-# )
-# __TEXCONV_EXE = os.path.join(__TEXCONV_DIR, "texconv.exe")
-
 
 def __decode(b: bytes) -> str:
     try:
         return b.decode(encoding="iso8859-1")
-    except:
+    except Exception:
         try:
             return b.decode(encoding="utf-8")
-        except:
+        except Exception:
             return str(b)
 
 
-def __run_texconv(args: List[str], error_message: str):
+def __run_texconv(args: list[str], error_message: str):
     if platform.system() != "Windows":
         # texconv is only supported on Windows.
         raise ValueError(
@@ -49,7 +46,7 @@ def __run_texconv(args: List[str], error_message: str):
         logger.error(
             "\n".join(
                 [
-                    f"Failed to run texconv.",
+                    "Failed to run texconv.",
                     f"texconv: {__TEXCONV_EXE}",
                     f"args: {args}",
                     f"exit code: {result.returncode}",
@@ -60,7 +57,7 @@ def __run_texconv(args: List[str], error_message: str):
         raise ValueError(f"{error_message}: Code {result.returncode}: {output}")
 
 
-def dds_to_png_texconv(path: str) -> str:
+def dds_to_png_texconv(path: Path) -> Path:
     """
     Converts the given DDS file to PNG by creating a temporary PNG file.
     """
@@ -80,16 +77,16 @@ def dds_to_png_texconv(path: str) -> str:
             prefix,
             "-o",
             tempdir,
-            path,
+            str(path),
         ],
         "Unable to convert DDS",
     )
 
-    return os.path.join(tempdir, prefix + basename + ".png")
+    return (Path(tempdir) / (prefix + basename)).with_suffix(".png")
 
 
 def save_as_dds(
-    path: str,
+    path: Path,
     image: np.ndarray,
     dds_format: DxgiFormat,
     mipmap_levels: int = 0,
@@ -109,11 +106,11 @@ def save_as_dds(
 
     assert ext == ".dds", "The file to save must end with '.dds'"
 
-    tempDir = mkdtemp(prefix="chaiNNer-")
+    temp_dir = mkdtemp(prefix="chaiNNer-")
 
     try:
-        tempPng = os.path.join(tempDir, f"{name}.png")
-        cv_save_image(tempPng, image, [])
+        temp_png = os.path.join(temp_dir, f"{name}.png")
+        cv_save_image(temp_png, image, [])
 
         args = [
             "-y",
@@ -124,7 +121,7 @@ def save_as_dds(
             str(mipmap_levels),
             # use texconv to directly produce the target file
             "-o",
-            target_dir,
+            str(target_dir),
         ]
 
         bc = ""
@@ -141,7 +138,7 @@ def save_as_dds(
         if separate_alpha:
             args.append("-sepalpha")
 
-        args.append(tempPng)
+        args.append(temp_png)
         __run_texconv(args, "Unable to write DDS")
     finally:
-        shutil.rmtree(tempDir)
+        shutil.rmtree(temp_dir)

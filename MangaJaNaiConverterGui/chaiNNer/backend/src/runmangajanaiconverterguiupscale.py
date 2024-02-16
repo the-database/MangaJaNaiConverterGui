@@ -17,8 +17,23 @@ os.environ["MAGICK_HOME"] = os.path.abspath(r".\ImageMagick")
 from wand.image import Image as WandImage
 from wand.display import display
 
+
+from api import (
+    BaseOutput,
+    Collector,
+    ExecutionOptions,
+    InputId,
+    Iterator,
+    NodeContext,
+    NodeData,
+    NodeId,
+    OutputId,
+    SettingsParser,
+    registry,
+)
+from progress_controller import Aborted, ProgressController, ProgressToken
 from nodes.utils.utils import get_h_w_c
-from nodes.impl.image_utils import cv_save_image, to_uint8, to_uint16
+from nodes.impl.image_utils import cv_save_image, to_uint8, to_uint16, normalize
 from packages.chaiNNer_standard.image.io.load_image import load_image_node
 from packages.chaiNNer_standard.image_adjustment.adjustments.stretch_contrast import stretch_contrast_node, StretchMode
 from packages.chaiNNer_pytorch.pytorch.io.load_model import load_model_node
@@ -30,6 +45,30 @@ from nodes.impl.upscale.auto_split_tiles import (
     estimate_tile_size,
     parse_tile_size_input,
 )
+
+
+class _ExecutorNodeContext(NodeContext):
+    def __init__(self, progress: ProgressToken, settings: SettingsParser) -> None:
+        super().__init__()
+
+        self.progress = progress
+        self.__settings = settings
+
+    @property
+    def aborted(self) -> bool:
+        return self.progress.aborted
+
+    def set_progress(self, progress: float) -> None:
+        self.check_aborted()
+
+        # TODO: send progress event
+
+    @property
+    def settings(self) -> SettingsParser:
+        """
+        Returns the settings of the current node execution.
+        """
+        return self.__settings
 
 
 def mitchell_resize_wand(image, new_size):
@@ -147,7 +186,7 @@ def _read_cv_from_path(path):
 
     if img is None:
         try:
-            img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+            img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
         except Exception as e:
             raise RuntimeError(
                 f'Error reading image image from path "{path}". Image may be corrupt.'
@@ -194,14 +233,15 @@ def _read_pil(im) -> np.ndarray | None:
 
 
 def ai_upscale_image(image, is_grayscale):
+    global context
     # print(f"ai_upscale_image")
     if is_grayscale:
         if grayscale_model is not None:
             # TODO estimate vs no_tiling benchmark
-            return upscale_image_node(image, grayscale_model, ESTIMATE, False)
+            return upscale_image_node(context, image, grayscale_model, ESTIMATE, False)
     else:
         if color_model is not None:
-            return upscale_image_node(image, color_model, ESTIMATE, False)
+            return upscale_image_node(context, image, color_model, ESTIMATE, False)
     return image
 
 
@@ -362,11 +402,7 @@ resize_height_before_upscale, resize_factor_before_upscale):
                 if is_grayscale and auto_adjust_levels:
                     image = enhance_contrast(image)
                 else:
-                    # TODO ???
-                    # image = image.astype('float32')
-                    # print("?!?!?!?!?")
-                    # image = np.array(Image.fromarray(image).convert("L")).astype('float32')
-                    pass
+                    image = normalize(image)
                 upscale_queue.put((image, decoded_filename, True, is_grayscale))
         except:
             print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
@@ -419,7 +455,7 @@ lossy_compression_quality, use_lossless_compression, resize_height_after_upscale
                     if is_grayscale and auto_adjust_levels:
                         image = enhance_contrast(image)
                     else:
-                        # image = np.array(Image.fromarray(image).convert("L")).astype('float32')  # TODO ???
+                        image = normalize(image)
                         pass
                     upscale_queue.put((image, output_filename_rel, True, is_grayscale))
             elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
@@ -466,6 +502,8 @@ resize_height_before_upscale, resize_factor_before_upscale):
 
         if is_grayscale and auto_adjust_levels:
             image = enhance_contrast(image)
+        else:
+            image = normalize(image)
 
         upscale_queue.put((image, None, True, is_grayscale))
     upscale_queue.put(SENTINEL)
@@ -696,11 +734,20 @@ color_model = None
 grayscale_model = None
 system_codepage = get_system_codepage()
 
+settings = SettingsParser({
+    'use_cpu': False,
+    'use_fp16': True,
+    'gpu_index': 0,
+    'budget_limit': 0
+})
+
+context = _ExecutorNodeContext(ProgressController(), settings)
+
 if args.color_model_path:
-    color_model, dirname, basename = load_model_node(args.color_model_path)
+    color_model, dirname, basename = load_model_node(context, args.color_model_path)
 
 if args.grayscale_model_path:
-    grayscale_model, dirname, basename = load_model_node(args.grayscale_model_path)
+    grayscale_model, dirname, basename = load_model_node(context, args.grayscale_model_path)
 
 
 

@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import gc
-from typing import Dict, Generic, Iterable, Optional, Set, TypeVar
+from typing import Generic, Iterable, TypeVar
 
 from sanic.log import logger
 
-from .chain import Chain, NodeId
+from api import NodeId
+
+from .chain import Chain, Edge, FunctionNode, NewIteratorNode
 
 
 class CacheStrategy:
@@ -26,23 +30,44 @@ StaticCaching = CacheStrategy(CacheStrategy.STATIC_HITS_TO_LIVE)
 """The value is cached for the during of the execution of the chain."""
 
 
-def get_cache_strategies(chain: Chain) -> Dict[NodeId, CacheStrategy]:
+def get_cache_strategies(chain: Chain) -> dict[NodeId, CacheStrategy]:
     """Create a map with the cache strategies for all nodes in the given chain."""
 
-    result: Dict[NodeId, CacheStrategy] = {}
+    iterator_map = chain.get_parent_iterator_map()
+
+    def any_are_iterated(out_edges: list[Edge]) -> bool:
+        for out_edge in out_edges:
+            target = chain.nodes[out_edge.target.id]
+            if isinstance(target, FunctionNode) and iterator_map[target] is not None:
+                return True
+        return False
+
+    result: dict[NodeId, CacheStrategy] = {}
 
     for node in chain.nodes.values():
-        out_edges = chain.edges_from(node.id)
-        connected_to_child_node = any(
-            chain.nodes[e.target.id].parent for e in out_edges
-        )
-
         strategy: CacheStrategy
-        if node.parent is None and connected_to_child_node:
-            # free nodes that are connected to child nodes need to live as the execution
-            strategy = StaticCaching
-        else:
+
+        out_edges = chain.edges_from(node.id)
+        if isinstance(node, FunctionNode) and iterator_map[node] is not None:
+            # the function node is iterated
             strategy = CacheStrategy(len(out_edges))
+        else:
+            # the node is NOT implicitly iterated
+
+            if isinstance(node, NewIteratorNode):
+                # we only care about non-iterator outputs
+                iterator_output = node.data.single_iterator_output
+                out_edges = [
+                    out_edge
+                    for out_edge in out_edges
+                    if out_edge.source.output_id not in iterator_output.outputs
+                ]
+
+            if any_are_iterated(out_edges):
+                # some output is used by an iterated node
+                strategy = StaticCaching
+            else:
+                strategy = CacheStrategy(len(out_edges))
 
         result[node.id] = strategy
 
@@ -62,16 +87,16 @@ class _CacheEntry(Generic[T]):
 class OutputCache(Generic[T]):
     def __init__(
         self,
-        parent: Optional["OutputCache[T]"] = None,
-        static_data: Optional[Dict[NodeId, T]] = None,
+        parent: OutputCache[T] | None = None,
+        static_data: dict[NodeId, T] | None = None,
     ):
         super().__init__()
-        self.__static: Dict[NodeId, T] = static_data.copy() if static_data else {}
-        self.__counted: Dict[NodeId, _CacheEntry[T]] = {}
-        self.parent: Optional[OutputCache[T]] = parent
+        self.__static: dict[NodeId, T] = static_data.copy() if static_data else {}
+        self.__counted: dict[NodeId, _CacheEntry[T]] = {}
+        self.parent: OutputCache[T] | None = parent
 
-    def keys(self) -> Set[NodeId]:
-        keys: Set[NodeId] = set()
+    def keys(self) -> set[NodeId]:
+        keys: set[NodeId] = set()
         keys.update(self.__static.keys(), self.__counted.keys())
         if self.parent:
             keys.update(self.parent.keys())
@@ -84,10 +109,10 @@ class OutputCache(Generic[T]):
             return self.parent.has(node_id)
         return False
 
-    def get(self, node_id: NodeId) -> Optional[T]:
-        staticValue = self.__static.get(node_id, None)
-        if staticValue is not None:
-            return staticValue
+    def get(self, node_id: NodeId) -> T | None:
+        static_value = self.__static.get(node_id, None)
+        if static_value is not None:
+            return static_value
 
         counted = self.__counted.get(node_id, None)
         if counted is not None:

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple
-
-import torch.nn as nn
+from torch import nn
 
 
 class PixTransformNet(nn.Module):
@@ -10,9 +8,9 @@ class PixTransformNet(nn.Module):
         self,
         channels_in: int = 5,
         kernel_size: int = 1,
-        weights_regularizer: Tuple[float, float, float] | None = None,
+        weights_regularizer: tuple[float, float, float] | None = None,
     ):
-        super(PixTransformNet, self).__init__()
+        super().__init__()
 
         self.channels_in = channels_in
 
@@ -59,7 +57,7 @@ class PixTransformNet(nn.Module):
             {"params": self.head_net.parameters(), "weight_decay": reg_head}
         ]
 
-    def forward(self, input_):
+    def forward(self, input_):  # noqa: ANN001
         input_spatial = input_[:, self.channels_in - 2 :, :, :]
         input_color = input_[:, 0 : self.channels_in - 2, :, :]
 

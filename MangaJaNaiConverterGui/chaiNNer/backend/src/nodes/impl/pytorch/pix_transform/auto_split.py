@@ -12,7 +12,7 @@ from ...upscale.grayscale import SplitMode, grayscale_split
 from ...upscale.passthrough import passthrough_single_color
 from ...upscale.tiler import Tiler
 from ..utils import safe_cuda_cache_empty
-from .pix_transform import Params, PixTransform
+from .pix_transform import Params, pix_transform
 
 
 class _PixTiler(Tiler):
@@ -58,7 +58,7 @@ def pix_transform_auto_split(
 
     assert (
         g_h > s_h and g_w > s_w
-    ), f"The guide image mus be larger than the source image."
+    ), "The guide image mus be larger than the source image."
     assert (
         g_w / s_w == g_w // s_w and g_w / s_w == g_h / s_h
     ), "The size of the guide image must be an integer multiple of the size of the source image (e.g. 2x, 3x, 4x, ...)."
@@ -69,7 +69,7 @@ def pix_transform_auto_split(
     def upscale(tile: np.ndarray, region: Region):
         try:
             tile_guide = region.scale(scale).read_from(guide)
-            pix_op = to_op(PixTransform)(
+            pix_op = to_op(pix_transform)(
                 guide_img=np.transpose(_as_3d(tile_guide), (2, 0, 1)),
                 device=device,
                 params=params,

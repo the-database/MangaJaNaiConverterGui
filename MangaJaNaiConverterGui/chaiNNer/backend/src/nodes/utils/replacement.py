@@ -27,11 +27,11 @@ class ReplacementString:
 
         content_pattern = re.compile(r"\A\w+\Z")
 
-        lastIndex = 0
-        lastStr = ""
+        last_index = 0
+        last_str = ""
         for m in re.compile(r"(\{\{)|\{([^{}]*)\}").finditer(pattern):
-            lastStr += pattern[lastIndex : m.start()]
-            lastIndex = m.end()
+            last_str += pattern[last_index : m.start()]
+            last_index = m.end()
 
             interpolation = m.group(2)
             if interpolation is not None:
@@ -49,14 +49,14 @@ class ReplacementString:
                         f" Full pattern: {pattern}"
                     )
 
-                self.tokens.append(lastStr)
-                lastStr = ""
+                self.tokens.append(last_str)
+                last_str = ""
                 self.tokens.append(ReplacementInterpolation(interpolation))
                 self.names.add(interpolation)
             else:
-                lastStr += "{"
-        lastStr += pattern[lastIndex:]
-        self.tokens.append(lastStr)
+                last_str += "{"
+        last_str += pattern[last_index:]
+        self.tokens.append(last_str)
 
     def replace(self, replacements: dict[str, str]) -> str:
         result = ""
@@ -64,14 +64,13 @@ class ReplacementString:
         for token in self.tokens:
             if isinstance(token, str):
                 result += token
+            elif token.name in replacements:
+                result += replacements[token.name]
             else:
-                if token.name in replacements:
-                    result += replacements[token.name]
-                else:
-                    raise ValueError(
-                        "Unknown replacement."
-                        f" There is no replacement with the name or id {token.name}."
-                        f" Available replacements: {', '.join(replacements.keys()) }."
-                    )
+                raise ValueError(
+                    "Unknown replacement."
+                    f" There is no replacement with the name or id {token.name}."
+                    f" Available replacements: {', '.join(replacements.keys()) }."
+                )
 
         return result

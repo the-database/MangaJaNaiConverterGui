@@ -1,11 +1,11 @@
-from typing import Tuple, Type
+from __future__ import annotations
 
 import numpy as np
 
 from ..image_utils import MAX_VALUES_BY_DTYPE, as_3d
 
 
-def np_denorm(x: np.ndarray, min_max: Tuple[float, float] = (-1.0, 1.0)) -> np.ndarray:
+def np_denorm(x: np.ndarray, min_max: tuple[float, float] = (-1.0, 1.0)) -> np.ndarray:
     """Denormalize from [-1,1] range to [0,1]
     formula: xi' = (xi - mu)/sigma
     Example: "out = (x + 1.0) / 2.0" for denorm
@@ -44,11 +44,11 @@ def np_rgba_to_bgra(img: np.ndarray) -> np.ndarray:
 
 def np2nptensor(
     img: np.ndarray,
-    bgr2rgb=True,
-    data_range=1.0,  # pylint: disable=unused-argument
-    normalize=False,
-    change_range=True,
-    add_batch=True,
+    bgr2rgb: bool = True,
+    data_range: float = 1.0,
+    normalize: bool = False,
+    change_range: bool = True,
+    add_batch: bool = True,
 ) -> np.ndarray:
     """Converts a numpy image array into a numpy Tensor array.
     Parameters:
@@ -86,12 +86,12 @@ def np2nptensor(
 
 def nptensor2np(
     img: np.ndarray,
-    rgb2bgr=True,
-    remove_batch=True,
-    data_range=255,
-    denormalize=False,
-    change_range=True,
-    imtype: Type = np.uint8,
+    rgb2bgr: bool = True,
+    remove_batch: bool = True,
+    data_range: float = 255,
+    denormalize: bool = False,
+    change_range: bool = True,
+    imtype: type = np.uint8,
 ) -> np.ndarray:
     """Converts a Tensor array into a numpy image array.
     Parameters:
@@ -137,7 +137,9 @@ def nptensor2np(
         img_np = np_denorm(img_np)  # denormalize if needed
     if change_range:
         img_np = np.clip(
-            data_range * img_np, 0, data_range  # type: ignore
+            data_range * img_np,
+            0,
+            data_range,
         ).round()  # np.clip to the data_range
 
     # has to be in range (0,255) before changing to np.uint8, else np.float32

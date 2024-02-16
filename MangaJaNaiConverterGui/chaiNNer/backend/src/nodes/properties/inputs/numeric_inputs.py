@@ -1,18 +1,21 @@
+from __future__ import annotations
+
 import math
-from typing import List, Literal, Tuple, Union
+from typing import Literal
 
 import navi
-from nodes.base_input import BaseInput, InputConversion, InputKind
+from api import BaseInput, InputConversion, InputKind
 
 from ...utils.utils import round_half_up
+from .label import LabelStyle, get_default_label_style
 
 
-def clampNumber(
-    value: Union[float, int],
+def clamp_number(
+    value: float | int,
     precision: int,
-    min_value: Union[float, int, None],
-    max_value: Union[float, int, None],
-) -> Union[float, int]:
+    min_value: float | int | None,
+    max_value: float | int | None,
+) -> float | int:
     # Convert proper number type
     value = round_half_up(value) if precision == 0 else round(value, precision)
 
@@ -30,8 +33,8 @@ def clampNumber(
 
 
 def get_number_type(
-    min_value: Union[float, int, None],
-    max_value: Union[float, int, None],
+    min_value: float | int | None,
+    max_value: float | int | None,
     precision: int,
 ) -> navi.ExpressionJson:
     if precision > 0:
@@ -47,21 +50,21 @@ class NumberInput(BaseInput):
         self,
         label: str,
         precision: int = 0,
-        controls_step: Union[float, int, None] = None,
-        default: Union[float, int] = 0,
-        minimum: Union[float, int, None] = 0,
-        maximum: Union[float, int, None] = None,
-        unit: Union[str, None] = None,
-        note_expression: Union[str, None] = None,
+        controls_step: float | int | None = None,
+        default: float | int = 0,
+        minimum: float | int | None = 0,
+        maximum: float | int | None = None,
+        unit: str | None = None,
+        note_expression: str | None = None,
         kind: InputKind = "number",
         hide_trailing_zeros: bool = True,
-        hide_label: bool = False,
+        label_style: LabelStyle | None = None,
         has_handle: bool = True,
     ):
         super().__init__("number", label, kind=kind, has_handle=has_handle)
         self.precision = precision
         # controls_step is for increment/decrement arrows.
-        self.controls_step: Union[float, int] = (
+        self.controls_step: float | int = (
             controls_step if controls_step is not None else 10**-precision
         )
         self.default = default
@@ -70,7 +73,7 @@ class NumberInput(BaseInput):
         self.unit = unit
         self.note_expression = note_expression
         self.hide_trailing_zeros = hide_trailing_zeros
-        self.hide_label = hide_label
+        self.label_style: LabelStyle = label_style or get_default_label_style(label)
 
         self.associated_type = float if precision > 0 else int
 
@@ -82,9 +85,9 @@ class NumberInput(BaseInput):
         if self.precision == 0:
             self.input_conversions = [InputConversion("number", "round(Input)")]
 
-    def toDict(self):
+    def to_dict(self):
         return {
-            **super().toDict(),
+            **super().to_dict(),
             "min": self.minimum,
             "max": self.maximum,
             "noteExpression": self.note_expression,
@@ -93,20 +96,20 @@ class NumberInput(BaseInput):
             "controlsStep": self.controls_step,
             "unit": self.unit,
             "hideTrailingZeros": self.hide_trailing_zeros,
-            "hideLabel": self.hide_label,
+            "labelStyle": self.label_style,
             "hasHandle": self.has_handle,
         }
 
     def make_optional(self):
         raise ValueError("NumberInput and SliderInput cannot be made optional")
 
-    def enforce(self, value):
+    def enforce(self, value: object):
         assert isinstance(value, (int, float))
 
         if math.isnan(value):
             raise ValueError("NaN is not a valid number")
 
-        return clampNumber(value, self.precision, self.minimum, self.maximum)
+        return clamp_number(value, self.precision, self.minimum, self.maximum)
 
 
 class SliderInput(NumberInput):
@@ -116,16 +119,16 @@ class SliderInput(NumberInput):
         self,
         label: str,
         precision: int = 0,
-        controls_step: Union[float, int, None] = None,
-        slider_step: Union[float, int, None] = None,
-        minimum: Union[float, int] = 0,
-        maximum: Union[float, int] = 100,
-        default: Union[float, int] = 50,
-        unit: Union[str, None] = None,
-        note_expression: Union[str, None] = None,
-        ends: Tuple[Union[str, None], Union[str, None]] = (None, None),
+        controls_step: float | int | None = None,
+        slider_step: float | int | None = None,
+        minimum: float | int = 0,
+        maximum: float | int = 100,
+        default: float | int = 50,
+        unit: str | None = None,
+        note_expression: str | None = None,
+        ends: tuple[str | None, str | None] = (None, None),
         hide_trailing_zeros: bool = False,
-        gradient: Union[List[str], None] = None,
+        gradient: list[str] | None = None,
         scale: Literal["linear", "log", "log-offset", "sqrt"] = "linear",
         has_handle: bool = True,
     ):
@@ -151,9 +154,9 @@ class SliderInput(NumberInput):
         self.gradient = gradient
         self.scale = scale
 
-    def toDict(self):
+    def to_dict(self):
         return {
-            **super().toDict(),
+            **super().to_dict(),
             "ends": self.ends,
             "sliderStep": self.slider_step,
             "gradient": self.gradient,

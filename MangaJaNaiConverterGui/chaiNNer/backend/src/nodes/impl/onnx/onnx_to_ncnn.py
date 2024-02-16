@@ -1,4 +1,5 @@
-from typing import Dict, List, Union
+# ruff: noqa: N806
+from __future__ import annotations
 
 import numpy as np
 import onnx.numpy_helper as onph
@@ -26,7 +27,21 @@ from ..ncnn.model import (
     UnaryOpTypes,
 )
 from ..ncnn.optimizer import NcnnOptimizer
-from .tensorproto_utils import *
+from .tensorproto_utils import (
+    APT,
+    FLOAT32_MAX,
+    get_node_attr_af,
+    get_node_attr_ai,
+    get_node_attr_f,
+    get_node_attr_from_input_af,
+    get_node_attr_from_input_ai,
+    get_node_attr_from_input_f,
+    get_node_attr_i,
+    get_node_attr_s,
+    get_node_attr_tensor,
+    get_tensor_proto_data_size,
+    set_node_attr_ai,
+)
 
 UOT = UnaryOpTypes
 BOT = BinaryOpTypes
@@ -43,21 +58,21 @@ ROT = ReductionOpTypes
 class Onnx2NcnnConverter:
     def __init__(self, onnx_model: ModelProto):
         self.onnx_graph: GraphProto = onnx_model.graph
-        self.mutable_graph_nodes: List[NodeProto] = [n for n in self.onnx_graph.node]
+        self.mutable_graph_nodes: list[NodeProto] = list(self.onnx_graph.node)
         self.node_count: int = len(self.onnx_graph.node)
-        self.weights: Dict[str, TensorProto] = {
+        self.weights: dict[str, TensorProto] = {
             initializer.name: initializer for initializer in self.onnx_graph.initializer
         }
 
-        self.producers: Dict[str, None] = {i.name: None for i in self.onnx_graph.input}
-        self.node_reference: Dict[str, int] = {}
-        self.blob_names: Dict[str, None] = {}
+        self.producers: dict[str, None] = {i.name: None for i in self.onnx_graph.input}
+        self.node_reference: dict[str, int] = {}
+        self.blob_names: dict[str, None] = {}
 
     @staticmethod
     def add_weight(
         layer: NcnnLayer,
         weight_name: str,
-        data: Union[float, int, np.ndarray, TensorProto],
+        data: float | int | np.ndarray | TensorProto,
         quantize_tag: bytes = b"",
     ) -> int:
         if isinstance(data, TensorProto):
@@ -67,7 +82,7 @@ class Onnx2NcnnConverter:
 
     @staticmethod
     def clear_container(
-        container: Union[RepeatedCompositeFieldContainer, RepeatedScalarFieldContainer],
+        container: RepeatedCompositeFieldContainer | RepeatedScalarFieldContainer,
     ) -> None:
         for _ in range(len(container)):
             container.pop()
@@ -99,7 +114,7 @@ class Onnx2NcnnConverter:
                     set_node_attr_ai(gather, "ends", np.array([index + 1], np.int32))
                     set_node_attr_ai(gather, "axis", np.array([axis], np.int32))
 
-    def fuse_weight_reshape(self, reduced_node_count: List[int]) -> None:
+    def fuse_weight_reshape(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
             if node.op_type == "Reshape":
@@ -123,9 +138,9 @@ class Onnx2NcnnConverter:
                         self.node_reference[node.input[1]] -= 1
 
                     reduced_node_count[0] += 1
-                    i += 1
+                    i += 1  # noqa
 
-    def fuse_weight_transpose(self, reduced_node_count: List[int]) -> None:
+    def fuse_weight_transpose(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
             if node.op_type == "Transpose":
@@ -159,9 +174,9 @@ class Onnx2NcnnConverter:
                     self.node_reference[node.input[0]] -= 1
 
                     reduced_node_count[0] += 1
-                    i += 1
+                    i += 1  # noqa
 
-    def fuse_shufflechannel(self, reduced_node_count: List[int]) -> None:
+    def fuse_shufflechannel(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -181,9 +196,7 @@ class Onnx2NcnnConverter:
 
                 # 1 groups channels_per_group, height, width
                 # reverse style = channels_per_group, groups, height * width
-                if (shape.size != 5 and shape.size != 3) or (
-                    shape.size == 5 and shape[0] != 1
-                ):
+                if (shape.size not in (5, 3)) or (shape.size == 5 and shape[0] != 1):
                     continue
                 if i + 2 >= self.node_count:
                     continue
@@ -203,7 +216,7 @@ class Onnx2NcnnConverter:
                 # 0 2 1 3 4
                 # reverse style = 1 0 2
                 perm = get_node_attr_ai(node2, "perm")
-                if perm.size != 5 and perm.size != 3:
+                if perm.size not in (5, 3):
                     continue
                 if perm.size == 5 and (
                     perm[0] != 0
@@ -225,7 +238,7 @@ class Onnx2NcnnConverter:
 
                 # 1, -1, height, width
                 # reverse style = group, -1, channels_per_group, height, width
-                if shape3.size != 4 and shape3.size != 5:
+                if shape3.size not in (4, 5):
                     continue
                 if shape3.size == 4 and (
                     shape3[0] != 1
@@ -265,9 +278,9 @@ class Onnx2NcnnConverter:
                 node3.attribute.append(attr_reverse)
 
                 reduced_node_count[0] += 2
-                i += 2
+                i += 2  # noqa
 
-    def fuse_shufflechannel_split(self, reduced_node_count: List[int]) -> None:
+    def fuse_shufflechannel_split(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -326,9 +339,9 @@ class Onnx2NcnnConverter:
                 node3.attribute.append(attr_axis)
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
-    def fuse_hardswish(self, reduced_node_count: List[int]) -> None:
+    def fuse_hardswish(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -367,7 +380,7 @@ class Onnx2NcnnConverter:
                 if (
                     node2.op_type != "Clip"
                     or node3.op_type != "Mul"
-                    or (node4.op_type != "Div" and node4.op_type != "Mul")
+                    or (node4.op_type not in ("Div", "Mul"))
                 ):
                     continue
                 if self.node_reference[node2.output[0]] != 1:
@@ -434,7 +447,7 @@ class Onnx2NcnnConverter:
                 node4.attribute.append(attr_beta)
 
                 reduced_node_count[0] += 3
-                i += 3
+                i += 3  # noqa
 
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
@@ -477,9 +490,9 @@ class Onnx2NcnnConverter:
                 node2.attribute.append(attr_beta)
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
-    def fuse_hardsigmoid(self, reduced_node_count: List[int]) -> None:
+    def fuse_hardsigmoid(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -515,9 +528,7 @@ class Onnx2NcnnConverter:
                         continue
                     node3 = self.mutable_graph_nodes[i + 3]
 
-                if node2.op_type != "Clip" or (
-                    node3.op_type != "Div" and node3.op_type != "Mul"
-                ):
+                if node2.op_type != "Clip" or (node3.op_type not in ("Div", "Mul")):
                     continue
 
                 if self.node_reference[node2.output[0]] != 1:
@@ -576,9 +587,9 @@ class Onnx2NcnnConverter:
                 node3.attribute.append(attr_beta)
 
                 reduced_node_count[0] += 2
-                i += 2
+                i += 2  # noqa
 
-    def fuse_swish(self, reduced_node_count: List[int]) -> None:
+    def fuse_swish(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -608,9 +619,9 @@ class Onnx2NcnnConverter:
                 node2.input.append(node.input[0])
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
-    def fuse_batchnorm1d_squeeze_unsqueeze(self, reduced_node_count: List[int]) -> None:
+    def fuse_batchnorm1d_squeeze_unsqueeze(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -646,9 +657,9 @@ class Onnx2NcnnConverter:
                 node2.output[0] = node3.output[0]
 
                 reduced_node_count[0] += 2
-                i += 2
+                i += 2  # noqa
 
-    def fuse_unsqueeze_prelu(self, reduced_node_count: List[int]) -> None:
+    def fuse_unsqueeze_prelu(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -686,9 +697,9 @@ class Onnx2NcnnConverter:
                 node2.input[1] = node.input[0]
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
-    def fuse_normalize(self, reduced_node_count: List[int]) -> None:
+    def fuse_normalize(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -779,9 +790,9 @@ class Onnx2NcnnConverter:
                 node4.attribute.append(attr_alpha)
 
                 reduced_node_count[0] += 4 if has_shape_node else 3
-                i += 4 if has_shape_node else 3
+                i += 4 if has_shape_node else 3  # noqa
 
-    def fuse_groupnorm(self, reduced_node_count: List[int]) -> None:
+    def fuse_groupnorm(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -862,7 +873,7 @@ class Onnx2NcnnConverter:
                 # affine
                 affine_S = get_node_attr_from_input_af(self.weights[node4.input[1]])
                 affine_B = get_node_attr_from_input_af(self.weights[node5.input[1]])
-                if affine_S.size != channels and affine_B.size != channels:
+                if channels not in (affine_S.size, affine_B.size):
                     continue  # only per-channel affine allowed
 
                 # reduce
@@ -913,9 +924,9 @@ class Onnx2NcnnConverter:
                 node5.attribute.append(attr_affine)
 
                 reduced_node_count[0] += 4
-                i += 4
+                i += 4  # noqa
 
-    def fuse_layernorm(self, reduced_node_count: List[int]) -> None:
+    def fuse_layernorm(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -929,7 +940,7 @@ class Onnx2NcnnConverter:
 
                 # -1
                 # -2 -1
-                if axes.size != 1 and axes.size != 2:
+                if axes.size not in (1, 2):
                     continue
                 if (axes.size == 1 and axes[0] != -1) or (
                     axes.size == 2 and (axes[0] != -2 or axes[1] != -1)
@@ -1066,7 +1077,7 @@ class Onnx2NcnnConverter:
                     node7.attribute.append(attr_affine)
 
                     reduced_node_count[0] += 6
-                    i += 6
+                    i += 6  # noqa
                 else:
                     # This is probably unnecessary on their part, but I'm paranoid
                     node8 = self.mutable_graph_nodes[i + 7]
@@ -1094,9 +1105,9 @@ class Onnx2NcnnConverter:
                     node9.attribute.append(attr_affine)
 
                     reduced_node_count[0] += 8
-                    i += 8
+                    i += 8  # noqa
 
-    def fuse_flatten(self, reduced_node_count: List[int]) -> None:
+    def fuse_flatten(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -1206,9 +1217,9 @@ class Onnx2NcnnConverter:
                 node7.input.append(node.input[0])
 
                 reduced_node_count[0] += 5
-                i += 5
+                i += 5  # noqa
 
-    def fuse_pixelshuffle(self, reduced_node_count: List[int]) -> None:
+    def fuse_pixelshuffle(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -1304,9 +1315,9 @@ class Onnx2NcnnConverter:
                 node3.attribute.append(attr_group)
 
                 reduced_node_count[0] += 2
-                i += 2
+                i += 2  # noqa
 
-    def fuse_reorg(self, reduced_node_count: List[int]) -> None:
+    def fuse_reorg(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -1399,9 +1410,9 @@ class Onnx2NcnnConverter:
                 node3.attribute.append(attr_group)
 
                 reduced_node_count[0] += 2
-                i += 2
+                i += 2  # noqa
 
-    def fuse_expand_broadcast(self, reduced_node_count: List[int]) -> None:
+    def fuse_expand_broadcast(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -1435,9 +1446,9 @@ class Onnx2NcnnConverter:
                     node2.input[1] = node.input[0]
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
-    def fuse_lstm_gru_rnn(self, reduced_node_count: List[int]) -> None:
+    def fuse_lstm_gru_rnn(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -1501,7 +1512,7 @@ class Onnx2NcnnConverter:
                 node.output[0] = node3.output[0]
 
                 reduced_node_count[0] += 2
-                i += 2
+                i += 2  # noqa
 
                 if i + 1 < self.node_count:
                     if self.node_reference[node3.output[0]] != 1:
@@ -1534,7 +1545,7 @@ class Onnx2NcnnConverter:
                     node.output[0] = node4.output[0]
 
                     reduced_node_count[0] += 1
-                    i += 1
+                    i += 1  # noqa
 
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
@@ -1569,7 +1580,7 @@ class Onnx2NcnnConverter:
                 node.output[0] = node2.output[0]
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
                 if i + 1 < self.node_count:
                     if self.node_reference[node2.output[0]] != 1:
@@ -1603,7 +1614,7 @@ class Onnx2NcnnConverter:
                     node.output[0] = node3.output[0]
 
                     reduced_node_count[0] += 1
-                    i += 1
+                    i += 1  # noqa
 
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
@@ -1635,9 +1646,9 @@ class Onnx2NcnnConverter:
                 node2.input[0] = node.input[0]
 
                 reduced_node_count[0] += 1
-                i += 1
+                i += 1  # noqa
 
-    def fuse_multiheadattention(self, reduced_node_count: List[int]) -> None:
+    def fuse_multiheadattention(self, reduced_node_count: list[int]) -> None:
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
 
@@ -1941,7 +1952,7 @@ class Onnx2NcnnConverter:
                 node20.attribute.append(attr_num_heads)
 
                 reduced_node_count[0] += 19
-                i += 19
+                i += 19  # noqa
 
         for i in range(self.node_count):
             node = self.mutable_graph_nodes[i]
@@ -2214,7 +2225,7 @@ class Onnx2NcnnConverter:
                 node17.attribute.append(attr_num_heads)
 
                 reduced_node_count[0] += 16
-                i += 16
+                i += 16  # noqa
 
     def fuse_binaryop_with_scalar(self) -> None:
         for i in range(self.node_count):
@@ -2313,7 +2324,9 @@ class Onnx2NcnnConverter:
                 continue
 
             # find node that produces missing_input_name
+            swap_j = 0
             for j, nodeq in enumerate(self.mutable_graph_nodes, i + 1):
+                swap_j = j
                 found = False
                 for output_name in nodeq.output:
                     if output_name == missing_input_name:
@@ -2328,7 +2341,7 @@ class Onnx2NcnnConverter:
                     f"which is required by node {i} ({node.name})."
                 )
 
-            self.swap_nodes(i, j)
+            self.swap_nodes(i, swap_j)
 
         # global definition line
         # [layer count][blob count]
@@ -2507,7 +2520,7 @@ class Onnx2NcnnConverter:
             elif op == "Upsample":
                 if len(node.input) >= 2:
                     self.node_reference[node.input[1]] -= 1
-            elif op == "adaptive_avg_pool2d" or op == "adaptive_max_pool2d":
+            elif op in ("adaptive_avg_pool2d", "adaptive_max_pool2d"):
                 if len(node.input) >= 2:
                     self.node_reference[node.input[1]] -= 1
 
@@ -2690,7 +2703,7 @@ class Onnx2NcnnConverter:
                 "Sub",
             ]:
                 layer.op_type = "BinaryOp"
-            elif op == "AveragePool" or op == "MaxPool":
+            elif op in ("AveragePool", "MaxPool"):
                 kernel_shape = get_node_attr_ai(node, "kernel_shape")
                 if kernel_shape.size == 1:
                     layer.op_type = "Pooling1D"
@@ -2722,9 +2735,9 @@ class Onnx2NcnnConverter:
                     layer.op_type = "DeconvolutionDepthWise"
                 else:
                     layer.op_type = "Deconvolution"
-            elif op == "Crop" or op == "Slice":
+            elif op in ("Crop", "Slice"):
                 layer.op_type = "Crop"
-            elif op == "DepthToSpace" or op == "PixelShuffle":
+            elif op in ("DepthToSpace", "PixelShuffle"):
                 layer.op_type = "PixelShuffle"
             elif op == "Dropout":
                 layer.op_type = "Dropout"
@@ -2769,7 +2782,7 @@ class Onnx2NcnnConverter:
                 layer.op_type = "InstanceNorm"
             elif op == "LayerNorm":
                 layer.op_type = "LayerNorm"
-            elif op == "LeakyRelu" or op == "Relu":
+            elif op in ("LeakyRelu", "Relu"):
                 layer.op_type = "ReLU"
             elif op == "LRN":
                 layer.op_type = "LRN"
@@ -2830,7 +2843,7 @@ class Onnx2NcnnConverter:
                 layer.op_type = "Swish"
             elif op == "Transpose":
                 layer.op_type = "Permute"
-            elif op == "Upsample" or op == "Resize":
+            elif op in ("Upsample", "Resize"):
                 layer.op_type = "Interp"
             elif op == "Unsqueeze":
                 layer.op_type = "ExpandDims"
@@ -2851,7 +2864,7 @@ class Onnx2NcnnConverter:
                     if input_name in split_node_reference:
                         refidx = split_node_reference[input_name] - 1
                         split_node_reference[input_name] = refidx
-                        input_name = f"{input_name}_splitncnn_{refidx}"
+                        input_name = f"{input_name}_splitncnn_{refidx}"  # noqa
 
                     layer.inputs.append(input_name)
 
@@ -2891,7 +2904,7 @@ class Onnx2NcnnConverter:
                 layer.add_param(0, UOT.ASIN)
             elif op == "Atan":
                 layer.add_param(0, UOT.ATAN)
-            elif op == "AveragePool" or op == "MaxPool":
+            elif op in ("AveragePool", "MaxPool"):
                 auto_pad = get_node_attr_s(node, "auto_pad")
                 ceil_mode = get_node_attr_i(node, "ceil_mode", 0)
                 kernel_shape = get_node_attr_ai(node, "kernel_shape")
@@ -3027,17 +3040,16 @@ class Onnx2NcnnConverter:
                     layer.add_param(4, -233)
                 elif auto_pad == "SAME_LOWER":
                     layer.add_param(4, -234)
-                else:
-                    if pads.size == 1:
-                        layer.add_param(4, int(pads[0]))
-                    elif pads.size == 2:
-                        layer.add_param(4, int(pads[1]))
-                        layer.add_param(14, int(pads[0]))
-                    elif pads.size == 4:
-                        layer.add_param(4, int(pads[1]))
-                        layer.add_param(14, int(pads[0]))
-                        layer.add_param(15, int(pads[3]))
-                        layer.add_param(16, int(pads[2]))
+                elif pads.size == 1:
+                    layer.add_param(4, int(pads[0]))
+                elif pads.size == 2:
+                    layer.add_param(4, int(pads[1]))
+                    layer.add_param(14, int(pads[0]))
+                elif pads.size == 4:
+                    layer.add_param(4, int(pads[1]))
+                    layer.add_param(14, int(pads[0]))
+                    layer.add_param(15, int(pads[3]))
+                    layer.add_param(16, int(pads[2]))
 
                 layer.add_param(5, has_bias)
 
@@ -3091,17 +3103,16 @@ class Onnx2NcnnConverter:
                     layer.add_param(4, -233)
                 elif auto_pad == "SAME_LOWER":
                     layer.add_param(4, -234)
-                else:
-                    if pads.size == 1:
-                        layer.add_param(4, int(pads[0]))
-                    elif pads.size == 2:
-                        layer.add_param(4, int(pads[1]))
-                        layer.add_param(14, int(pads[0]))
-                    elif pads.size == 4:
-                        layer.add_param(4, int(pads[1]))
-                        layer.add_param(14, int(pads[0]))
-                        layer.add_param(15, int(pads[3]))
-                        layer.add_param(16, int(pads[2]))
+                elif pads.size == 1:
+                    layer.add_param(4, int(pads[0]))
+                elif pads.size == 2:
+                    layer.add_param(4, int(pads[1]))
+                    layer.add_param(14, int(pads[0]))
+                elif pads.size == 4:
+                    layer.add_param(4, int(pads[1]))
+                    layer.add_param(14, int(pads[0]))
+                    layer.add_param(15, int(pads[3]))
+                    layer.add_param(16, int(pads[2]))
 
                 if output_padding.size == 1:
                     layer.add_param(18, int(output_padding[0]))
@@ -3209,10 +3220,10 @@ class Onnx2NcnnConverter:
                     layer.add_param(1, beta)
                     layer.add_param(2, transA)
                     layer.add_param(3, transB)
-            elif op == "GlobalAveragePool" or op == "GlobalMaxPool":
+            elif op in ("GlobalAveragePool", "GlobalMaxPool"):
                 layer.add_param(0, int(op == "GlobalAveragePool"))
                 layer.add_param(4, 1)
-            elif op == "adaptive_avg_pool2d" or op == "adaptive_max_pool2d":
+            elif op in ("adaptive_avg_pool2d", "adaptive_max_pool2d"):
                 out_shape_tp = self.weights[node.input[1]]
                 out_shape = get_node_attr_from_input_ai(out_shape_tp)
 
@@ -3240,13 +3251,12 @@ class Onnx2NcnnConverter:
                         and affine_B[0] == 0
                     ):
                         affine = 0
+                    elif np.any(affine_S[:channels] != 1) or np.any(
+                        affine_B[:channels] != 0
+                    ):
+                        affine = 1
                     else:
-                        if np.any(affine_S[:channels] != 1) or np.any(
-                            affine_B[:channels] != 0
-                        ):
-                            affine = 1
-                        else:
-                            affine = 0
+                        affine = 0
 
                 layer.add_param(0, groups)
                 layer.add_param(1, channels)
@@ -3305,7 +3315,7 @@ class Onnx2NcnnConverter:
                 raise RuntimeError(
                     "GRU not implemented yet, please report issue with model used"
                 )
-            elif op == "HardSigmoid" or op == "Hard Swish":
+            elif op in ("HardSigmoid", "Hard Swish"):
                 alpha = get_node_attr_f(node, "alpha", 0.2)
                 beta = get_node_attr_f(node, "beta", 0.5)
 
@@ -3727,8 +3737,8 @@ class Onnx2NcnnConverter:
                             np.delete(axes, i)
                             break
 
-                layer.add_param(9, [starts.size, *[s for s in starts]])
-                layer.add_param(10, [ends.size, *[e for e in ends]])
+                layer.add_param(9, [starts.size, *list(starts)])
+                layer.add_param(10, [ends.size, *list(ends)])
                 if axes.size:
                     assert np.all(
                         axes != 0 and axes <= 3 and axes >= -3
@@ -3747,7 +3757,7 @@ class Onnx2NcnnConverter:
                 assert axis >= 1, f"Unsupported axis {axis} in Split"
 
                 if splits.size:
-                    layer.add_param(0, [output_size, *[s for s in splits[:-1]], -233])
+                    layer.add_param(0, [output_size, *list(splits[:-1]), -233])
                 else:
                     layer.add_param(
                         0, [output_size, *[-233 for _ in range(output_size)]]
@@ -3837,7 +3847,7 @@ class Onnx2NcnnConverter:
                 else:
                     scales = get_node_attr_from_input_af(self.weights[node.input[1]])
 
-                if mode == "bilinear" or mode == "linear":
+                if mode in ("bilinear", "linear"):
                     resize_type = IRT.BILINEAR
                 elif mode == "trilinear":
                     raise ValueError("Upsample does not support trilinear mode")

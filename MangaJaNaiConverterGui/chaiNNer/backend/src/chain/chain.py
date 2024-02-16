@@ -1,13 +1,15 @@
-from typing import Callable, Dict, List, TypeVar, Union
+from __future__ import annotations
 
-from api import NodeData, registry
-from base_types import InputId, NodeId, OutputId
+from dataclasses import dataclass
+from typing import Callable, TypeVar, Union
+
+from api import InputId, NodeData, NodeId, OutputId, registry
 
 K = TypeVar("K")
 V = TypeVar("V")
 
 
-def get_or_add(d: Dict[K, V], key: K, supplier: Callable[[], V]) -> V:
+def get_or_add(d: dict[K, V], key: K, supplier: Callable[[], V]) -> V:
     value = d.get(key)
     if value is None:
         value = supplier()
@@ -19,95 +21,76 @@ class FunctionNode:
     def __init__(self, node_id: NodeId, schema_id: str):
         self.id: NodeId = node_id
         self.schema_id: str = schema_id
-        self.parent: Union[NodeId, None] = None
-        self.is_helper: bool = False
-
-    def get_node(self) -> NodeData:
-        return registry.get_node(self.schema_id)
+        self.data: NodeData = registry.get_node(schema_id)
+        assert self.data.kind == "regularNode"
 
     def has_side_effects(self) -> bool:
-        return self.get_node().side_effects
-
-
-class IteratorNode:
-    def __init__(self, node_id: NodeId, schema_id: str):
-        self.id: NodeId = node_id
-        self.schema_id: str = schema_id
-        self.parent: None = None
-        self.__node = None
-
-    def get_node(self) -> NodeData:
-        if self.__node is None:
-            node = registry.get_node(self.schema_id)
-            assert node.type == "iterator", "Invalid iterator node"
-            self.__node = node
-        return self.__node
+        return self.data.side_effects
 
 
 class NewIteratorNode:
     def __init__(self, node_id: NodeId, schema_id: str):
         self.id: NodeId = node_id
         self.schema_id: str = schema_id
-        self.parent: None = None
-        self.__node = None
-        self.is_helper: bool = False
-
-    def get_node(self) -> NodeData:
-        if self.__node is None:
-            node = registry.get_node(self.schema_id)
-            assert node.type == "newIterator", "Invalid iterator node"
-            self.__node = node
-        return self.__node
+        self.data: NodeData = registry.get_node(schema_id)
+        assert self.data.kind == "newIterator"
 
     def has_side_effects(self) -> bool:
-        return self.get_node().side_effects
+        return self.data.side_effects
 
 
 class CollectorNode:
     def __init__(self, node_id: NodeId, schema_id: str):
         self.id: NodeId = node_id
         self.schema_id: str = schema_id
-        self.parent: None = None
-        self.__node = None
-        self.is_helper: bool = False
-
-    def get_node(self) -> NodeData:
-        if self.__node is None:
-            node = registry.get_node(self.schema_id)
-            assert node.type == "collector", "Invalid iterator node"
-            self.__node = node
-        return self.__node
+        self.data: NodeData = registry.get_node(schema_id)
+        assert self.data.kind == "collector"
 
     def has_side_effects(self) -> bool:
-        return self.get_node().side_effects
+        return self.data.side_effects
 
 
-Node = Union[FunctionNode, IteratorNode, NewIteratorNode, CollectorNode]
+Node = Union[FunctionNode, NewIteratorNode, CollectorNode]
 
 
+@dataclass(frozen=True)
 class EdgeSource:
-    def __init__(self, node_id: NodeId, output_id: OutputId):
-        self.id: NodeId = node_id
-        self.output_id: OutputId = output_id
+    id: NodeId
+    output_id: OutputId
 
 
+@dataclass(frozen=True)
 class EdgeTarget:
-    def __init__(self, node_id: NodeId, input_id: InputId):
-        self.id: NodeId = node_id
-        self.input_id: InputId = input_id
+    id: NodeId
+    input_id: InputId
 
 
+@dataclass(frozen=True)
 class Edge:
-    def __init__(self, source: EdgeSource, target: EdgeTarget):
-        self.source = source
-        self.target = target
+    source: EdgeSource
+    target: EdgeTarget
+
+
+class ChainInputs:
+    def __init__(self) -> None:
+        self.inputs: dict[NodeId, dict[InputId, object]] = {}
+
+    def get(self, node_id: NodeId, input_id: InputId) -> object | None:
+        node = self.inputs.get(node_id)
+        if node is None:
+            return None
+        return node.get(input_id)
+
+    def set(self, node_id: NodeId, input_id: InputId, value: object) -> None:
+        get_or_add(self.inputs, node_id, dict)[input_id] = value
 
 
 class Chain:
     def __init__(self):
-        self.nodes: Dict[NodeId, Node] = {}
-        self.__edges_by_source: Dict[NodeId, List[Edge]] = {}
-        self.__edges_by_target: Dict[NodeId, List[Edge]] = {}
+        self.nodes: dict[NodeId, Node] = {}
+        self.inputs: ChainInputs = ChainInputs()
+        self.__edges_by_source: dict[NodeId, list[Edge]] = {}
+        self.__edges_by_target: dict[NodeId, list[Edge]] = {}
 
     def add_node(self, node: Node):
         assert node.id not in self.nodes, f"Duplicate node id {node.id}"
@@ -117,11 +100,22 @@ class Chain:
         get_or_add(self.__edges_by_source, edge.source.id, list).append(edge)
         get_or_add(self.__edges_by_target, edge.target.id, list).append(edge)
 
-    def edges_from(self, source: NodeId) -> List[Edge]:
+    def edges_from(self, source: NodeId) -> list[Edge]:
         return self.__edges_by_source.get(source, [])
 
-    def edges_to(self, target: NodeId) -> List[Edge]:
+    def edges_to(self, target: NodeId) -> list[Edge]:
         return self.__edges_by_target.get(target, [])
+
+    def edge_to(self, target: NodeId, input_id: InputId) -> Edge | None:
+        """
+        Returns the edge connected to the given input (if any).
+        """
+        edges = self.__edges_by_target.get(target)
+        if edges is not None:
+            for e in edges:
+                if e.target.input_id == input_id:
+                    return e
+        return None
 
     def remove_node(self, node_id: NodeId):
         """
@@ -129,6 +123,7 @@ class Chain:
         If the node is an iterator node, then all of its children will also be removed.
         """
 
+        self.inputs.inputs.pop(node_id, None)
         node = self.nodes.pop(node_id, None)
         if node is None:
             return
@@ -138,18 +133,70 @@ class Chain:
         for e in self.__edges_by_target.pop(node_id, []):
             self.__edges_by_source[e.source.id].remove(e)
 
-        if isinstance(node, IteratorNode):
-            # remove all child nodes
-            for n in list(self.nodes.values()):
-                if n.parent == node_id:
-                    self.remove_node(n.id)
+    def remove_edge(self, edge: Edge) -> None:
+        """
+        Removes the edge connected to the given input (if any).
+        """
+        edges_target = self.__edges_by_target.get(edge.target.id)
+        if edges_target is not None:
+            edges_target.remove(edge)
+        edges_source = self.__edges_by_source.get(edge.source.id)
+        if edges_source is not None:
+            edges_source.remove(edge)
 
+    def topological_order(self) -> list[NodeId]:
+        """
+        Returns all nodes in topological order.
+        """
+        result: list[NodeId] = []
+        visited: set[NodeId] = set()
 
-class SubChain:
-    def __init__(self, chain: Chain, iterator_id: NodeId):
-        self.nodes: Dict[NodeId, FunctionNode] = {}
-        self.iterator_id = iterator_id
+        def visit(node_id: NodeId):
+            if node_id in visited:
+                return
+            visited.add(node_id)
 
-        for node in chain.nodes.values():
-            if node.parent is not None and node.parent == iterator_id:
-                self.nodes[node.id] = node
+            for e in self.edges_from(node_id):
+                visit(e.target.id)
+
+            result.append(node_id)
+
+        for node_id in self.nodes:
+            visit(node_id)
+
+        return result
+
+    def get_parent_iterator_map(self) -> dict[FunctionNode, NewIteratorNode | None]:
+        """
+        Returns a map of all function nodes to their parent iterator node (if any).
+        """
+        iterator_cache: dict[FunctionNode, NewIteratorNode | None] = {}
+
+        def get_iterator(r: FunctionNode) -> NewIteratorNode | None:
+            if r in iterator_cache:
+                return iterator_cache[r]
+
+            iterator: NewIteratorNode | None = None
+
+            for in_edge in self.edges_to(r.id):
+                source = self.nodes[in_edge.source.id]
+                if isinstance(source, FunctionNode):
+                    iterator = get_iterator(source)
+                    if iterator is not None:
+                        break
+                elif isinstance(source, NewIteratorNode):
+                    if (
+                        in_edge.source.output_id
+                        in source.data.single_iterator_output.outputs
+                    ):
+                        iterator = source
+                        break
+
+            iterator_cache[r] = iterator
+            return iterator
+
+        for node in self.nodes.values():
+            if isinstance(node, FunctionNode):
+                get_iterator(node)
+
+        return iterator_cache

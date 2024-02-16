@@ -1,8 +1,8 @@
 import numpy as np
 
 from ...utils.checked_cast import checked_cast
-from .model import BinaryOpTypes as BOT
-from .model import EltwiseOpTypes as EOT
+from .model import BinaryOpTypes as BOT  # noqa
+from .model import EltwiseOpTypes as EOT  # noqa
 from .model import NcnnLayer, NcnnModel
 
 
@@ -418,9 +418,9 @@ class NcnnOptimizer:
                         continue
                     if self.model.layers[j].num_inputs != 2:
                         continue
-                    if (
-                        self.model.layers[j].inputs[0] == output
-                        or self.model.layers[j].inputs[1] == output
+                    if output in (
+                        self.model.layers[j].inputs[0],
+                        self.model.layers[j].inputs[1],
                     ):
                         break
                 else:
@@ -608,7 +608,7 @@ class NcnnOptimizer:
                     layer.outputs,
                 )
                 eltwise.add_param(0, EOT.SUM)
-                if j0 != i and j1 != i:
+                if i not in (j0, j1):
                     # fuse BinaryOp - BinaryOp - BinaryOp to Eltwise
                     eltwise.add_param(
                         1,
@@ -759,7 +759,7 @@ class NcnnOptimizer:
 
     def __eliminate_split(self):
         blob_input_references = []
-        for i, layer in enumerate(self.model.layers):
+        for _, layer in enumerate(self.model.layers):
             for input_name in layer.inputs:
                 blob_input_references.append(input_name)
 
@@ -944,9 +944,9 @@ class NcnnOptimizer:
                         continue
                     if self.model.layers[j].num_inputs != 2:
                         continue
-                    if (
-                        self.model.layers[j].inputs[0] == reshape_output
-                        or self.model.layers[j].inputs[1] == reshape_output
+                    if reshape_output in (
+                        self.model.layers[j].inputs[0],
+                        self.model.layers[j].inputs[1],
                     ):
                         break
                 else:

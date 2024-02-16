@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Iterable, List, Literal, Tuple, TypedDict, Union, cast
+from typing import Iterable, Literal, TypedDict, Union, cast
 
 import numpy as np
 
@@ -19,36 +19,36 @@ ColorJsonKind = Literal["grayscale", "rgb", "rgba"]
 
 class ColorJson(TypedDict):
     kind: ColorJsonKind
-    values: List[float]
+    values: list[float]
 
 
 class Color:
-    def __init__(self, value: Tuple[float, ...]) -> None:
+    def __init__(self, value: tuple[float, ...]) -> None:
         assert len(value) >= 1
-        self.value: Tuple[float, ...] = value
+        self.value: tuple[float, ...] = value
 
     @property
     def channels(self) -> int:
         return len(self.value)
 
     @staticmethod
-    def gray(gray: FloatLike) -> "Color":
+    def gray(gray: FloatLike) -> Color:
         return Color((_norm(gray),))
 
     @staticmethod
-    def bgr(value: Iterable[FloatLike]) -> "Color":
+    def bgr(value: Iterable[FloatLike]) -> Color:
         t = tuple(map(_norm, value))
         assert len(t) == 3
         return Color(t)
 
     @staticmethod
-    def bgra(value: Iterable[FloatLike]) -> "Color":
+    def bgra(value: Iterable[FloatLike]) -> Color:
         t = tuple(map(_norm, value))
         assert len(t) == 4
         return Color(t)
 
     @staticmethod
-    def from_1x1_image(img: np.ndarray) -> "Color":
+    def from_1x1_image(img: np.ndarray) -> Color:
         h, w, c = get_h_w_c(img)
         assert h == w == 1
 
@@ -59,10 +59,10 @@ class Color:
         elif c == 4:
             return Color.bgra(img.flat)
         else:
-            assert False, "Only grayscale, RGB, and RGBA colors are supported."
+            raise AssertionError("Only grayscale, RGB, and RGBA colors are supported.")
 
     @staticmethod
-    def from_json(color_json: ColorJson | str) -> "Color":
+    def from_json(color_json: ColorJson | str) -> Color:
         if isinstance(color_json, str):
             color_json = cast(ColorJson, json.loads(color_json))
         kind = color_json["kind"]
@@ -78,7 +78,7 @@ class Color:
             assert len(values) == 4
             return Color.bgra([values[2], values[1], values[0], values[3]])
         else:
-            assert False, f"Unknown color kind {kind}"
+            raise AssertionError(f"Unknown color kind {kind}")
 
     def to_1x1_image(self) -> np.ndarray:
         return self.to_image(1, 1)
@@ -102,6 +102,6 @@ class Color:
             kind = "rgba"
             values = [values[2], values[1], values[0], values[3]]
         else:
-            assert False, f"Colors with {len(values)} are not supported."
+            raise AssertionError(f"Colors with {len(values)} are not supported.")
 
         return {"kind": kind, "values": values}

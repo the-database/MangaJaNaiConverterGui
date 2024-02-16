@@ -30,7 +30,7 @@ def set_node_attr_ai(node: NodeProto, key: str, value: np.ndarray) -> None:
 def get_node_attr_af(node: NodeProto, key: str) -> np.ndarray:
     for attr in node.attribute:
         if attr.name == key:
-            return np.array([f for f in attr.floats], np.float32)
+            return np.array(list(attr.floats), np.float32)
 
     return np.empty(0, np.float32)
 
@@ -81,7 +81,7 @@ def get_node_attr_from_input_f(tp: TensorProto) -> float:
 
 
 def get_node_attr_from_input_ai(tp: TensorProto) -> np.ndarray:
-    if tp.data_type == TPT.INT32 or tp.data_type == TPT.INT64:
+    if tp.data_type in (TPT.INT32, TPT.INT64):
         shape_data = onph.to_array(tp)
         if shape_data.size == 1:
             shape_data = np.array([shape_data.item(0)], shape_data.dtype)
@@ -103,7 +103,7 @@ def get_node_attr_from_input_ai(tp: TensorProto) -> np.ndarray:
 def get_node_attr_from_input_af(tp: TensorProto) -> np.ndarray:
     if tp.data_type in (TPT.FLOAT, TPT.FLOAT16, TPT.DOUBLE):
         shape_data = onph.to_array(tp)
-        return np.array([val for val in shape_data], shape_data.dtype)
+        return np.array(list(shape_data), shape_data.dtype)
     else:
         logger.error(f"Unknown data type {tp.data_type}")
 
@@ -115,7 +115,7 @@ def get_tensor_proto_data_size(tp: TensorProto, fpmode: int = TPT.FLOAT) -> int:
         if fpmode == TPT.FLOAT16:
             return len(tp.raw_data) // 2
         return len(tp.raw_data) // 4
-    elif tp.data_type == TPT.FLOAT or tp.data_type == TPT.FLOAT16:
+    elif tp.data_type in (TPT.FLOAT, TPT.FLOAT16):
         return len(tp.float_data)
 
     return 0

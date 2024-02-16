@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import functools
 import hashlib
 import os
 import tempfile
 import time
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Iterable, NewType
 
 import numpy as np
 from sanic.log import logger
 
+from api import RunFn
+
 CACHE_MAX_BYTES = int(os.environ.get("CACHE_MAX_BYTES", 1024**3))  # default 1 GiB
-CACHE_REGISTRY: List["NodeOutputCache"] = []
+CACHE_REGISTRY: list[NodeOutputCache] = []
 
 
 class CachedNumpyArray:
@@ -26,16 +30,19 @@ class CachedNumpyArray:
         return np.frombuffer(self.file.read(), dtype=self.dtype).reshape(self.shape)
 
 
+CacheKey = NewType("CacheKey", tuple)
+
+
 class NodeOutputCache:
     def __init__(self):
-        self._data: Dict[Tuple, List] = {}
-        self._bytes: Dict[Tuple, int] = {}
-        self._access_time: Dict[Tuple, float] = {}
+        self._data: dict[CacheKey, list] = {}
+        self._bytes: dict[CacheKey, int] = {}
+        self._access_time: dict[CacheKey, float] = {}
 
         CACHE_REGISTRY.append(self)
 
     @staticmethod
-    def _args_to_key(args) -> Tuple:
+    def _args_to_key(args: Iterable[object]) -> CacheKey:
         key = []
         for arg in args:
             if isinstance(arg, (int, float, bool, str, bytes)):
@@ -50,13 +57,13 @@ class NodeOutputCache:
                 key.append(hashlib.sha256(arg.tobytes()).digest())
             elif hasattr(arg, "cache_key_func"):
                 key.append(arg.__class__.__name__)
-                key.append(arg.cache_key_func())
+                key.append(arg.cache_key_func())  # type: ignore
             else:
                 raise RuntimeError(f"Unexpected argument type {arg.__class__.__name__}")
-        return tuple(key)
+        return CacheKey(tuple(key))
 
     @staticmethod
-    def _estimate_bytes(output) -> int:
+    def _estimate_bytes(output: list[object]) -> int:
         size = 0
         for out in output:
             if isinstance(out, np.ndarray):
@@ -67,10 +74,10 @@ class NodeOutputCache:
                 size += 1024  # 1 KiB
         return size
 
-    def empty(self):
+    def empty(self) -> bool:
         return len(self._data) == 0
 
-    def oldest(self) -> Tuple[Tuple, float]:
+    def oldest(self) -> tuple[CacheKey, float]:
         return min(self._access_time.items(), key=lambda x: x[1])
 
     def size(self):
@@ -95,21 +102,21 @@ class NodeOutputCache:
             cache.drop(key)
 
     @staticmethod
-    def _write_arrays_to_disk(output: List) -> List:
+    def _write_arrays_to_disk(output: list) -> list:
         return [
             CachedNumpyArray(item) if isinstance(item, np.ndarray) else item
             for item in output
         ]
 
     @staticmethod
-    def _read_arrays_from_disk(output: List) -> List:
+    def _read_arrays_from_disk(output: list) -> list:
         return [
             item.value() if isinstance(item, CachedNumpyArray) else item
             for item in output
         ]
 
     @staticmethod
-    def _output_to_list(output) -> List:
+    def _output_to_list(output: object) -> list[object]:
         if isinstance(output, list):
             return output
         elif isinstance(output, tuple):
@@ -118,12 +125,12 @@ class NodeOutputCache:
             return [output]
 
     @staticmethod
-    def _list_to_output(output: List):
+    def _list_to_output(output: list[object]):
         if len(output) == 1:
             return output[0]
         return output
 
-    def get(self, args) -> Optional[List]:
+    def get(self, args: Iterable[object]) -> object | None:
         key = self._args_to_key(args)
         if key in self._data:
             logger.debug("Cache hit")
@@ -132,24 +139,24 @@ class NodeOutputCache:
         logger.debug("Cache miss")
         return None
 
-    def put(self, args, output):
+    def put(self, args: Iterable[object], output: object):
         key = self._args_to_key(args)
         self._data[key] = self._write_arrays_to_disk(self._output_to_list(output))
-        self._bytes[key] = self._estimate_bytes(output)
+        self._bytes[key] = self._estimate_bytes(self._output_to_list(output))
         self._access_time[key] = time.time()
         self._enforce_limits()
 
-    def drop(self, key):
+    def drop(self, key: CacheKey):
         del self._data[key]
         del self._bytes[key]
         del self._access_time[key]
 
 
-def cached(run):
+def cached(run: RunFn):
     cache = NodeOutputCache()
 
     @functools.wraps(run)
-    def _run(*args):
+    def _run(*args: object):
         out = cache.get(args)
         if out is not None:
             return out

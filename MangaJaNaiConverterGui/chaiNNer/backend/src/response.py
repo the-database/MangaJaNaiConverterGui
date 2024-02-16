@@ -1,4 +1,6 @@
-from typing import Literal, Optional, TypedDict, Union
+from __future__ import annotations
+
+from typing import Literal, TypedDict
 
 from events import ExecutionErrorSource
 from process import NodeExecutionError
@@ -6,19 +8,17 @@ from process import NodeExecutionError
 
 class SuccessResponse(TypedDict):
     type: Literal["success"]
-    message: str
 
 
 class ErrorResponse(TypedDict):
     type: Literal["error"]
     message: str
     exception: str
-    source: Optional[ExecutionErrorSource]
+    source: ExecutionErrorSource | None
 
 
 class NoExecutorResponse(TypedDict):
     type: Literal["no-executor"]
-    message: str
 
 
 class AlreadyRunningResponse(TypedDict):
@@ -26,14 +26,14 @@ class AlreadyRunningResponse(TypedDict):
     message: str
 
 
-def successResponse(message: str) -> SuccessResponse:
-    return {"type": "success", "message": message}
+def success_response() -> SuccessResponse:
+    return {"type": "success"}
 
 
-def errorResponse(
+def error_response(
     message: str,
-    exception: Union[str, Exception],
-    source: Optional[ExecutionErrorSource] = None,
+    exception: str | Exception,
+    source: ExecutionErrorSource | None = None,
 ) -> ErrorResponse:
     if source is None and isinstance(exception, NodeExecutionError):
         source = {
@@ -49,9 +49,9 @@ def errorResponse(
     }
 
 
-def noExecutorResponse(message: str) -> NoExecutorResponse:
-    return {"type": "no-executor", "message": message}
+def no_executor_response() -> NoExecutorResponse:
+    return {"type": "no-executor"}
 
 
-def alreadyRunningResponse(message: str) -> AlreadyRunningResponse:
+def already_running_response(message: str) -> AlreadyRunningResponse:
     return {"type": "already-running", "message": message}

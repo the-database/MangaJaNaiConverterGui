@@ -9,7 +9,7 @@ try:
 
     use_gpu = True
 except ImportError:
-    from ncnn import ncnn
+    from ncnn import ncnn  # type: ignore
 
     use_gpu = False
 from sanic.log import logger
@@ -21,14 +21,14 @@ from ..upscale.auto_split import Split, Tiler, auto_split
 
 def ncnn_auto_split(
     img: np.ndarray,
-    net,
+    net,  # noqa: ANN001
     input_name: str,
     output_name: str,
-    blob_vkallocator,
-    staging_vkallocator,
+    blob_vkallocator,  # noqa: ANN001
+    staging_vkallocator,  # noqa: ANN001
     tiler: Tiler,
 ) -> np.ndarray:
-    def upscale(img: np.ndarray, _):
+    def upscale(img: np.ndarray, _: object):
         ex = net.create_extractor()
         if use_gpu:
             ex.set_blob_vkallocator(blob_vkallocator)
@@ -79,7 +79,7 @@ def ncnn_auto_split(
             # Check to see if its actually the NCNN out of memory error
             if "failed" in str(e):
                 # clear VRAM
-                logger.debug(f"NCNN out of VRAM, clearing VRAM and splitting.")
+                logger.debug("NCNN out of VRAM, clearing VRAM and splitting.")
                 ex = None
                 del ex
                 gc.collect()

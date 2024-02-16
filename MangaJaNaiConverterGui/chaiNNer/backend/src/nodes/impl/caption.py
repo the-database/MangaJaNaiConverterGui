@@ -3,14 +3,12 @@ from __future__ import annotations
 import os
 import sys
 from enum import Enum
-from typing import Tuple
 
-import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from ..utils.utils import get_h_w_c
-from .image_utils import normalize, to_uint8
+from .image_utils import as_target_channels, normalize
 
 
 class CaptionPosition(Enum):
@@ -18,7 +16,7 @@ class CaptionPosition(Enum):
     TOP = "top"
 
 
-def get_font_size(font: ImageFont.FreeTypeFont, text: str) -> Tuple[int, int]:
+def get_font_size(font: ImageFont.FreeTypeFont, text: str) -> tuple[int, int]:
     """Get font [width, height] of the given text"""
     # (left, top, right, bottom)
     caption_bb = font.getbbox(text)
@@ -27,50 +25,46 @@ def get_font_size(font: ImageFont.FreeTypeFont, text: str) -> Tuple[int, int]:
     return font_width, font_height
 
 
+def get_font(font_size: int):
+    font_path = os.path.join(
+        os.path.dirname(sys.modules["__main__"].__file__),  # type: ignore
+        "fonts/Roboto-Light.ttf",  # type: ignore
+    )
+    return ImageFont.truetype(font_path, font_size)
+
+
 def add_caption(
     img: np.ndarray, caption: str, size: int, position: CaptionPosition
 ) -> np.ndarray:
     """Add caption with PIL"""
-    fontsize = round(size * 0.8)
-    if position is CaptionPosition.BOTTOM:
-        img = cv2.copyMakeBorder(
-            img, 0, size, 0, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0, 1)
-        )
-    elif position is CaptionPosition.TOP:
-        img = cv2.copyMakeBorder(
-            img, size, 0, 0, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0, 1)
-        )
-    else:
-        raise RuntimeError(f"Unknown position {position}")
+    _, w, c = get_h_w_c(img)
 
-    pimg = Image.fromarray(to_uint8(img))
-    font_path = os.path.join(
-        os.path.dirname(sys.modules["__main__"].__file__), "fonts/Roboto-Light.ttf"  # type: ignore
-    )
-    font = ImageFont.truetype(font_path, fontsize)
-    h, w, c = get_h_w_c(img)
-    text_x = w // 2
-    if position is CaptionPosition.BOTTOM:
-        text_y = h - round(size / 2)
-    elif position is CaptionPosition.TOP:
-        text_y = round(size / 2)
-    font_color = (255,) * c
+    cap_img = Image.fromarray(np.zeros((size, w), dtype=np.uint8))
+
+    font_size = round(size * 0.8)
+    font = get_font(font_size)
 
     fw, _ = get_font_size(font, caption)
     # scale font size to fit image
     if fw > w:
-        font = ImageFont.truetype(font_path, round(fontsize * w / fw))
+        font = get_font(round(font_size * w / fw))
 
-    d = ImageDraw.Draw(pimg)
+    d = ImageDraw.Draw(cap_img)
     d.text(
-        (text_x, text_y),
+        (w // 2, size // 2),
         caption,
         font=font,
         anchor="mm",
         align="center",
-        fill=font_color,
+        fill=255,
     )
 
-    img = normalize(np.array(pimg))
+    cap_img = normalize(np.array(cap_img))
+    cap_img = as_target_channels(cap_img, c)
 
-    return img
+    if position == CaptionPosition.BOTTOM:
+        return np.vstack((img, cap_img))
+    elif position == CaptionPosition.TOP:
+        return np.vstack((cap_img, img))
+    else:
+        raise ValueError(f"Unknown position {position}")

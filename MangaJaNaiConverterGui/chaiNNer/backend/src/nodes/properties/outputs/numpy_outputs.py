@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 import base64
-from typing import Optional, Tuple
 
 import cv2
 import numpy as np
 
 import navi
-from nodes.base_output import BaseOutput, OutputKind
+from api import BaseOutput, OutputKind
 
 from ...impl.image_utils import normalize, to_uint8
-from ...impl.pil_utils import InterpolationMethod, resize
+from ...impl.resize import ResizeFilter, resize
 from ...utils.format import format_image_with_channels
 from ...utils.utils import get_h_w_c, round_half_up
 
@@ -31,7 +32,7 @@ class NumPyOutput(BaseOutput):
             associated_type=np.ndarray,
         )
 
-    def enforce(self, value) -> np.ndarray:
+    def enforce(self, value: object) -> np.ndarray:
         assert isinstance(value, np.ndarray)
         return value
 
@@ -48,17 +49,17 @@ class ImageOutput(NumPyOutput):
         image_type: navi.ExpressionJson = "Image",
         kind: OutputKind = "image",
         has_handle: bool = True,
-        channels: Optional[int] = None,
+        channels: int | None = None,
         assume_normalized: bool = False,
     ):
         super().__init__(
-            navi.intersect(image_type, navi.Image(channels=channels)),
+            navi.intersect_with_error(image_type, navi.Image(channels=channels)),
             label,
             kind=kind,
             has_handle=has_handle,
         )
 
-        self.channels: Optional[int] = channels
+        self.channels: int | None = channels
         self.assume_normalized: bool = assume_normalized
 
     def get_broadcast_data(self, value: np.ndarray):
@@ -73,7 +74,7 @@ class ImageOutput(NumPyOutput):
         h, w, c = get_h_w_c(value)
         return navi.Image(width=w, height=h, channels=c)
 
-    def enforce(self, value) -> np.ndarray:
+    def enforce(self, value: object) -> np.ndarray:
         assert isinstance(value, np.ndarray)
 
         h, w, c = get_h_w_c(value)
@@ -119,7 +120,7 @@ def preview_encode(
     target_size: int = 512,
     grace: float = 1.2,
     lossless: bool = False,
-) -> Tuple[str, np.ndarray]:
+) -> tuple[str, np.ndarray]:
     """
     resize the image, so the preview loads faster and doesn't lag the UI
     512 was chosen as the default target because a 512x512 RGBA 8bit PNG is at most 1MB in size
@@ -130,11 +131,7 @@ def preview_encode(
     if w > max_size or h > max_size:
         f = max(w / target_size, h / target_size)
         t = (max(1, round_half_up(w / f)), max(1, round_half_up(h / f)))
-        if c == 4:
-            # https://github.com/chaiNNer-org/chaiNNer/issues/1321
-            img = resize(img, t, InterpolationMethod.BOX)
-        else:
-            img = cv2.resize(img, t, interpolation=cv2.INTER_AREA)
+        img = resize(img, t, ResizeFilter.BOX)
 
     image_format = "png" if c > 3 or lossless else "jpg"
 

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Tuple
+from typing import Literal
 
 import numpy as np
 import torch
-import torch.optim as optim
 import torch.utils.data
+from torch import optim
 
 from .pix_transform_net import PixTransformNet
 
@@ -15,14 +15,14 @@ from .pix_transform_net import PixTransformNet
 class Params:
     spatial_features_input: bool = True
     # spatial color head
-    weights_regularizer: Tuple[float, float, float] | None = (0.0001, 0.001, 0.001)
+    weights_regularizer: tuple[float, float, float] | None = (0.0001, 0.001, 0.001)
     loss: Literal["mse", "l1"] = "l1"
     lr: float = 0.001
     batch_size: int = 32
     iteration: int = 32 * 1024
 
 
-def PixTransform(
+def pix_transform(
     source_img: np.ndarray,
     guide_img: np.ndarray,
     device: torch.device,
@@ -40,9 +40,9 @@ def PixTransform(
     assert lr_height == lr_width
     assert hr_height % lr_height == 0
 
-    D = hr_height // lr_height
-    M = lr_height
-    _N = hr_height
+    d = hr_height // lr_height
+    m = lr_height
+    _n = hr_height
 
     # normalize guide and source
     guide_img = (
@@ -69,14 +69,14 @@ def PixTransform(
     guide_tensor = torch.from_numpy(guide_img).float().to(device)
     source_tensor = torch.from_numpy(source_img).float().to(device)
 
-    guide_patches = torch.zeros((M * M, guide_tensor.shape[0], D, D)).to(device)
-    source_pixels = torch.zeros((M * M, 1)).to(device)
-    for i in range(0, M):
-        for j in range(0, M):
-            guide_patches[j + i * M, :, :, :] = guide_tensor[
-                :, i * D : (i + 1) * D, j * D : (j + 1) * D
+    guide_patches = torch.zeros((m * m, guide_tensor.shape[0], d, d)).to(device)
+    source_pixels = torch.zeros((m * m, 1)).to(device)
+    for i in range(m):
+        for j in range(m):
+            guide_patches[j + i * m, :, :, :] = guide_tensor[
+                :, i * d : (i + 1) * d, j * d : (j + 1) * d
             ]
-            source_pixels[j + i * M] = source_tensor[i : (i + 1), j : (j + 1)]
+            source_pixels[j + i * m] = source_tensor[i : (i + 1), j : (j + 1)]
 
     train_data = torch.utils.data.TensorDataset(guide_patches, source_pixels)
     train_loader = torch.utils.data.DataLoader(
@@ -99,11 +99,11 @@ def PixTransform(
     elif params.loss == "l1":
         myloss = torch.nn.L1Loss()
     else:
-        assert False, "unknown loss!"
+        raise AssertionError("unknown loss!")
     ###############################################################################################
 
-    epochs = params.batch_size * params.iteration // (M * M)
-    for _epoch in range(0, epochs):
+    epochs = params.batch_size * params.iteration // (m * m)
+    for _epoch in range(epochs):
         for x, y in train_loader:
             optimizer.zero_grad()
 

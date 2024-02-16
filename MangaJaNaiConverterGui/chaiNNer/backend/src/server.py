@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 import asyncio
-import functools
 import gc
 import importlib
 import logging
 import os
 import sys
 import traceback
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from json import dumps as stringify
-from typing import Dict, List, Optional, Tuple, TypedDict, Union
+from typing import TypedDict
 
 import psutil
 from sanic import Sanic
@@ -19,34 +21,27 @@ from sanic.response import json
 from sanic_cors import CORS
 
 import api
-from base_types import NodeId
+from api import (
+    ExecutionOptions,
+    Group,
+    JsonExecutionOptions,
+    NodeId,
+)
 from chain.cache import OutputCache
+from chain.chain import Chain, FunctionNode
 from chain.json import JsonNode, parse_json
 from chain.optimize import optimize
 from custom_types import UpdateProgressFn
 from dependencies.store import DependencyInfo, install_dependencies, installed_packages
-from events import EventQueue, ExecutionErrorData
+from events import EventConsumer, EventQueue, ExecutionErrorData
 from gpu import get_nvidia_helper
-from nodes.group import Group
-from nodes.utils.exec_options import (
-    ExecutionOptions,
-    JsonExecutionOptions,
-    set_execution_options,
-)
-from process import (
-    Executor,
-    NodeExecutionError,
-    Output,
-    compute_broadcast,
-    run_node,
-    timed_supplier,
-)
+from process import ExecutionId, Executor, NodeExecutionError, NodeOutput
 from progress_controller import Aborted
 from response import (
-    alreadyRunningResponse,
-    errorResponse,
-    noExecutorResponse,
-    successResponse,
+    already_running_response,
+    error_response,
+    no_executor_response,
+    success_response,
 )
 from server_config import ServerConfig
 from system import is_arm_mac
@@ -55,8 +50,9 @@ from system import is_arm_mac
 class AppContext:
     def __init__(self):
         self.config: ServerConfig = None  # type: ignore
-        self.executor: Optional[Executor] = None
-        self.cache: Dict[NodeId, Output] = dict()
+        self.executor: Executor | None = None
+        self.individual_executors: dict[ExecutionId, Executor] = {}
+        self.cache: dict[NodeId, NodeOutput] = {}
         # This will be initialized by after_server_start.
         # This is necessary because we don't know Sanic's event loop yet.
         self.queue: EventQueue = None  # type: ignore
@@ -64,7 +60,7 @@ class AppContext:
         self.pool = ThreadPoolExecutor(max_workers=4)
 
     @staticmethod
-    def get(app_instance: Sanic) -> "AppContext":
+    def get(app_instance: Sanic) -> AppContext:
         assert isinstance(app_instance.ctx, AppContext)
         return app_instance.ctx
 
@@ -76,8 +72,11 @@ CORS(app)
 
 
 class SSEFilter(logging.Filter):
-    def filter(self, record):
-        return not ((record.request.endswith("/sse") or record.request.endswith("/setup-sse")) and record.status == 200)  # type: ignore
+    def filter(self, record):  # noqa: ANN001
+        request = record.request  # type: ignore
+        return not (
+            (request.endswith(("/sse", "/setup-sse"))) and record.status == 200  # type: ignore
+        )
 
 
 class ZeroCounter:
@@ -91,11 +90,11 @@ class ZeroCounter:
     def __enter__(self):
         self.count += 1
 
-    def __exit__(self, _exc_type, _exc_value, _exc_traceback):
+    def __exit__(self, _exc_type: object, _exc_value: object, _exc_traceback: object):
         self.count -= 1
 
 
-runIndividualCounter = ZeroCounter()
+run_individual_counter = ZeroCounter()
 
 setup_task = None
 
@@ -119,20 +118,21 @@ async def nodes(_request: Request):
         node_dict = {
             "schemaId": node.schema_id,
             "name": node.name,
-            "category": sub.category.name,
-            "inputs": [x.toDict() for x in node.inputs],
-            "outputs": [x.toDict() for x in node.outputs],
+            "category": sub.category.id,
+            "nodeGroup": sub.id,
+            "inputs": [x.to_dict() for x in node.inputs],
+            "outputs": [x.to_dict() for x in node.outputs],
             "groupLayout": [
-                g.toDict() if isinstance(g, Group) else g for g in node.group_layout
+                g.to_dict() if isinstance(g, Group) else g for g in node.group_layout
             ],
+            "iteratorInputs": [x.to_dict() for x in node.iterator_inputs],
+            "iteratorOutputs": [x.to_dict() for x in node.iterator_outputs],
             "description": node.description,
             "seeAlso": node.see_also,
             "icon": node.icon,
-            "subcategory": sub.name,
-            "nodeType": node.type,
+            "kind": node.kind,
             "hasSideEffects": node.side_effects,
             "deprecated": node.deprecated,
-            "defaultNodes": node.default_nodes,
             "features": node.features,
         }
         node_list.append(node_dict)
@@ -140,14 +140,14 @@ async def nodes(_request: Request):
     return json(
         {
             "nodes": node_list,
-            "categories": [x.toDict() for x in api.registry.categories],
+            "categories": [x.to_dict() for x in api.registry.categories],
             "categoriesMissingNodes": [],
         }
     )
 
 
 class RunRequest(TypedDict):
-    data: List[JsonNode]
+    data: list[JsonNode]
     options: JsonExecutionOptions
     sendBroadcastData: bool
 
@@ -161,27 +161,26 @@ async def run(request: Request):
     if ctx.executor:
         message = "Cannot run another executor while the first one is still running."
         logger.warning(message)
-        return json(alreadyRunningResponse(message), status=500)
+        return json(already_running_response(message), status=500)
 
     try:
         # wait until all previews are done
-        await runIndividualCounter.wait_zero()
+        await run_individual_counter.wait_zero()
 
         full_data: RunRequest = dict(request.json)  # type: ignore
         logger.debug(full_data)
-        chain, inputs = parse_json(full_data["data"])
+        chain = parse_json(full_data["data"])
         optimize(chain)
 
         logger.info("Running new executor...")
-        exec_opts = ExecutionOptions.parse(full_data["options"])
-        set_execution_options(exec_opts)
         executor = Executor(
-            chain,
-            inputs,
-            full_data["sendBroadcastData"],
-            app.loop,
-            ctx.queue,
-            ctx.pool,
+            id=ExecutionId("main-executor " + uuid.uuid4().hex),
+            chain=chain,
+            send_broadcast_data=full_data["sendBroadcastData"],
+            options=ExecutionOptions.parse(full_data["options"]),
+            loop=app.loop,
+            queue=ctx.queue,
+            pool=ctx.pool,
             parent_cache=OutputCache(static_data=ctx.cache.copy()),
         )
         try:
@@ -193,10 +192,7 @@ async def run(request: Request):
             ctx.executor = None
             gc.collect()
 
-        await ctx.queue.put(
-            {"event": "finish", "data": {"message": "Successfully ran nodes!"}}
-        )
-        return json(successResponse("Successfully ran nodes!"), status=200)
+        return json(success_response(), status=200)
     except Exception as exception:
         logger.error(exception, exc_info=True)
         logger.error(traceback.format_exc())
@@ -214,12 +210,12 @@ async def run(request: Request):
             }
 
         await ctx.queue.put({"event": "execution-error", "data": error})
-        return json(errorResponse("Error running nodes!", exception), status=500)
+        return json(error_response("Error running nodes!", exception), status=500)
 
 
 class RunIndividualRequest(TypedDict):
     id: NodeId
-    inputs: List[object]
+    inputs: list[object]
     schemaId: str
     options: JsonExecutionOptions
 
@@ -231,50 +227,51 @@ async def run_individual(request: Request):
     ctx = AppContext.get(request.app)
     try:
         full_data: RunIndividualRequest = dict(request.json)  # type: ignore
-        node_id = full_data["id"]
-        if ctx.cache.get(node_id, None) is not None:
-            del ctx.cache[node_id]
         logger.debug(full_data)
-        exec_opts = ExecutionOptions.parse(full_data["options"])
-        set_execution_options(exec_opts)
-        # Create node based on given category/name information
-        node_instance = api.registry.get_node(full_data["schemaId"])
 
-        with runIndividualCounter:
-            # Run the node and pass in inputs as args
-            output, execution_time = await app.loop.run_in_executor(
-                None,
-                timed_supplier(
-                    functools.partial(
-                        run_node, node_instance, full_data["inputs"], node_id
-                    )
-                ),
-            )
-            # Cache the output of the node
-            if not isinstance(output, api.Iterator) and not isinstance(
-                output, api.Collector
-            ):
+        node_id = full_data["id"]
+        ctx.cache.pop(node_id, None)
+
+        node = FunctionNode(node_id, full_data["schemaId"])
+        chain = Chain()
+        chain.add_node(node)
+
+        for index, i in enumerate(full_data["inputs"]):
+            chain.inputs.set(node_id, node.data.inputs[index].id, i)
+
+        # only yield certain types of events
+        queue = EventConsumer.filter(
+            ctx.queue, {"node-finish", "node-broadcast", "execution-error"}
+        )
+
+        execution_id = ExecutionId("individual-executor " + node_id)
+        executor = Executor(
+            id=execution_id,
+            chain=chain,
+            send_broadcast_data=True,
+            options=ExecutionOptions.parse(full_data["options"]),
+            loop=app.loop,
+            queue=queue,
+            pool=ctx.pool,
+        )
+
+        with run_individual_counter:
+            try:
+                if execution_id in ctx.individual_executors:
+                    # kill the previous executor (if any)
+                    old_executor = ctx.individual_executors[execution_id]
+                    old_executor.kill()
+
+                ctx.individual_executors[execution_id] = executor
+                output = await executor.process_regular_node(node)
                 ctx.cache[node_id] = output
+            except Aborted:
+                pass
+            finally:
+                if ctx.individual_executors.get(execution_id, None) == executor:
+                    ctx.individual_executors.pop(execution_id, None)
+                gc.collect()
 
-        # Broadcast the output from the individual run
-        node_outputs = node_instance.outputs
-        if len(node_outputs) > 0:
-            assert not isinstance(output, api.Iterator)
-            assert not isinstance(output, api.Collector)
-            data, types = compute_broadcast(output, node_outputs)
-            await ctx.queue.put(
-                {
-                    "event": "node-finish",
-                    "data": {
-                        "nodeId": node_id,
-                        "executionTime": execution_time,
-                        "data": data,
-                        "types": types,
-                        "progressPercent": None,
-                    },
-                }
-            )
-        gc.collect()
         return json({"success": True, "data": None})
     except Exception as exception:
         logger.error(exception, exc_info=True)
@@ -301,18 +298,19 @@ async def pause(request: Request):
     await nodes_available()
     ctx = AppContext.get(request.app)
 
+    logger.info("Attempting to pause executor...")
+
     if not ctx.executor:
-        message = "No executor to pause"
-        logger.warning(message)
-        return json(noExecutorResponse(message), status=400)
+        logger.warning("No executor to pause.")
+        return json(no_executor_response(), status=400)
 
     try:
-        logger.info("Executor found. Attempting to pause...")
         ctx.executor.pause()
-        return json(successResponse("Successfully paused execution!"), status=200)
+        logger.info("Paused executor.")
+        return json(success_response(), status=200)
     except Exception as exception:
         logger.log(2, exception, exc_info=True)
-        return json(errorResponse("Error pausing execution!", exception), status=500)
+        return json(error_response("Error pausing execution!", exception), status=500)
 
 
 @app.route("/resume", methods=["POST"])
@@ -321,18 +319,19 @@ async def resume(request: Request):
     await nodes_available()
     ctx = AppContext.get(request.app)
 
+    logger.info("Attempting to resume executor...")
+
     if not ctx.executor:
-        message = "No executor to resume"
-        logger.warning(message)
-        return json(noExecutorResponse(message), status=400)
+        logger.warning("No executor to resume.")
+        return json(no_executor_response(), status=400)
 
     try:
-        logger.info("Executor found. Attempting to resume...")
         ctx.executor.resume()
-        return json(successResponse("Successfully resumed execution!"), status=200)
+        logger.info("Resumed executor.")
+        return json(success_response(), status=200)
     except Exception as exception:
         logger.log(2, exception, exc_info=True)
-        return json(errorResponse("Error resuming execution!", exception), status=500)
+        return json(error_response("Error resuming execution!", exception), status=500)
 
 
 @app.route("/kill", methods=["POST"])
@@ -341,61 +340,21 @@ async def kill(request: Request):
     await nodes_available()
     ctx = AppContext.get(request.app)
 
+    logger.info("Attempting to kill executor...")
+
     if not ctx.executor:
-        message = "No executor to kill"
-        logger.warning("No executor to kill")
-        return json(noExecutorResponse(message), status=400)
+        logger.warning("No executor to kill.")
+        return json(no_executor_response(), status=400)
 
     try:
-        logger.info("Executor found. Attempting to kill...")
         ctx.executor.kill()
         while ctx.executor:
             await asyncio.sleep(0.0001)
-        return json(successResponse("Successfully killed execution!"), status=200)
+        logger.info("Killed executor.")
+        return json(success_response(), status=200)
     except Exception as exception:
         logger.log(2, exception, exc_info=True)
-        return json(errorResponse("Error killing execution!", exception), status=500)
-
-
-@app.route("/list-gpus/ncnn", methods=["GET"])
-async def list_ncnn_gpus(_request: Request):
-    """Lists the available GPUs for NCNN"""
-    await nodes_available()
-    try:
-        # pylint: disable=import-outside-toplevel
-        from ncnn_vulkan import ncnn
-
-        result = []
-        for i in range(ncnn.get_gpu_count()):
-            result.append(ncnn.get_gpu_info(i).device_name())
-        return json(result)
-    except Exception as exception:
-        try:
-            from ncnn import ncnn
-
-            result = ["cpu"]
-            return json(result)
-        except Exception as exception2:
-            logger.error(exception, exc_info=True)
-            logger.error(exception2, exc_info=True)
-            return json([])
-
-
-@app.route("/list-gpus/nvidia", methods=["GET"])
-async def list_nvidia_gpus(_request: Request):
-    """Lists the available GPUs for NCNN"""
-    await nodes_available()
-    try:
-        nv = get_nvidia_helper()
-
-        if nv is None:
-            return json([])
-
-        result = nv.list_gpus()
-        return json(result)
-    except Exception as exception:
-        logger.error(exception, exc_info=True)
-        return json([])
+        return json(error_response("Error killing execution!", exception), status=500)
 
 
 @app.route("/python-info", methods=["GET"])
@@ -445,7 +404,7 @@ async def get_packages(_request: Request):
         for pkg_dep in package.dependencies:
             installed_version = installed_packages.get(pkg_dep.pypi_name, None)
             pkg_dep_item = {
-                **pkg_dep.toDict(),
+                **pkg_dep.to_dict(),
             }
             if installed_version is None:
                 pkg_dep_item["installed"] = None
@@ -460,8 +419,8 @@ async def get_packages(_request: Request):
                 "description": package.description,
                 "icon": package.icon,
                 "color": package.color,
-                "dependencies": [d.toDict() for d in package.dependencies],
-                "features": [f.toDict() for f in package.features],
+                "dependencies": [d.to_dict() for d in package.dependencies],
+                "features": [f.to_dict() for f in package.features],
                 "settings": [asdict(x) for x in package.settings],
             }
         )
@@ -473,7 +432,7 @@ async def get_packages(_request: Request):
 async def get_installed_dependencies(_request: Request):
     await nodes_available()
 
-    installed_deps: Dict[str, str] = {}
+    installed_deps: dict[str, str] = {}
     for package in api.registry.packages.values():
         for pkg_dep in package.dependencies:
             installed_version = installed_packages.get(pkg_dep.pypi_name, None)
@@ -487,13 +446,13 @@ async def get_installed_dependencies(_request: Request):
 async def get_features(_request: Request):
     await nodes_available()
 
-    features: List[Tuple[api.Feature, api.Package]] = []
+    features: list[tuple[api.Feature, api.Package]] = []
     for package in api.registry.packages.values():
         for feature in package.features:
             features.append((feature, package))
 
     # check all features in parallel
-    async def check(feature: api.Feature) -> Union[api.FeatureState, None]:
+    async def check(feature: api.Feature) -> api.FeatureState | None:
         if feature.behavior is None:
             # no behavior assigned
             return None
@@ -504,7 +463,7 @@ async def get_features(_request: Request):
             return api.FeatureState.disabled(str(e))
 
     # because good API design just isn't pythonic, asyncio.gather will return List[Any].
-    results: List[Union[api.FeatureState, None]] = await asyncio.gather(
+    results: list[api.FeatureState | None] = await asyncio.gather(
         *[check(f) for f, _ in features]
     )
 
@@ -553,8 +512,8 @@ async def import_packages(
     config: ServerConfig,
     update_progress_cb: UpdateProgressFn,
 ):
-    async def install_deps(dependencies: List[api.Dependency]):
-        dep_info: List[DependencyInfo] = [
+    async def install_deps(dependencies: list[api.Dependency]):
+        dep_info: list[DependencyInfo] = [
             {
                 "package_name": dep.pypi_name,
                 "display_name": dep.display_name,
@@ -575,7 +534,7 @@ async def import_packages(
 
     logger.info("Checking dependencies...")
 
-    to_install: List[api.Dependency] = []
+    to_install: list[api.Dependency] = []
     for package in api.registry.packages.values():
         logger.info(f"Checking dependencies for {package.name}...")
 
@@ -598,9 +557,7 @@ async def import_packages(
         except Exception as ex:
             logger.error(f"Error installing dependencies: {ex}")
             if config.close_after_start:
-                raise ValueError(  # pylint: disable=raise-missing-from
-                    "Error installing dependencies"
-                )
+                raise ValueError("Error installing dependencies") from ex
 
     logger.info("Done checking dependencies...")
 
@@ -612,11 +569,12 @@ async def import_packages(
 
     load_errors = api.registry.load_nodes(__file__)
     if len(load_errors) > 0:
-        import_errors: List[api.LoadErrorInfo] = []
+        import_errors: list[api.LoadErrorInfo] = []
         for e in load_errors:
             if not isinstance(e.error, ModuleNotFoundError):
-                logger.warning(f"Failed to load {e.module} ({e.file}):")
-                logger.warning(e.error)
+                logger.warning(
+                    f"Failed to load {e.module} ({e.file}):", exc_info=e.error
+                )
             else:
                 import_errors.append(e)
 
@@ -638,7 +596,7 @@ async def setup(sanic_app: Sanic):
     setup_queue = AppContext.get(sanic_app).setup_queue
 
     async def update_progress(
-        message: str, progress: float, status_progress: Union[float, None] = None
+        message: str, progress: float, status_progress: float | None = None
     ):
         await setup_queue.put_and_wait(
             {

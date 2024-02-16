@@ -1,60 +1,56 @@
 from sanic.log import logger
 
-from .chain import Chain, EdgeSource, IteratorNode, Node
+from .chain import Chain
 
 
-def __has_side_effects(node: Node) -> bool:
-    if isinstance(node, IteratorNode) or node.is_helper:
-        # we assume that both iterators and their helper nodes always have side effects
-        return True
-    return node.has_side_effects()
+class _Mutation:
+    def __init__(self) -> None:
+        self.changed = False
+
+    def signal(self) -> None:
+        self.changed = True
 
 
-def __outline_child_nodes(chain: Chain) -> bool:
-    """
-    If a child node of an iterator is not downstream of any iterator helper node,
-    then this child node can be lifted out of the iterator (outlined) to be a free node.
-    """
-    changed = False
-
-    for node in chain.nodes.values():
-        # we try to outline child nodes that are not iterator helper nodes
-        if node.parent is not None and not node.is_helper:
-
-            def has_no_parent(source: EdgeSource) -> bool:
-                n = chain.nodes.get(source.id)
-                assert n is not None
-                return n.parent is None
-
-            # we can only outline if all of its inputs are independent of the iterator
-            can_outline = all(has_no_parent(n.source) for n in chain.edges_to(node.id))
-            if can_outline:
-                node.parent = None
-                changed = True
-                logger.debug(
-                    f"Chain optimization: Outlined {node.schema_id} node {node.id}"
-                )
-
-    return changed
-
-
-def __removed_dead_nodes(chain: Chain) -> bool:
+def __removed_dead_nodes(chain: Chain, mutation: _Mutation):
     """
     If a node does not have side effects and has no downstream nodes, then it can be removed.
     """
-    changed = False
 
     for node in list(chain.nodes.values()):
-        is_dead = len(chain.edges_from(node.id)) == 0 and not __has_side_effects(node)
+        is_dead = len(chain.edges_from(node.id)) == 0 and not node.has_side_effects()
         if is_dead:
             chain.remove_node(node.id)
-            changed = True
+            mutation.signal()
             logger.debug(f"Chain optimization: Removed {node.schema_id} node {node.id}")
 
-    return changed
+
+def __static_switch_trim(chain: Chain, mutation: _Mutation):
+    """
+    If the selected variant of the Switch node is statically known, then we can remove the input edges of all other variants.
+    """
+
+    for node in list(chain.nodes.values()):
+        if node.schema_id == "chainner:utility:switch":
+            value_index = chain.inputs.get(node.id, node.data.inputs[0].id)
+            if isinstance(value_index, int):
+                for index, i in enumerate(node.data.inputs[1:]):
+                    if index != value_index:
+                        edge = chain.edge_to(node.id, i.id)
+                        if edge is not None:
+                            chain.remove_edge(edge)
+                            mutation.signal()
+                            logger.debug(
+                                f"Chain optimization: Removed edge from {node.id} to {i.label}"
+                            )
 
 
 def optimize(chain: Chain):
-    changed = True
-    while changed:
-        changed = __removed_dead_nodes(chain) or __outline_child_nodes(chain)
+    max_passes = 10
+    for _ in range(max_passes):
+        mutation = _Mutation()
+
+        __removed_dead_nodes(chain, mutation)
+        __static_switch_trim(chain, mutation)
+
+        if not mutation.changed:
+            break

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Union
 
 import navi
-from nodes.base_output import BaseOutput
+from api import BaseOutput
 
 from ...impl.color.color import Color
 from ...utils.format import format_color_with_channels
@@ -17,7 +17,7 @@ class NumberOutput(BaseOutput):
         output_type: navi.ExpressionJson = "number",
     ):
         super().__init__(
-            navi.intersect("number", output_type),
+            navi.intersect_with_error("number", output_type),
             label,
             associated_type=Union[int, float],
         )
@@ -25,7 +25,7 @@ class NumberOutput(BaseOutput):
     def get_broadcast_type(self, value: int | float):
         return navi.literal(value)
 
-    def enforce(self, value) -> int | float:
+    def enforce(self, value: object) -> int | float:
         assert isinstance(value, (int, float))
         return value
 
@@ -36,12 +36,12 @@ class TextOutput(BaseOutput):
         label: str,
         output_type: navi.ExpressionJson = "string",
     ):
-        super().__init__(navi.intersect("string", output_type), label)
+        super().__init__(navi.intersect_with_error("string", output_type), label)
 
     def get_broadcast_type(self, value: str):
         return navi.literal(value)
 
-    def enforce(self, value) -> str:
+    def enforce(self, value: object) -> str:
         assert isinstance(value, str)
         return value
 
@@ -60,7 +60,7 @@ class SeedOutput(BaseOutput):
     def __init__(self, label: str = "Seed"):
         super().__init__(output_type="Seed", label=label, kind="generic")
 
-    def enforce(self, value) -> Seed:
+    def enforce(self, value: object) -> Seed:
         assert isinstance(value, Seed)
         return value
 
@@ -73,14 +73,16 @@ class ColorOutput(BaseOutput):
         channels: int | None = None,
     ):
         super().__init__(
-            output_type=navi.intersect(color_type, navi.Color(channels=channels)),
+            output_type=navi.intersect_with_error(
+                color_type, navi.Color(channels=channels)
+            ),
             label=label,
             kind="generic",
         )
 
         self.channels = channels
 
-    def enforce(self, value) -> Color:
+    def enforce(self, value: object) -> Color:
         assert isinstance(value, Color)
 
         if self.channels is not None and value.channels != self.channels:
@@ -102,3 +104,15 @@ class AudioStreamOutput(BaseOutput):
             label=label,
             kind="generic",
         )
+
+
+class AnyOutput(BaseOutput):
+    def __init__(self, label: str = "Any", output_type: navi.ExpressionJson = "Any"):
+        super().__init__(
+            output_type=output_type,
+            label=label,
+            kind="generic",
+        )
+
+    def enforce(self, value: object) -> object:
+        return value

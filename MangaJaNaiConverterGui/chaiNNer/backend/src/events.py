@@ -1,12 +1,35 @@
+from __future__ import annotations
+
 import asyncio
-from typing import Dict, List, Literal, Optional, TypedDict, Union
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Dict, Literal, TypedDict, Union
 
-from base_types import InputId, NodeId, OutputId
-from nodes.base_input import ErrorValue
+from api import ErrorValue, InputId, NodeId, OutputId
+
+# General events
 
 
-class FinishData(TypedDict):
+class BackendStatusData(TypedDict):
     message: str
+    progress: float
+    statusProgress: float | None
+
+
+class BackendStatusEvent(TypedDict):
+    event: Literal["backend-status"]
+    data: BackendStatusData
+
+
+class BackendStateEvent(TypedDict):
+    event: Literal["backend-ready"] | Literal["backend-started"]
+    data: None
+
+
+BackendEvent = Union[BackendStatusEvent, BackendStateEvent]
+
+
+# Execution events
 
 
 InputsDict = Dict[InputId, ErrorValue]
@@ -21,47 +44,7 @@ class ExecutionErrorSource(TypedDict):
 class ExecutionErrorData(TypedDict):
     message: str
     exception: str
-    source: Optional[ExecutionErrorSource]
-
-
-class NodeFinishData(TypedDict):
-    nodeId: NodeId
-    executionTime: Optional[float]
-    data: Optional[Dict[OutputId, object]]
-    types: Optional[Dict[OutputId, object]]
-    progressPercent: Optional[float]
-
-
-class NodeStartData(TypedDict):
-    nodeId: NodeId
-
-
-class IteratorProgressUpdateData(TypedDict):
-    percent: float
-    index: int
-    total: int
-    eta: float
-    iteratorId: NodeId
-    running: Optional[List[NodeId]]
-
-
-class NodeProgressUpdateData(TypedDict):
-    percent: float
-    index: int
-    total: int
-    eta: float
-    nodeId: NodeId
-
-
-class BackendStatusData(TypedDict):
-    message: str
-    progress: float
-    statusProgress: Optional[float]
-
-
-class FinishEvent(TypedDict):
-    event: Literal["finish"]
-    data: FinishData
+    source: ExecutionErrorSource | None
 
 
 class ExecutionErrorEvent(TypedDict):
@@ -69,9 +52,17 @@ class ExecutionErrorEvent(TypedDict):
     data: ExecutionErrorData
 
 
-class NodeFinishEvent(TypedDict):
-    event: Literal["node-finish"]
-    data: NodeFinishData
+class ChainStartData(TypedDict):
+    nodes: list[str]
+
+
+class ChainStartEvent(TypedDict):
+    event: Literal["chain-start"]
+    data: ChainStartData
+
+
+class NodeStartData(TypedDict):
+    nodeId: NodeId
 
 
 class NodeStartEvent(TypedDict):
@@ -79,39 +70,75 @@ class NodeStartEvent(TypedDict):
     data: NodeStartData
 
 
-class IteratorProgressUpdateEvent(TypedDict):
-    event: Literal["iterator-progress-update"]
-    data: IteratorProgressUpdateData
+class NodeProgressData(TypedDict):
+    nodeId: NodeId
+    progress: float
+    """A number between 0 and 1"""
+    index: int
+    total: int
+    eta: float
 
 
 class NodeProgressUpdateEvent(TypedDict):
-    event: Literal["node-progress-update"]
-    data: NodeProgressUpdateData
+    event: Literal["node-progress"]
+    data: NodeProgressData
 
 
-class BackendStatusEvent(TypedDict):
-    event: Literal["backend-status"]
-    data: BackendStatusData
+class NodeBroadcastData(TypedDict):
+    nodeId: NodeId
+    data: dict[OutputId, object]
+    types: dict[OutputId, object]
 
 
-class BackendStateEvent(TypedDict):
-    event: Union[Literal["backend-ready"], Literal["backend-started"]]
-    data: None
+class NodeBroadcastEvent(TypedDict):
+    event: Literal["node-broadcast"]
+    data: NodeBroadcastData
 
 
-Event = Union[
-    FinishEvent,
+class NodeFinishData(TypedDict):
+    nodeId: NodeId
+    executionTime: float
+
+
+class NodeFinishEvent(TypedDict):
+    event: Literal["node-finish"]
+    data: NodeFinishData
+
+
+ExecutionEvent = Union[
     ExecutionErrorEvent,
-    NodeFinishEvent,
+    ChainStartEvent,
     NodeStartEvent,
-    IteratorProgressUpdateEvent,
     NodeProgressUpdateEvent,
-    BackendStatusEvent,
-    BackendStateEvent,
+    NodeBroadcastEvent,
+    NodeFinishEvent,
 ]
 
 
-class EventQueue:
+Event = Union[ExecutionEvent, BackendEvent]
+
+
+class EventConsumer(ABC):
+    @abstractmethod
+    async def put(self, event: Event) -> None:
+        ...
+
+    @staticmethod
+    def filter(queue: EventConsumer, allowed: set[str]) -> EventConsumer:
+        return _FilteredEventConsumer(queue, allowed)
+
+
+@dataclass
+class _FilteredEventConsumer(EventConsumer):
+    queue: EventConsumer
+    allowed: set[str]
+
+    async def put(self, event: Event) -> None:
+        if event["event"] in self.allowed:
+            await self.queue.put(event)
+
+
+class EventQueue(EventConsumer):
     def __init__(self):
         self.queue = asyncio.Queue()
 

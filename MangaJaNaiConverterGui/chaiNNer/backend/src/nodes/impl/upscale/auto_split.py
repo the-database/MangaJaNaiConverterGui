@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import math
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 
 import numpy as np
 from sanic.log import logger
 
 from ...utils.utils import Region, Size, get_h_w_c
 from .exact_split import exact_split
+from .tile_blending import BlendDirection, TileBlender, TileOverlap, half_sin_blend_fn
 from .tiler import Tiler
 
 
@@ -72,7 +73,8 @@ def _exact_split(
             raise _SplitEx
         return result
 
-    MAX_ITER = 20
+    MAX_ITER = 20  # noqa: N806
+
     for _ in range(MAX_ITER):
         try:
             max_overlap = min(*starting_tile_size) // 4
@@ -125,14 +127,14 @@ def _max_split(
 
     # The upscale method is allowed to request splits at any time.
     # When a split occurs, we have to "restart" the loop and
-    # these 2 variables allow us to split the already processed tiles.
-    start_x = 0
+    # this variable allow us to split the already processed tiles.
     start_y = 0
 
     # To allocate the result image, we need to know the upscale factor first,
     # and we only get to know this factor after the first successful upscale.
-    result: Optional[np.ndarray] = None
+    result: TileBlender | None = None
     scale: int = 0
+    out_channels: int = 0
 
     restart = True
     while restart:
@@ -153,16 +155,16 @@ def _max_split(
             f"Currently {tile_count_x}x{tile_count_y} tiles each {tile_size_x}x{tile_size_y}px."
         )
 
-        for y in range(0, tile_count_y):
-            if restart:
-                break
+        prev_row_result: TileBlender | None = None
+
+        for y in range(tile_count_y):
             if y < start_y:
                 continue
 
-            for x in range(0, tile_count_x):
-                if y == start_y and x < start_x:
-                    continue
+            row_result: TileBlender | None = None
+            row_overlap: TileOverlap | None = None
 
+            for x in range(tile_count_x):
                 tile = Region(
                     x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y
                 ).intersect(img_region)
@@ -174,39 +176,68 @@ def _max_split(
                 if isinstance(upscale_result, Split):
                     max_tile_size = split_tile_size(max_tile_size)
 
-                    new_tile_count_x = math.ceil(w / max_tile_size[0])
                     new_tile_count_y = math.ceil(h / max_tile_size[1])
-                    new_tile_size_x = math.ceil(w / new_tile_count_x)
                     new_tile_size_y = math.ceil(h / new_tile_count_y)
-                    start_x = (x * tile_size_x) // new_tile_size_x
                     start_y = (y * tile_size_x) // new_tile_size_y
 
                     logger.info(
-                        f"Split occurred. New tile size is {max_tile_size}. Starting at {start_x},{start_y}."
+                        f"Split occurred. New tile size is {max_tile_size}. Starting at row {start_y}."
                     )
+
+                    # reset result
+                    if result is not None:
+                        # we already added at least one row, so we have to set the offset back
+                        result.offset = start_y * new_tile_size_y
 
                     restart = True
                     break
 
                 # figure out by how much the image was upscaled by
-                up_h, up_w, _ = get_h_w_c(upscale_result)
+                up_h, up_w, up_c = get_h_w_c(upscale_result)
                 current_scale = up_h // padded_tile.height
                 assert current_scale > 0
                 assert padded_tile.height * current_scale == up_h
                 assert padded_tile.width * current_scale == up_w
 
-                if result is None:
+                if row_result is None:
                     # allocate the result image
                     scale = current_scale
-                    result = np.zeros((h * scale, w * scale, c), dtype=np.float32)
+                    out_channels = up_c
+                    row_result = TileBlender(
+                        width=w * scale,
+                        height=padded_tile.height * scale,
+                        channels=out_channels,
+                        direction=BlendDirection.X,
+                        blend_fn=half_sin_blend_fn,
+                        _prev=prev_row_result,
+                    )
+                    prev_row_result = row_result
+                    row_overlap = TileOverlap(pad.top * scale, pad.bottom * scale)
 
                 assert current_scale == scale
 
-                # remove overlap padding
-                upscale_result = pad.scale(scale).remove_from(upscale_result)
+                # add to row
+                row_result.add_tile(
+                    upscale_result, TileOverlap(pad.left * scale, pad.right * scale)
+                )
 
-                # copy into result image
-                tile.scale(scale).write_into(result, upscale_result)
+            if restart:
+                break
+
+            assert row_result is not None
+            assert row_overlap is not None
+
+            if result is None:
+                result = TileBlender(
+                    width=w * scale,
+                    height=h * scale,
+                    channels=out_channels,
+                    direction=BlendDirection.Y,
+                    blend_fn=half_sin_blend_fn,
+                )
+
+            # add row
+            result.add_tile(row_result.get_result(), row_overlap)
 
     assert result is not None
-    return result
+    return result.get_result()

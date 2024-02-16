@@ -6,7 +6,7 @@ import os
 import random
 import string
 from enum import Enum
-from typing import List, Tuple
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -74,7 +74,7 @@ class NormalMapType(Enum):
     OCTAHEDRAL = "Octahedral"
 
 
-def convert_to_BGRA(img: np.ndarray, in_c: int) -> np.ndarray:
+def convert_to_bgra(img: np.ndarray, in_c: int) -> np.ndarray:
     assert in_c in (1, 3, 4), f"Number of channels ({in_c}) unexpected"
     if in_c == 1:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGRA)
@@ -87,7 +87,7 @@ def convert_to_BGRA(img: np.ndarray, in_c: int) -> np.ndarray:
 def _get_iinfo(img: np.ndarray) -> np.iinfo | None:
     try:
         return np.iinfo(img.dtype)
-    except:
+    except Exception:
         return None
 
 
@@ -108,10 +108,7 @@ def normalize(img: np.ndarray) -> np.ndarray:
     return np.clip(img, 0, 1)
 
 
-def to_uint8(
-    img: np.ndarray,
-    normalized=False,
-) -> np.ndarray:
+def to_uint8(img: np.ndarray, normalized: bool = False) -> np.ndarray:
     """
     Returns a new uint8 image with the given image data.
 
@@ -126,14 +123,11 @@ def to_uint8(
     return (img * 255).round().astype(np.uint8)
 
 
-def to_uint16(
-    img: np.ndarray,
-    normalized=False,
-) -> np.ndarray:
+def to_uint16(img: np.ndarray, normalized: bool = False) -> np.ndarray:
     """
-    Returns a new uint8 image with the given image data.
+    Returns a new uint16 image with the given image data.
 
-    If `normalized` is `False`, then the image will be normalized before being converted to uint8.
+    If `normalized` is `False`, then the image will be normalized before being converted to uint16.
     """
     if img.dtype == np.uint16:
         return img.copy()
@@ -144,10 +138,41 @@ def to_uint16(
     return (img * 65535).round().astype(np.uint16)
 
 
-def shift(img: np.ndarray, amount_x: int, amount_y: int, fill: FillColor) -> np.ndarray:
-    c = get_h_w_c(img)[2]
+class ShiftFill(Enum):
+    AUTO = -1
+    BLACK = 0
+    TRANSPARENT = 1
+    WRAP = 2
+
+    def to_fill_color(self) -> FillColor:
+        if self == ShiftFill.AUTO:
+            return FillColor.AUTO
+        elif self == ShiftFill.BLACK:
+            return FillColor.BLACK
+        elif self == ShiftFill.TRANSPARENT:
+            return FillColor.TRANSPARENT
+        raise ValueError(f"Cannot get color for {self}")
+
+
+def shift(
+    img: np.ndarray, amount_x: int, amount_y: int, shift_fill: ShiftFill
+) -> np.ndarray:
+    h, w, c = get_h_w_c(img)
+
+    if shift_fill == ShiftFill.WRAP:
+        amount_x %= w
+        amount_y %= h
+
+        if amount_x != 0:
+            img = np.roll(img, amount_x, axis=1)
+        if amount_y != 0:
+            img = np.roll(img, amount_y, axis=0)
+
+        return img
+
+    fill = shift_fill.to_fill_color()
     if fill == FillColor.TRANSPARENT:
-        img = convert_to_BGRA(img, c)
+        img = convert_to_bgra(img, c)
     fill_color = fill.get_color(c)
 
     h, w, _ = get_h_w_c(img)
@@ -171,7 +196,7 @@ def as_2d_grayscale(img: np.ndarray) -> np.ndarray:
         return img
     if img.ndim == 3 and img.shape[2] == 1:
         return img[:, :, 0]
-    assert False, f"Invalid image shape {img.shape}"
+    raise AssertionError(f"Invalid image shape {img.shape}")
 
 
 def as_3d(img: np.ndarray) -> np.ndarray:
@@ -283,8 +308,8 @@ def calculate_ssim(
     """Calculates mean localized Structural Similarity Index (SSIM)
     between two images."""
 
-    C1 = 0.01**2
-    C2 = 0.03**2
+    c1 = 0.01**2
+    c2 = 0.03**2
 
     kernel = cv2.getGaussianKernel(11, 1.5)
     window = np.outer(kernel, kernel.transpose())  # type: ignore
@@ -298,22 +323,22 @@ def calculate_ssim(
     sigma2_sq = cv2.filter2D(img2**2, -1, window)[5:-5, 5:-5] - mu2_sq
     sigma12 = cv2.filter2D(img1 * img2, -1, window)[5:-5, 5:-5] - mu1_mu2
 
-    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / (
-        (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
+    ssim_map = ((2 * mu1_mu2 + c1) * (2 * sigma12 + c2)) / (
+        (mu1_sq + mu2_sq + c1) * (sigma1_sq + sigma2_sq + c2)
     )
 
     return float(np.mean(ssim_map))
 
 
-def cv_save_image(path: str, img: np.ndarray, params: List[int]):
+def cv_save_image(path: Path | str, img: np.ndarray, params: list[int]):
     """
     A light wrapper around `cv2.imwrite` to support non-ASCII paths.
     """
 
     # Write image with opencv if path is ascii, since imwrite doesn't support unicode
     # This saves us from having to keep the image buffer in memory, if possible
-    if path.isascii():
-        cv2.imwrite(path, img, params)
+    if str(path).isascii():
+        cv2.imwrite(str(path), img, params)
     else:
         dirname, _, extension = split_file_path(path)
         try:
@@ -321,13 +346,13 @@ def cv_save_image(path: str, img: np.ndarray, params: List[int]):
             full_temp_path = os.path.join(dirname, temp_filename)
             cv2.imwrite(full_temp_path, img, params)
             os.rename(full_temp_path, path)
-        except:
+        except Exception:
             _, buf_img = cv2.imencode(f".{extension}", img, params)
             with open(path, "wb") as outf:
                 outf.write(buf_img)  # type: ignore
 
 
-def cartesian_product(arrays: List[np.ndarray]) -> np.ndarray:
+def cartesian_product(arrays: list[np.ndarray]) -> np.ndarray:
     """
     Returns the cartesian product of the given arrays. Good for initializing coordinates, for example.
 
@@ -389,7 +414,7 @@ def fast_gaussian_blur(
             return 6
         return 8
 
-    def get_sizing(size: int, sigma: float, f: float) -> Tuple[int, float, float]:
+    def get_sizing(size: int, sigma: float, f: float) -> tuple[int, float, float]:
         """
         Return the size of the downsampled image, the sigma of the downsampled gaussian blur,
         and the sigma of the upscaled gaussian blur.

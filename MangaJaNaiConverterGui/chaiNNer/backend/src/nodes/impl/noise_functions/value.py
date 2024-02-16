@@ -10,9 +10,8 @@ class ValueNoise:
         self.values = np.arange(16, dtype="float32")
         self.values = self.values / max(self.values)
 
-        np.random.seed(seed)
         self.permutation_table = np.arange(self.values.size * 16)
-        np.random.shuffle(self.permutation_table)
+        np.random.default_rng(seed).shuffle(self.permutation_table)
 
     def evaluate(self, points: np.ndarray):
         block, fractional = np.divmod(points, 1)
@@ -23,12 +22,12 @@ class ValueNoise:
         weights = np.zeros((points.shape[0], 2**self.dimensions))
 
         for i, pattern in enumerate(itertools.product([0, 1], repeat=self.dimensions)):
-            pattern = np.array(pattern, dtype=np.int32)
-            corners[:, i] = block + pattern
+            np_pattern = np.array(pattern, dtype=np.int32)
+            corners[:, i] = block + np_pattern
 
             # linear interpolation
             weights[:, i] = np.prod(
-                fractional * pattern + (1 - fractional) * (1 - pattern), axis=1
+                fractional * np_pattern + (1 - fractional) * (1 - np_pattern), axis=1
             )
 
         value_index = np.zeros(corners.shape[:2], dtype="int32")
