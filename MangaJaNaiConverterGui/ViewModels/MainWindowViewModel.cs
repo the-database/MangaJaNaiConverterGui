@@ -1,5 +1,6 @@
 ﻿using Avalonia.Data;
 using Avalonia.Threading;
+using Newtonsoft.Json;
 using Progression.Extras;
 using ReactiveUI;
 using SevenZipExtractor;
@@ -57,7 +58,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             _timer.Tick += _timer_Tick;
 
             ShowDialog = new Interaction<MainWindowViewModel, MainWindowViewModel?>();
-
         }
 
         public Interaction<MainWindowViewModel, MainWindowViewModel?> ShowDialog { get; }
@@ -81,12 +81,68 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string AppVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
+        private string[] _tileSizes = [
+            "Auto (Estimate)",
+            "Maximum",
+            "No Tiling",
+            "128",
+            "192",
+            "256",
+            "384",
+            "512",
+            "768",
+            "1024",
+            "2048",
+            "4096"];
+
+        public string[] TileSizes
+        {
+            get => _tileSizes;
+            set => this.RaiseAndSetIfChanged(ref _tileSizes, value);
+        }
+
+        private string[] _deviceList = [];
+
+        public string[] DeviceList
+        {
+            get => _deviceList;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref _deviceList, value); 
+                this.RaisePropertyChanged(nameof(SelectedDeviceIndex));
+            }
+        }
+
         private bool _autoUpdate;
         [DataMember]
         public bool AutoUpdateEnabled
         {
             get => _autoUpdate;
             set => this.RaiseAndSetIfChanged(ref _autoUpdate, value);
+        }
+
+        private int _selectedDeviceIndex;
+        [DataMember]
+        public int SelectedDeviceIndex
+        {
+            get => _selectedDeviceIndex;
+            set => this.RaiseAndSetIfChanged(ref _selectedDeviceIndex, value);
+        }
+
+        private bool _useCpu;
+        [DataMember]
+        public bool UseCpu
+        {
+            get => _useCpu;
+            set => this.RaiseAndSetIfChanged(ref _useCpu, value);
+        }
+
+        private bool _useFp16;
+        [DataMember] 
+        public bool UseFp16
+        {
+            get => _useFp16;
+            set => this.RaiseAndSetIfChanged(ref _useFp16, value);
         }
 
         private int _selectedTabIndex;
@@ -185,6 +241,14 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _grayscaleModelFilePath, value);
         }
 
+        private string _grayscaleModelTileSize = "Auto (Estimate)";
+        [DataMember]
+        public string GrayscaleModelTileSize
+        {
+            get => _grayscaleModelTileSize;
+            set => this.RaiseAndSetIfChanged(ref _grayscaleModelTileSize, value);
+        }
+
         private string _colorModelFilePath = string.Empty;
         [DataMember]
         public string ColorModelFilePath
@@ -193,12 +257,28 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _colorModelFilePath, value);
         }
 
+        private string _colorModelTileSize = "Auto (Estimate)";
+        [DataMember]
+        public string ColorModelTileSize
+        {
+            get => _colorModelTileSize;
+            set => this.RaiseAndSetIfChanged(ref _colorModelTileSize, value);
+        }
+
         private string _resizeHeightBeforeUpscale = 0.ToString();
         [DataMember]
         public string ResizeHeightBeforeUpscale
         {
             get => _resizeHeightBeforeUpscale;
             set => this.RaiseAndSetIfChanged(ref _resizeHeightBeforeUpscale, value);
+        }
+
+        private string _resizeWidthBeforeUpscale = 0.ToString();
+        [DataMember]
+        public string ResizeWidthBeforeUpscale
+        {
+            get => _resizeWidthBeforeUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthBeforeUpscale, value);
         }
 
         private string _resizeFactorBeforeUpscale = 100.ToString();
@@ -864,6 +944,61 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
                 
             }
+        }
+
+        public async Task<string[]> InitializeDeviceList()
+        {
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                _runningProcess = process;
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = @"/C .\python\python.exe .\backend\src\device_list.py";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\chaiNNer");
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+
+                var result = string.Empty;
+
+                // Create a StreamWriter to write the output to a log file
+                using (var outputFile = new StreamWriter("error.log", append: true))
+                {
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            //outputFile.WriteLine(e.Data); // Write the output to the log file
+                            //ConsoleQueueEnqueue(e.Data);
+                            Debug.WriteLine(e.Data);
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            result = e.Data;
+                            Debug.WriteLine(e.Data);
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        return JsonConvert.DeserializeObject<string[]>(result);
+                    }
+                }
+            }
+
+            return [];
         }
 
         public async void ShowSettingsDialog()

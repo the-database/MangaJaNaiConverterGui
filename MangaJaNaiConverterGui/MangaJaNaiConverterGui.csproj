@@ -21,15 +21,15 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.6" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.6" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.6" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.6" />
+    <PackageReference Include="Avalonia" Version="11.0.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.9" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.9" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.6" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.6" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.9" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.9" />
     <PackageReference Include="Clowd.Squirrel" Version="3.0.210-g5f9f594" />
-    <PackageReference Include="FluentAvaloniaUI" Version="2.0.4" />
+    <PackageReference Include="FluentAvaloniaUI" Version="2.0.5" />
     <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -45,20 +45,9 @@
     <None Update="appstate.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="chaiNNer\backend\src\runmangajanaiconverterguiupscale.py">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <Content Include="chaiNNer\ImageMagick\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="chaiNNer\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <!--<CopyToOutputDirectory>Always</CopyToOutputDirectory>-->
     </Content>
-    <None Update="chaiNNer\models\4x_MangaJaNai_Color_V1RC30booruonly_40k.pth">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="chaiNNer\models\4x_MangaJaNai_Grayscale_V1RC34_100k.pth">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="chaiNNer\python\python311._pth">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

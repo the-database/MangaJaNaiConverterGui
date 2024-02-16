@@ -35,8 +35,6 @@ namespace MangaJaNaiConverterGui.Views
 
             //this.WhenActivated(action => action(ViewModel!.ShowDialog.RegisterHandler(DoShowDialogAsync)));//TODO
 
-
-
             var inputFileNameTextBox = this.FindControl<TextBox>("InputFileNameTextBox");
             var outputFileNameTextBox = this.FindControl<TextBox>("OutputFileNameTextBox");
             var inputFolderNameTextBox = this.FindControl<TextBox>("InputFolderNameTextBox");
@@ -51,11 +49,13 @@ namespace MangaJaNaiConverterGui.Views
             colorModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetColorModelFilePath);
         }
 
-        private void MainWindow_Opened(object? sender, EventArgs e)
+        private async void MainWindow_Opened(object? sender, EventArgs e)
         {
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.CheckAndExtractBackend();
+
+                vm.DeviceList = await vm.InitializeDeviceList();
             }
         }
 

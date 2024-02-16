@@ -1,6 +1,9 @@
 {
   "$type": "MangaJaNaiConverterGui.ViewModels.MainWindowViewModel, MangaJaNaiConverterGui",
   "AutoUpdateEnabled": true,
+  "SelectedDeviceIndex": 0,
+  "UseCpu": false,
+  "UseFp16":  true,
   "SelectedTabIndex": 0,
   "InputFilePath": "",
   "InputFolderPath": "",
