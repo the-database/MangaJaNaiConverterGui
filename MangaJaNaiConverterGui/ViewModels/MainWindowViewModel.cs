@@ -297,6 +297,14 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value);
         }
 
+        private string _resizeWidthAfterUpscale = 0.ToString();
+        [DataMember]
+        public string ResizeWidthAfterUpscale
+        {
+            get => _resizeWidthAfterUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value);
+        }
+
         private string _resizeFactorAfterUpscale = 100.ToString();
         [DataMember]
         public string ResizeFactorAfterUpscale
@@ -577,6 +585,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     flags.Append("--use-lossless-compression ");
                 }
+                if (UseCpu)
+                {
+                    flags.Append("--use-cpu ");
+                }
+                if (UseFp16)
+                {
+                    flags.Append("--use-fp16 ");
+                }
 
                 var inputArgs = $"--input-file-path \"{InputFilePath}\" ";
 
@@ -588,7 +604,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 var grayscaleModelFilePath = string.IsNullOrWhiteSpace(GrayscaleModelFilePath) ? GrayscaleModelFilePath : Path.GetFullPath(GrayscaleModelFilePath);
                 var colorModelFilePath = string.IsNullOrWhiteSpace(ColorModelFilePath) ? ColorModelFilePath : Path.GetFullPath(ColorModelFilePath);
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{grayscaleModelFilePath}"" --color-model-path ""{colorModelFilePath}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --selected-device {SelectedDeviceIndex} {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-width-before-upscale {ResizeWidthBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{grayscaleModelFilePath}"" --grayscale-model-tile-size ""{GrayscaleModelTileSize}"" --color-model-path ""{colorModelFilePath}"" --color-model-tile-size ""{ColorModelTileSize}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-width-after-upscale {ResizeWidthAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
