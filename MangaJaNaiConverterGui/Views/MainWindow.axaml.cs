@@ -31,7 +31,7 @@ namespace MangaJaNaiConverterGui.Views
         public MainWindow()
         {
             AvaloniaXamlLoader.Load(this);
-            _um = new UpdateManager("https://github.com/the-database/MangaJaNaiConverterGui/releases");
+            _um = new UpdateManager("https://github.com/the-database/MangaJaNaiConverterGui/releases", logger: Program.Log);
 
             Resized += MainWindow_Resized;
             Closing += MainWindow_Closing;
@@ -58,8 +58,6 @@ namespace MangaJaNaiConverterGui.Views
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.CheckAndExtractBackend();
-
-                vm.DeviceList = await vm.InitializeDeviceList();
             }
         }
 

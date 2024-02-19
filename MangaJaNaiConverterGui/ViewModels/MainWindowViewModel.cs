@@ -964,6 +964,11 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public async Task<string[]> InitializeDeviceList()
         {
+            if (!File.Exists(@".\chaiNNer\backend\src\device_list.py"))
+            {
+                return [];
+            }
+
             // Create a new process to run the CMD command
             using (var process = new Process())
             {
@@ -1056,9 +1061,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             this.RaisePropertyChanged(nameof(ConsoleText));
         }
 
-        public void CheckAndExtractBackend()
+        public async void CheckAndExtractBackend()
         {
-            Task.Run(() =>
+            await Task.Run(() =>
             {
                 var backendArchivePath = Path.GetFullPath("./chaiNNer.7z");
 
@@ -1072,6 +1077,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                     IsExtractingBackend = false;
                 }
             });
+
+            DeviceList = await InitializeDeviceList();
         }
     }
 }
