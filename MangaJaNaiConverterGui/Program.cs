@@ -1,24 +1,23 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
-using AvaloniaCrossPlat;
-using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
+using Squirrel;
 using System;
-using Velopack;
 
 namespace MangaJaNaiConverterGui
 {
     internal class Program
     {
-        public static ILogger Log { get; private set; }
-
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
         public static void Main(string[] args)
         {
-            Log = new MemoryLogger();
-            VelopackApp.Build().Run(Log);
+            SquirrelAwareApp.HandleEvents(
+                onInitialInstall: OnAppInstall,
+                onAppUninstall: OnAppUninstall
+            );
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 
@@ -29,5 +28,15 @@ namespace MangaJaNaiConverterGui
                 .WithInterFont()
                 .LogToTrace()
                 .UseReactiveUI();
+
+        private static void OnAppInstall(SemanticVersion version, IAppTools tools)
+        {
+            tools.CreateShortcutForThisExe(ShortcutLocation.StartMenu | ShortcutLocation.Desktop);
+        }
+
+        private static void OnAppUninstall(SemanticVersion version, IAppTools tools)
+        {
+            tools.RemoveShortcutForThisExe(ShortcutLocation.StartMenu | ShortcutLocation.Desktop);
+        }
     }
 }
