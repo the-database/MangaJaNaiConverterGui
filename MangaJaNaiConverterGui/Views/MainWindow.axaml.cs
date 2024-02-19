@@ -339,7 +339,7 @@ namespace MangaJaNaiConverterGui.Views
                     AllowMultiple = false,
                     FileTypeFilter = new FilePickerFileType[]
                     {
-                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
+                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.safetensors" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
                     },
                     SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folderPath))),
                 });
@@ -373,7 +373,7 @@ namespace MangaJaNaiConverterGui.Views
                     AllowMultiple = false,
                     FileTypeFilter = new FilePickerFileType[]
                     {
-                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.onnx" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
+                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.safetensors" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
                     },
                     SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folderPath))),
                 });

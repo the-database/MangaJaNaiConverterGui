@@ -308,7 +308,7 @@
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Grayscale Model Path</TextBlock>
                   <TextBox x:Name="GrayscaleModelFilePathTextBox" Margin="0,0,5,0" Text="{Binding GrayscaleModelFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
                   <Button Content="Select File" Click="OpenGrayscaleModelFileButtonClick" />
-                  <TextBlock Width="400" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">File path of the PyTorch .pth or ONNX model to run on black and white images. If unspecified, black and white images will not be upscaled.</TextBlock>
+                  <TextBlock Width="400" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">File path of the PyTorch .pth model to run on black and white images. If unspecified, black and white images will not be upscaled.</TextBlock>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
@@ -322,7 +322,7 @@
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Color Model Path</TextBlock>
                   <TextBox x:Name="ColorModelFilePathTextBox" Margin="0,0,5,0" Text="{Binding ColorModelFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
                   <Button Content="Select File" Click="OpenColorModelFileButtonClick" />
-                  <TextBlock Width="400" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">File path of the PyTorch .pth or ONNX model to run on color images. If unspecified, color images will not be upscaled.</TextBlock>
+                  <TextBlock Width="400" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">File path of the PyTorch .pth model to run on color images. If unspecified, color images will not be upscaled.</TextBlock>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">

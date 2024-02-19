@@ -1079,6 +1079,11 @@ namespace MangaJaNaiConverterGui.ViewModels
             });
 
             DeviceList = await InitializeDeviceList();
+
+            if (DeviceList.Length == 0)
+            {
+                UseCpu = true;
+            }
         }
     }
 }
