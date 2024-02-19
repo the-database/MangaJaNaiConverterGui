@@ -1065,7 +1065,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             await Task.Run(() =>
             {
-                var backendArchivePath = Path.GetFullPath("./chaiNNer.7z");
+                var backendArchivePath = Path.GetFullPath("./chaiNNer.7z_");
 
                 if (File.Exists(backendArchivePath))
                 {
