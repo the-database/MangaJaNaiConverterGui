@@ -1,15 +1,15 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
+using AvaloniaCrossPlat;
+using Microsoft.Extensions.Logging;
 using System;
 using Velopack;
-using Serilog;
-using Serilog.Extensions.Logging;
 
 namespace MangaJaNaiConverterGui
 {
     internal class Program
     {
-        public static Microsoft.Extensions.Logging.ILogger Log { get; private set; }
+        public static ILogger Log { get; private set; }
 
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -17,19 +17,8 @@ namespace MangaJaNaiConverterGui
         [STAThread]
         public static void Main(string[] args)
         {
-
-            //Log = new LoggerConfiguration().WriteTo.Console().CreateLogger();
-
-            var serilogLogger = new LoggerConfiguration()
-            .Enrich.FromLogContext()
-            .MinimumLevel.Verbose()
-            .WriteTo.File("mangajanaiconvertergui.log") // Serilog.Sinks.Debug
-            .CreateLogger();
-
-            var microsoftLogger = new SerilogLoggerFactory(serilogLogger)
-                .CreateLogger(nameof(Program));
-
-            VelopackApp.Build().Run(microsoftLogger);
+            Log = new MemoryLogger();
+            VelopackApp.Build().Run(Log);
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 
