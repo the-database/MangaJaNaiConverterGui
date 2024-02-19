@@ -16,19 +16,23 @@ using FluentAvalonia.UI.Windowing;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Material.Icons.Avalonia;
-using Squirrel;
+using Velopack;
 
 namespace MangaJaNaiConverterGui.Views
 {
     public partial class MainWindow : AppWindow
     {
+        private readonly UpdateManager _um;
+        private UpdateInfo _update;
+
         private bool _autoScrollConsole = true;
         private bool _userWantsToQuit = false;
 
         public MainWindow()
         {
             AvaloniaXamlLoader.Load(this);
-            
+            _um = new UpdateManager("https://github.com/the-database/MangaJaNaiConverterGui/releases", logger: Program.Log);
+
             Resized += MainWindow_Resized;
             Closing += MainWindow_Closing;
             Opened += MainWindow_Opened;
@@ -76,13 +80,15 @@ namespace MangaJaNaiConverterGui.Views
                 }
                 else
                 {
-                    using var mgr = new UpdateManager("https://github.com/the-database/MangaJaNaiConverterGui/releases");
-                    if (!mgr.IsInstalledApp)
+                    if (_um.IsInstalled)
                     {
-                        return;
-                    }
+                        _update = await _um.CheckForUpdatesAsync().ConfigureAwait(true);
 
-                    var newVersion = await mgr.UpdateApp();
+                        if (_update != null)
+                        {
+                            _um.ApplyUpdatesAndExit(_update);
+                        }
+                    }
                 }
             }
         }
