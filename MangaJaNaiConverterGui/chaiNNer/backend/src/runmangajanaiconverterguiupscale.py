@@ -521,8 +521,8 @@ def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_pat
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
 
                     upscale_archive_file(os.path.join(root, filename), output_file_path,
-                                         auto_adjust_levels, resize_height_before_upscale, resize_factor_before_upscale,
-                                         image_format,
+                                         auto_adjust_levels, resize_height_before_upscale, resize_width_before_upscale,
+                                         resize_factor_before_upscale, image_format,
                                          lossy_compression_quality, use_lossless_compression,
                                          resize_height_after_upscale, resize_width_after_upscale,
                                          resize_factor_after_upscale)  # TODO custom output extension
