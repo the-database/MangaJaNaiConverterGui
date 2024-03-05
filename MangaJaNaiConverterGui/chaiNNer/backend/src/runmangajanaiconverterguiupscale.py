@@ -6,17 +6,14 @@ from ctypes import windll
 import io
 import cv2
 from tqdm import tqdm
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter, ImageCms
 import numpy as np
 import argparse
 import zipfile
 import rarfile
 import time
 from multiprocessing import Queue, Process, Manager
-
-os.environ["MAGICK_HOME"] = os.path.abspath(r".\ImageMagick")
-from wand.image import Image as WandImage
-from wand.display import display
+from chainner_ext import resize, ResizeFilter
 
 from api import (
     BaseOutput,
@@ -85,14 +82,50 @@ def get_tile_size(tile_size_str):
     return ESTIMATE
 
 
-def mitchell_resize_wand(image, new_size):
-    # print(f"mitchell_resize_wand {new_size}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", flush=True)
-    with WandImage.from_array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)) as img:
-        img.transform_colorspace("rgb")
-        img.resize(*new_size)
-        img.transform_colorspace("srgb")
-        arr = np.array(img)
-        return cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+"""
+lanczos downscale without color conversion, for pre-upscale
+downscale and final color downscale 
+"""
+
+
+def standard_resize(image, new_size):
+    new_image = np.float32(image) / 255.0
+    new_image = resize(new_image, new_size, ResizeFilter.Lanczos, False)
+    return (new_image * 255).astype(np.uint8)
+
+
+"""
+final downscale for grayscale images only
+"""
+
+
+def dotgain20_resize(image, new_size):
+    h, w = image.shape[:2]
+    size_ratio = h / new_size[1]
+    blur_size = (1 / size_ratio - 1) / 3.5
+    if blur_size >= 0.1:
+        if blur_size > 250:
+            blur_size = 250
+
+    pil_image = Image.fromarray(image[:, :, 0], mode="L")
+    pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=blur_size))
+    pil_image = ImageCms.applyTransform(pil_image, dotgain20togamma1transform, False)
+
+    new_image = np.array(pil_image)
+    new_image = np.float32(new_image) / 255.0
+    new_image = resize(new_image, new_size, ResizeFilter.CubicCatrom, False)
+    new_image = (new_image * 255).astype(np.uint8)
+
+    pil_image = Image.fromarray(new_image[:, :, 0], mode="L")
+    pil_image = ImageCms.applyTransform(pil_image, gamma1todotgain20transform, False)
+    return np.array(pil_image)
+
+
+def image_resize(image, new_size, is_grayscale):
+    if is_grayscale:
+        return dotgain20_resize(image, new_size)
+
+    return standard_resize(image, new_size)
 
 
 def get_system_codepage():
@@ -215,7 +248,7 @@ def _read_cv_from_path(path):
 
 def cv_image_is_grayscale(image):
     _, _, c = get_h_w_c(image)
-
+    print('cv_image_is_grayscale', c)
     if c == 1:
         return True
 
@@ -225,7 +258,8 @@ def cv_image_is_grayscale(image):
     # Calculate the mean pixel value for each channel
     image_mean = np.mean(image, axis=(0, 1))
     gray_image_mean = np.mean(gray_image)
-
+    print('image_mean', image_mean)
+    print('gray_mean', gray_image_mean)
     # Define a threshold for considering it grayscale
     threshold = 5  # Adjust the threshold as needed
 
@@ -248,7 +282,6 @@ def ai_upscale_image(image, is_grayscale):
     # print(f"ai_upscale_image")
     if is_grayscale:
         if grayscale_model is not None:
-            # TODO estimate vs no_tiling benchmark
             return upscale_image_node(context, image, grayscale_model, grayscale_model_tile_size, False)
     else:
         if color_model is not None:
@@ -262,7 +295,8 @@ def postprocess_image(image):
 
 
 def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression,
-                   resize_height_after_upscale, resize_width_after_upscale, resize_factor_after_upscale):
+                   resize_height_after_upscale, resize_width_after_upscale, resize_factor_after_upscale,
+                   is_grayscale):
     print(f"save image to zip: {file_name}", flush=True)
 
     params = []
@@ -294,19 +328,19 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
     # resize width and height, distorting image
     if resize_height_after_upscale != 0 and resize_width_after_upscale != 0:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (resize_width_after_upscale, resize_height_after_upscale))
+        image = image_resize(image, (resize_width_after_upscale, resize_height_after_upscale), is_grayscale)
     # resize height, keep proportional width
     elif resize_height_after_upscale != 0:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale))
+        image = image_resize(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale), is_grayscale)
     # resize width, keep proportional height
     elif resize_width_after_upscale != 0:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (resize_width_after_upscale, round(h * resize_width_after_upscale / w)))
+        image = image_resize(image, (resize_width_after_upscale, round(h * resize_width_after_upscale / w)), is_grayscale)
     elif resize_factor_after_upscale != 100:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (
-        round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)))
+        image = image_resize(image, (
+            round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)), is_grayscale)
 
     # Convert the resized image back to bytes
     _, buf_img = cv2.imencode(f".{image_format}", image, params)
@@ -318,7 +352,8 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
 
 
 def save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression,
-               resize_height_after_upscale, resize_width_after_upscale, resize_factor_after_upscale):
+               resize_height_after_upscale, resize_width_after_upscale, resize_factor_after_upscale,
+               is_grayscale):
     print(f"save image: {output_file_path}", flush=True)
 
     params = []
@@ -349,19 +384,19 @@ def save_image(image, output_file_path, image_format, lossy_compression_quality,
     # resize width and height, distorting image
     if resize_height_after_upscale != 0 and resize_width_after_upscale != 0:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (resize_width_after_upscale, resize_height_after_upscale))
+        image = image_resize(image, (resize_width_after_upscale, resize_height_after_upscale), is_grayscale)
     # resize height, keep proportional width
     elif resize_height_after_upscale != 0:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale))
+        image = image_resize(image, (round(w * resize_height_after_upscale / h), resize_height_after_upscale), is_grayscale)
     # resize width, keep proportional height
     elif resize_width_after_upscale != 0:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (resize_width_after_upscale, round(h * resize_width_after_upscale / w)))
+        image = image_resize(image, (resize_width_after_upscale, round(h * resize_width_after_upscale / w)), is_grayscale)
     elif resize_factor_after_upscale != 100:
         h, w = image.shape[:2]
-        image = mitchell_resize_wand(image, (
-        round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)))
+        image = image_resize(image, (
+            round(w * resize_factor_after_upscale / 100), round(h * resize_factor_after_upscale / 100)), is_grayscale)
 
     cv_save_image(output_file_path, image, params)
 
@@ -417,27 +452,27 @@ def preprocess_worker_archive_file(upscale_queue, input_archive, auto_adjust_lev
                 # image = _read_pil(img)
                 image = _read_cv(image_bytes)
 
+                is_grayscale = cv_image_is_grayscale(image)
+                # print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
+
                 # resize width and height, distorting image
                 if resize_height_before_upscale != 0 and resize_width_before_upscale != 0:
                     h, w = image.shape[:2]
-                    image = mitchell_resize_wand(image, (resize_width_before_upscale, resize_height_before_upscale))
+                    image = standard_resize(image, (resize_width_before_upscale, resize_height_before_upscale))
                 # resize height, keep proportional width
                 elif resize_height_before_upscale != 0:
                     h, w = image.shape[:2]
-                    image = mitchell_resize_wand(image, (
+                    image = standard_resize(image, (
                         round(w * resize_height_before_upscale / h), resize_height_before_upscale))
                 # resize width, keep proportional height
                 elif resize_width_before_upscale != 0:
                     h, w = image.shape[:2]
-                    image = mitchell_resize_wand(image, (
+                    image = standard_resize(image, (
                         resize_width_before_upscale, round(h * resize_width_before_upscale / w)))
                 elif resize_factor_before_upscale != 100:
                     h, w = image.shape[:2]
-                    image = mitchell_resize_wand(image, (
-                    round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
-
-                is_grayscale = cv_image_is_grayscale(image)
-                # print(f"is_grayscale? {is_grayscale} {filename}", flush=True)
+                    image = standard_resize(image, (
+                        round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
                 if is_grayscale and auto_adjust_levels:
                     image = enhance_contrast(image)
@@ -447,7 +482,7 @@ def preprocess_worker_archive_file(upscale_queue, input_archive, auto_adjust_lev
         except:
             print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
             upscale_queue.put((image_data, decoded_filename, False, False))
-            pass
+        #     pass
     upscale_queue.put(SENTINEL)
 
     # print("preprocess_worker_archive exiting")
@@ -485,26 +520,29 @@ def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_pat
 
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
                     image = _read_cv_from_path(os.path.join(root, filename))
+
+                    is_grayscale = cv_image_is_grayscale(image)
+
                     # resize width and height, distorting image
                     if resize_height_before_upscale != 0 and resize_width_before_upscale != 0:
                         h, w = image.shape[:2]
-                        image = mitchell_resize_wand(image, (resize_width_before_upscale, resize_height_before_upscale))
+                        image = standard_resize(image,
+                                                      (resize_width_before_upscale, resize_height_before_upscale))
                     # resize height, keep proportional width
                     elif resize_height_before_upscale != 0:
                         h, w = image.shape[:2]
-                        image = mitchell_resize_wand(image, (
+                        image = standard_resize(image, (
                             round(w * resize_height_before_upscale / h), resize_height_before_upscale))
                     # resize width, keep proportional height
                     elif resize_width_before_upscale != 0:
                         h, w = image.shape[:2]
-                        image = mitchell_resize_wand(image, (
+                        image = standard_resize(image, (
                             resize_width_before_upscale, round(h * resize_width_before_upscale / w)))
                     elif resize_factor_before_upscale != 100:
                         h, w = image.shape[:2]
-                        image = mitchell_resize_wand(image, (
-                        round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
-
-                    is_grayscale = cv_image_is_grayscale(image)
+                        image = standard_resize(image, (
+                            round(w * resize_factor_before_upscale / 100),
+                            round(h * resize_factor_before_upscale / 100)))
 
                     if is_grayscale and auto_adjust_levels:
                         image = enhance_contrast(image)
@@ -546,25 +584,27 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
         os.makedirs(os.path.dirname(output_image_path), exist_ok=True)
         # with Image.open(input_image_path) as img:
         image = _read_cv_from_path(input_image_path)
+
+        is_grayscale = cv_image_is_grayscale(image)
+
         # resize width and height, distorting image
         if resize_height_before_upscale != 0 and resize_width_before_upscale != 0:
             h, w = image.shape[:2]
-            image = mitchell_resize_wand(image, (resize_width_before_upscale, resize_height_before_upscale))
+            image = standard_resize(image, (resize_width_before_upscale, resize_height_before_upscale))
         # resize height, keep proportional width
         elif resize_height_before_upscale != 0:
             h, w = image.shape[:2]
-            image = mitchell_resize_wand(image,
-                                         (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
+            image = standard_resize(image,
+                                          (round(w * resize_height_before_upscale / h), resize_height_before_upscale))
         # resize width, keep proportional height
         elif resize_width_before_upscale != 0:
             h, w = image.shape[:2]
-            image = mitchell_resize_wand(image, (resize_width_before_upscale, round(h * resize_width_before_upscale / w)))
+            image = standard_resize(image,
+                                          (resize_width_before_upscale, round(h * resize_width_before_upscale / w)))
         elif resize_factor_before_upscale != 100:
             h, w = image.shape[:2]
-            image = mitchell_resize_wand(image, (
-            round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
-
-        is_grayscale = cv_image_is_grayscale(image)
+            image = standard_resize(image, (
+                round(w * resize_factor_before_upscale / 100), round(h * resize_factor_before_upscale / 100)))
 
         if is_grayscale and auto_adjust_levels:
             image = enhance_contrast(image)
@@ -608,7 +648,7 @@ def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, los
                 # image = postprocess_image(image)
                 save_image_zip(image, str(Path(file_name).with_suffix(f'.{image_format}')), output_zip, image_format,
                                lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
-                               resize_width_after_upscale, resize_factor_after_upscale)
+                               resize_width_after_upscale, resize_factor_after_upscale, is_grayscale)
             else:  # copy file
                 output_zip.writestr(file_name, image)
             print(f"PROGRESS=postprocess_worker_zip_image", flush=True)
@@ -623,13 +663,13 @@ def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lo
     """
     # print("postprocess_worker_folder entering")
     while True:
-        image, file_name, _, _ = postprocess_queue.get()
+        image, file_name, _, is_grayscale = postprocess_queue.get()
         if image is None:
             break
         image = postprocess_image(image)
         save_image(image, os.path.join(output_folder, str(Path(f"{file_name}.{image_format}"))), image_format,
                    lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
-                   resize_width_after_upscale, resize_factor_after_upscale)
+                   resize_width_after_upscale, resize_factor_after_upscale, is_grayscale)
         print(f"PROGRESS=postprocess_worker_folder", flush=True)
 
     # print("postprocess_worker_folder exiting")
@@ -663,9 +703,9 @@ def upscale_archive_file(input_zip_path, output_zip_path, auto_adjust_levels, re
 
     # start preprocess zip process
     preprocess_process = Process(target=preprocess_worker_archive,
-                                 args=(upscale_queue, input_zip_path, auto_adjust_levels,
-                                       resize_height_before_upscale, resize_width_before_upscale,
-                                       resize_factor_before_upscale))
+                                args=(upscale_queue, input_zip_path, auto_adjust_levels,
+                                      resize_height_before_upscale, resize_width_before_upscale,
+                                      resize_factor_before_upscale))
     preprocess_process.start()
 
     # start upscale process
@@ -674,9 +714,9 @@ def upscale_archive_file(input_zip_path, output_zip_path, auto_adjust_levels, re
 
     # start postprocess zip process
     postprocess_process = Process(target=postprocess_worker_zip,
-                                  args=(postprocess_queue, output_zip_path, image_format, lossy_compression_quality,
-                                        use_lossless_compression, resize_height_after_upscale,
-                                        resize_width_after_upscale, resize_factor_after_upscale))
+                                 args=(postprocess_queue, output_zip_path, image_format, lossy_compression_quality,
+                                       use_lossless_compression, resize_height_after_upscale,
+                                       resize_width_after_upscale, resize_factor_after_upscale))
     postprocess_process.start()
 
     # wait for all processes
@@ -695,10 +735,10 @@ def upscale_image_file(input_image_path, output_image_path, overwrite_existing_f
 
     # start preprocess image process
     preprocess_process = Process(target=preprocess_worker_image, args=(upscale_queue, input_image_path,
-                                                                       output_image_path, overwrite_existing_files,
-                                                                       auto_adjust_levels, resize_height_before_upscale,
-                                                                       resize_width_before_upscale,
-                                                                       resize_factor_before_upscale))
+                                                                      output_image_path, overwrite_existing_files,
+                                                                      auto_adjust_levels, resize_height_before_upscale,
+                                                                      resize_width_before_upscale,
+                                                                      resize_factor_before_upscale))
     preprocess_process.start()
 
     # start upscale process
@@ -707,11 +747,11 @@ def upscale_image_file(input_image_path, output_image_path, overwrite_existing_f
 
     # start postprocess image process
     postprocess_process = Process(target=postprocess_worker_image, args=(postprocess_queue, output_image_path,
-                                                                         image_format, lossy_compression_quality,
-                                                                         use_lossless_compression,
-                                                                         resize_height_after_upscale,
-                                                                         resize_width_after_upscale,
-                                                                         resize_factor_after_upscale))
+                                                                        image_format, lossy_compression_quality,
+                                                                        use_lossless_compression,
+                                                                        resize_height_after_upscale,
+                                                                        resize_width_after_upscale,
+                                                                        resize_factor_after_upscale))
     postprocess_process.start()
 
     # wait for all processes
@@ -771,13 +811,13 @@ def upscale_folder(input_folder_path, output_folder_path, output_filename, upsca
 
     # start preprocess folder process
     preprocess_process = Process(target=preprocess_worker_folder,
-                                 args=(upscale_queue, input_folder_path, output_folder_path,
-                                       output_filename, upscale_images, upscale_archives, overwrite_existing_files,
-                                       auto_adjust_levels, resize_height_before_upscale,
-                                       resize_width_before_upscale, resize_factor_before_upscale, image_format,
-                                       lossy_compression_quality, use_lossless_compression,
-                                       resize_height_after_upscale, resize_width_after_upscale,
-                                       resize_factor_after_upscale))
+                                args=(upscale_queue, input_folder_path, output_folder_path,
+                                      output_filename, upscale_images, upscale_archives, overwrite_existing_files,
+                                      auto_adjust_levels, resize_height_before_upscale,
+                                      resize_width_before_upscale, resize_factor_before_upscale, image_format,
+                                      lossy_compression_quality, use_lossless_compression,
+                                      resize_height_after_upscale, resize_width_after_upscale,
+                                      resize_factor_after_upscale))
     preprocess_process.start()
 
     # start upscale process
@@ -786,11 +826,11 @@ def upscale_folder(input_folder_path, output_folder_path, output_filename, upsca
 
     # start postprocess folder process
     postprocess_process = Process(target=postprocess_worker_folder, args=(postprocess_queue, output_folder_path,
-                                                                          image_format, lossy_compression_quality,
-                                                                          use_lossless_compression,
-                                                                          resize_height_after_upscale,
-                                                                          resize_width_after_upscale,
-                                                                          resize_factor_after_upscale))
+                                                                         image_format, lossy_compression_quality,
+                                                                         use_lossless_compression,
+                                                                         resize_height_after_upscale,
+                                                                         resize_width_after_upscale,
+                                                                         resize_factor_after_upscale))
     postprocess_process.start()
 
     # wait for all processes
@@ -855,6 +895,13 @@ if args.color_model_path:
 
 if args.grayscale_model_path:
     grayscale_model, dirname, basename = load_model_node(context, args.grayscale_model_path)
+
+gamma1icc = ImageCms.getOpenProfile(r'.\ImageMagick\Custom Gray Gamma 1.0.icc')
+dotgain20icc = ImageCms.getOpenProfile(r'.\ImageMagick\Dot Gain 20%.icc')
+
+dotgain20togamma1transform = ImageCms.buildTransformFromOpenProfiles(dotgain20icc, gamma1icc, 'L', 'L')
+gamma1todotgain20transform = ImageCms.buildTransformFromOpenProfiles(gamma1icc, dotgain20icc, 'L', 'L')
+
 
 if __name__ == '__main__':
     # gc.disable() #TODO!!!!!!!!!!!!
