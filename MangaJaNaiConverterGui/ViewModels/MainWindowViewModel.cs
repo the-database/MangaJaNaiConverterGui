@@ -22,8 +22,8 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class MainWindowViewModel : ViewModelBase
     {
-        public static readonly List<string> IMAGE_EXTENSIONS = new() { ".png", ".jpg", ".jpeg", ".webp", ".bmp" };
-        public static readonly List<string> ARCHIVE_EXTENSIONS = new() { ".zip", ".cbz", ".rar", ".cbr"};
+        public static readonly List<string> IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp"];
+        public static readonly List<string> ARCHIVE_EXTENSIONS = [".zip", ".cbz", ".rar", ".cbr"];
 
         private readonly DispatcherTimer _timer = new ();
 
@@ -985,8 +985,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                 var result = string.Empty;
 
                 // Create a StreamWriter to write the output to a log file
-                using (var outputFile = new StreamWriter("error.log", append: true))
+                try
                 {
+                    using var outputFile = new StreamWriter("error.log", append: true);
                     process.ErrorDataReceived += (sender, e) =>
                     {
                         if (!string.IsNullOrEmpty(e.Data))
@@ -1016,6 +1017,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         return JsonConvert.DeserializeObject<string[]>(result);
                     }
                 }
+                catch (IOException) { }
             }
 
             return [];
