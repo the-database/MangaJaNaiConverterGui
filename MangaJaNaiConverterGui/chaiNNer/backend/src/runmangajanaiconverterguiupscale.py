@@ -197,42 +197,19 @@ def enhance_contrast(image):
 
 
 def _read_cv(img_stream):
-    # if get_ext(path) not in get_opencv_formats():
-    #     # not supported
-    #     return None
-
-    # img = None
-    # try:
-    #     img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
-    # except Exception as cv_err:
-    #     print(f"Error loading image, trying with imdecode: {cv_err}")
-
-    # if img is None:
-    #     try:
-    #         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-    #     except Exception as e:
-    #         raise RuntimeError(
-    #             f'Error reading image image from path "{path}". Image may be corrupt.'
-    #         ) from e
-
-    # if img is None:  # type: ignore
-    #     raise RuntimeError(
-    #         f'Error reading image image from path "{path}". Image may be corrupt.'
-    #     )
-
-    return cv2.imdecode(np.frombuffer(img_stream.read(), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+    return cv2.imdecode(np.frombuffer(img_stream.read(), dtype=np.uint8), cv2.IMREAD_COLOR)
 
 
 def _read_cv_from_path(path):
     img = None
     try:
-        img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
     except Exception as cv_err:
         logger.warning(f"Error loading image, trying with imdecode: {cv_err}")
 
     if img is None:
         try:
-            img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+            img = cv2.imread(str(path), cv2.IMREAD_COLOR)
         except Exception as e:
             raise RuntimeError(
                 f'Error reading image image from path "{path}". Image may be corrupt.'
@@ -248,7 +225,7 @@ def _read_cv_from_path(path):
 
 def cv_image_is_grayscale(image):
     _, _, c = get_h_w_c(image)
-    print('cv_image_is_grayscale', c)
+    # print('cv_image_is_grayscale', c)
     if c == 1:
         return True
 
@@ -261,12 +238,20 @@ def cv_image_is_grayscale(image):
     r_b = cv2.subtract(abs(cv2.subtract(r, b)), ignore_threshold)
     g_b = cv2.subtract(abs(cv2.subtract(g, b)), ignore_threshold)
 
-    # sum of differences
-    diff_sum = np.sum(r_g + r_b + g_b)
+    # create a mask to identify pure white pixels
+    pure_white_mask = np.logical_and.reduce((r == 255, g == 255, b == 255))
 
-    # finding ratio of diff_sum with respect to size of image
-    ratio = diff_sum / (image.size * 3)
+    # exclude pure white pixels from diff_sum and image size calculation
+    diff_sum = np.sum(np.where(pure_white_mask, 0, r_g + r_b + g_b))
+    size_without_white = np.sum(~pure_white_mask) * 3
 
+    # if the entire image is white, return true
+    if size_without_white == 0:
+        return True
+
+    # finding ratio of diff_sum with respect to size of image without white pixels
+    ratio = diff_sum / size_without_white
+    # print('ratio', ratio)
     return ratio < 1
 
 
