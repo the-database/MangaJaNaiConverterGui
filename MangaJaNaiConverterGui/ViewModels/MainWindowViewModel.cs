@@ -1211,6 +1211,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             else
             {
+                UpdateStatusText = "No updates found";
             }
         }
 
