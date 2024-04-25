@@ -9,15 +9,13 @@ namespace MangaJaNaiConverterGui
 {
     internal class Program
     {
-        public static ILogger Log { get; private set; }
-
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
         public static void Main(string[] args)
         {
-            VelopackApp.Build().Run(Log);
+            VelopackApp.Build().Run();
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 

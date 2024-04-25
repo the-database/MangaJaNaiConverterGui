@@ -22,16 +22,12 @@ namespace MangaJaNaiConverterGui.Views
 {
     public partial class MainWindow : AppWindow
     {
-        private readonly UpdateManager _um;
-        private UpdateInfo _update;
-
         private bool _autoScrollConsole = true;
         private bool _userWantsToQuit = false;
 
         public MainWindow()
         {
             AvaloniaXamlLoader.Load(this);
-            _um = new UpdateManager("https://github.com/the-database/MangaJaNaiConverterGui/releases", logger: Program.Log);
 
             Resized += MainWindow_Resized;
             Closing += MainWindow_Closing;
@@ -80,15 +76,6 @@ namespace MangaJaNaiConverterGui.Views
                 }
                 else
                 {
-                    if (_um.IsInstalled)
-                    {
-                        _update = await _um.CheckForUpdatesAsync().ConfigureAwait(true);
-
-                        if (_update != null)
-                        {
-                            _um.ApplyUpdatesAndExit(_update);
-                        }
-                    }
                 }
             }
         }

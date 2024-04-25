@@ -1,5 +1,6 @@
 ﻿using Avalonia.Data;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Progression.Extras;
 using ReactiveUI;
@@ -16,6 +17,8 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Velopack;
+using Velopack.Sources;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
@@ -26,6 +29,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public static readonly List<string> ARCHIVE_EXTENSIONS = [".zip", ".cbz", ".rar", ".cbr"];
 
         private readonly DispatcherTimer _timer = new ();
+
+        private readonly UpdateManager _um;
+        private UpdateInfo? _update = null;
 
         public MainWindowViewModel() 
         {
@@ -57,6 +63,10 @@ namespace MangaJaNaiConverterGui.ViewModels
             _timer.Tick += _timer_Tick;
 
             ShowDialog = new Interaction<MainWindowViewModel, MainWindowViewModel?>();
+
+            _um = new UpdateManager(new GithubSource("https://github.com/the-database/MangaJaNaiConverterGui", null, false));
+
+            CheckForUpdates();
         }
 
         public Interaction<MainWindowViewModel, MainWindowViewModel?> ShowDialog { get; }
@@ -78,7 +88,45 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
 
-        public string AppVersion => Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+        public bool IsInstalled => _um?.IsInstalled ?? false;
+
+        private bool _showCheckUpdateButton = true;
+        public bool ShowCheckUpdateButton
+        {
+            get => _showCheckUpdateButton;
+            set => this.RaiseAndSetIfChanged(ref _showCheckUpdateButton, value);
+        }
+
+        private bool _showDownloadButton = false;
+        public bool ShowDownloadButton
+        {
+            get => _showDownloadButton;
+            set 
+            { 
+                this.RaiseAndSetIfChanged(ref _showDownloadButton, value); 
+                this.RaisePropertyChanged(nameof(ShowCheckUpdateButton));
+            }
+        }
+
+        private bool _showApplyButton = false;
+        public bool ShowApplyButton
+        {
+            get => _showApplyButton;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _showApplyButton, value);
+                this.RaisePropertyChanged(nameof(ShowCheckUpdateButton));
+            }
+        }
+
+        public string AppVersion => _um?.CurrentVersion?.ToString() ?? "";
+
+        private string _updateStatusText = string.Empty;
+        public string UpdateStatusText
+        {
+            get => _updateStatusText;
+            set => this.RaiseAndSetIfChanged(ref _updateStatusText, value);
+        }
 
         private string[] _tileSizes = [
             "Auto (Estimate)",
@@ -1085,6 +1133,90 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 UseCpu = true;
             }
+        }
+
+        public async Task CheckForUpdates()
+        {
+            try
+            {
+                if (IsInstalled)
+                {
+                    await Task.Run(async () =>
+                    {
+                        _update = await _um.CheckForUpdatesAsync().ConfigureAwait(true);
+                    });
+                    
+                    UpdateStatus();
+
+                    if (AutoUpdateEnabled)
+                    {
+                        await DownloadUpdate();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText = $"Check for update failed: {ex.Message}";
+            }
+        }
+
+        public async Task DownloadUpdate()
+        {
+            try
+            {
+                if (_update != null)
+                {
+                    ShowDownloadButton = false;
+                    await _um.DownloadUpdatesAsync(_update, Progress).ConfigureAwait(true);
+                    UpdateStatus();
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        public void ApplyUpdate()
+        {
+            if (_update != null)
+            {
+                ShowApplyButton = false;
+                _um.ApplyUpdatesAndRestart(_update);
+            }
+        }
+
+        private void UpdateStatus()
+        {
+            ShowDownloadButton = false;
+            ShowApplyButton = false;
+            ShowCheckUpdateButton = true;
+
+            if (_update != null)
+            {
+                UpdateStatusText = $"Update is available: {_update.TargetFullRelease.Version}";
+                ShowDownloadButton = true;
+                ShowCheckUpdateButton = false;
+
+                if (_um.IsUpdatePendingRestart)
+                {
+                    UpdateStatusText = $"Update ready, pending restart to install version: {_update.TargetFullRelease.Version}";
+                    ShowDownloadButton = false;
+                    ShowApplyButton = true;
+                    ShowCheckUpdateButton = false;
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+            }
+        }
+
+        private void Progress(int percent)
+        {
+            UpdateStatusText= $"Downloading update {_update?.TargetFullRelease.Version} ({percent}%)...";
         }
     }
 }
