@@ -225,7 +225,7 @@ def _read_cv_from_path(path):
 
 def cv_image_is_grayscale(image):
     _, _, c = get_h_w_c(image)
-    # print('cv_image_is_grayscale', c)
+
     if c == 1:
         return True
 
@@ -234,24 +234,28 @@ def cv_image_is_grayscale(image):
     ignore_threshold = 12
 
     # getting differences between (b,g), (r,g), (b,r) channel pixels
-    r_g = cv2.subtract(abs(cv2.subtract(r, g)), ignore_threshold)
-    r_b = cv2.subtract(abs(cv2.subtract(r, b)), ignore_threshold)
-    g_b = cv2.subtract(abs(cv2.subtract(g, b)), ignore_threshold)
+    r_g = cv2.subtract(cv2.absdiff(r, g), ignore_threshold)
+    r_b = cv2.subtract(cv2.absdiff(r, b), ignore_threshold)
+    g_b = cv2.subtract(cv2.absdiff(g, b), ignore_threshold)
 
-    # create a mask to identify pure white pixels
+    # create masks to identify pure black and pure white pixels
+    pure_black_mask = np.logical_and.reduce((r == 0, g == 0, b == 0))
     pure_white_mask = np.logical_and.reduce((r == 255, g == 255, b == 255))
 
-    # exclude pure white pixels from diff_sum and image size calculation
-    diff_sum = np.sum(np.where(pure_white_mask, 0, r_g + r_b + g_b))
-    size_without_white = np.sum(~pure_white_mask) * 3
+    # combine masks to exclude both pure black and pure white pixels
+    exclude_mask = np.logical_or(pure_black_mask, pure_white_mask)
 
-    # if the entire image is white, return true
-    if size_without_white == 0:
-        return True
+    # exclude pure black and pure white pixels from diff_sum and image size calculation
+    diff_sum = np.sum(np.where(exclude_mask, 0, r_g + r_b + g_b))
+    size_without_black_and_white = np.sum(~exclude_mask) * 3
 
-    # finding ratio of diff_sum with respect to size of image without white pixels
-    ratio = diff_sum / size_without_white
-    # print('ratio', ratio)
+    # if the entire image is pure black or pure white, return False
+    if size_without_black_and_white == 0:
+        return False
+
+    # finding ratio of diff_sum with respect to size of image without pure black and pure white pixels
+    ratio = diff_sum / size_without_black_and_white
+
     return ratio < 1
 
 
