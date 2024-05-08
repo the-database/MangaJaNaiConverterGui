@@ -91,7 +91,7 @@ downscale and final color downscale
 def standard_resize(image, new_size):
     new_image = np.float32(image) / 255.0
     new_image = resize(new_image, new_size, ResizeFilter.Lanczos, False)
-    return (new_image * 255).astype(np.uint8)
+    return (new_image * 255).round().astype(np.uint8)
 
 
 """
@@ -114,7 +114,7 @@ def dotgain20_resize(image, new_size):
     new_image = np.array(pil_image)
     new_image = np.float32(new_image) / 255.0
     new_image = resize(new_image, new_size, ResizeFilter.CubicCatrom, False)
-    new_image = (new_image * 255).astype(np.uint8)
+    new_image = (new_image * 255).round().astype(np.uint8)
 
     pil_image = Image.fromarray(new_image[:, :, 0], mode="L")
     pil_image = ImageCms.applyTransform(pil_image, gamma1todotgain20transform, False)
