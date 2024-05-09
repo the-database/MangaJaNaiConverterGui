@@ -15,7 +15,8 @@ namespace MangaJaNaiConverterGui
         private readonly string _file;
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
         {
-            TypeNameHandling = TypeNameHandling.All
+            TypeNameHandling = TypeNameHandling.All,
+            Formatting = Formatting.Indented,
         };
 
         public NewtonsoftJsonSuspensionDriver(string file) => _file = file;

@@ -273,7 +273,7 @@
 
                     <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
-                      <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
+                      <NumericUpDown Margin="0,0,5,0" Value="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                       <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                         Quality level for compression. Note that a quality level of 100 is still lossy.
@@ -298,7 +298,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
+                  <NumericUpDown Margin="0,0,5,0" Value="{Binding ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
                     Resize each image to this width (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this width.
@@ -306,7 +306,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
+                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                   <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                     Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. The final output images will be scaled by this factor, so when using the default 4x models, a setting of 50% can effectively result in a 2x upscale, and a setting of 75% is effectively 3x.
@@ -328,14 +328,14 @@
                             <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
                             <Border Classes="border">
                               <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10" VerticalAlignment="Center">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resolution Range</TextBlock>
-                                  <ui:FAComboBox IsEnabled="False" IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
+                                  <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
                                                  ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
 
                                   <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
-                                  <ui:FAComboBox IsEnabled="False" IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
+                                  <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
                                                  ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                                   <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means that the chain will run on all video resolutions.</TextBlock>
@@ -343,11 +343,11 @@
 
                                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scaling Factor Range</TextBlock>
-                                  <ui:NumberBox IsEnabled="False" Margin="0,0,5,0" Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" />
+                                  <NumericUpDown Margin="0,0,5,0" Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
 
                                   <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
-                                  <ui:NumberBox IsEnabled="False" Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" />
+                                  <NumericUpDown Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
                                   <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
                                 </StackPanel>
@@ -372,7 +372,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
-                                  <ui:NumberBox Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeHeightBeforeUpscale}" Minimum="0" />
+                                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeHeightBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                                     Resize each image to this height before upscaling, set to 0 to disable.
@@ -380,7 +380,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
-                                  <ui:NumberBox Margin="0,0,5,0" Text="{Binding ResizeWidthBeforeUpscale}" Minimum="0" />
+                                  <NumericUpDown Margin="0,0,5,0" Value="{Binding ResizeWidthBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                                     Resize each image to this width before upscaling, set to 0 to disable.
@@ -388,7 +388,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
-                                  <ui:NumberBox Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorBeforeUpscale}" Minimum="0" />
+                                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeFactorBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                                   <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                                     Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.

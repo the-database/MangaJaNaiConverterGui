@@ -294,28 +294,28 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _upscaleArchives, value);
         }
 
-        private string _resizeHeightAfterUpscale = 0.ToString();
+        private int? _resizeHeightAfterUpscale = 0;
         [DataMember]
-        public string ResizeHeightAfterUpscale
+        public int? ResizeHeightAfterUpscale
         {
             get => _resizeHeightAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value);
+            set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value ?? 0);
         }
 
-        private string _resizeWidthAfterUpscale = 0.ToString();
+        private int? _resizeWidthAfterUpscale = 0;
         [DataMember]
-        public string ResizeWidthAfterUpscale
+        public int? ResizeWidthAfterUpscale
         {
             get => _resizeWidthAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value);
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value ?? 0);
         }
 
-        private string _resizeFactorAfterUpscale = 100.ToString();
+        private double? _resizeFactorAfterUpscale = 100;
         [DataMember]
-        public string ResizeFactorAfterUpscale
+        public double? ResizeFactorAfterUpscale
         {
             get => _resizeFactorAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value);
+            set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value ?? 100);
         }
 
         private bool _webpSelected = true;
@@ -372,12 +372,12 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public bool ShowLossyCompressionQuality => JpegSelected || (WebpSelected && !UseLosslessCompression);
 
-        private string _lossyCompressionQuality = 80.ToString();
+        private int? _lossyCompressionQuality = 80;
         [DataMember]
-        public string LossyCompressionQuality
+        public int? LossyCompressionQuality
         {
             get => _lossyCompressionQuality;
-            set => this.RaiseAndSetIfChanged(ref _lossyCompressionQuality, value);
+            set => this.RaiseAndSetIfChanged(ref _lossyCompressionQuality, value ?? 80);
         }
 
         private bool _showLossySettings = true;
@@ -1271,20 +1271,20 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isColor, value);
         }
 
-        private string _minScaleFactor = 0.ToString();
+        private int? _minScaleFactor = 0;
         [DataMember]
-        public string MinScaleFactor
+        public int? MinScaleFactor
         {
             get => _minScaleFactor;
-            set => this.RaiseAndSetIfChanged(ref _minScaleFactor, value);
+            set => this.RaiseAndSetIfChanged(ref _minScaleFactor, value ?? 0);
         }
 
-        private string _maxScaleFactor = 0.ToString();
+        private int? _maxScaleFactor = 0;
         [DataMember]
-        public string MaxScaleFactor
+        public int? MaxScaleFactor
         {
             get => _maxScaleFactor;
-            set => this.RaiseAndSetIfChanged(ref _maxScaleFactor, value);
+            set => this.RaiseAndSetIfChanged(ref _maxScaleFactor, value ?? 0);
         }
 
         private string _modelFilePath = string.Empty;
@@ -1316,23 +1316,23 @@ namespace MangaJaNaiConverterGui.ViewModels
         public int? ResizeHeightBeforeUpscale
         {
             get => _resizeHeightBeforeUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeHeightBeforeUpscale, value);
+            set => this.RaiseAndSetIfChanged(ref _resizeHeightBeforeUpscale, value ?? 0);
         }
 
-        private string _resizeWidthBeforeUpscale = 0.ToString();
+        private int? _resizeWidthBeforeUpscale = 0;
         [DataMember]
-        public string ResizeWidthBeforeUpscale
+        public int? ResizeWidthBeforeUpscale
         {
             get => _resizeWidthBeforeUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeWidthBeforeUpscale, value);
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthBeforeUpscale, value ?? 0);
         }
 
-        private string _resizeFactorBeforeUpscale = 100.ToString();
+        private double? _resizeFactorBeforeUpscale = 100;
         [DataMember]
-        public string ResizeFactorBeforeUpscale
+        public double? ResizeFactorBeforeUpscale
         {
             get => _resizeFactorBeforeUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value);
+            set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
 
