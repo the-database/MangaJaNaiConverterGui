@@ -13,8 +13,8 @@
   "UpscaleImages": true,
   "UpscaleArchives": true,
   "AutoAdjustLevels": true,
-  "GrayscaleModelFilePath": ".\\chaiNNer\\models\\4x_MangaJaNai_Grayscale_1200_V1_ESRGAN_70k.pth",
-  "ColorModelFilePath": ".\\chaiNNer\\models\\4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
+  "GrayscaleModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+  "ColorModelFilePath": "4x_IllustrationJaNaip_V1_ESRGAN_135k",
   "ResizeHeightBeforeUpscale": "0",
   "ResizeFactorBeforeUpscale": "100",
   "ResizeHeightAfterUpscale": "0",
@@ -25,5 +25,175 @@
   "UseLosslessCompression": false,
   "LossyCompressionQuality": "80",
   "ShowLossySettings": true,
-  "ShowAdvancedSettings": false
+  "ShowAdvancedSettings": false,
+  "Chains": {
+    "$type": "Avalonia.Collections.AvaloniaList`1[[MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui]], Avalonia.Base",
+    "$values": [
+      {
+        "ChainNumber":  "1",
+        "IsColor": true,
+        "IsGrayscale": false,
+        "MinResolution": "0x0",
+        "MaxResolution": "0x0",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "2",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x0",
+        "MaxResolution": "0x1250",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "3",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x0",
+        "MaxResolution": "0x1250",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "4",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1251",
+        "MaxResolution": "0x1350",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "5",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1251",
+        "MaxResolution": "0x1350",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "6",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1351",
+        "MaxResolution": "0x1450",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "7",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1351",
+        "MaxResolution": "0x1450",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "8",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1451",
+        "MaxResolution": "0x1550",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "9",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1451",
+        "MaxResolution": "0x1550",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "10",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1551",
+        "MaxResolution": "0x1760",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "11",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1551",
+        "MaxResolution": "0x1760",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "12",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1761",
+        "MaxResolution": "0x1984",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "13",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1761",
+        "MaxResolution": "0x1984",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "14",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1985",
+        "MaxResolution": "0x0",
+        "MinScaleFactor": "0",
+        "MaxScaleFactor": "2",
+        "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+        "ModelTileSize": "Auto (Estimate)"
+      },
+      {
+        "ChainNumber": "15",
+        "IsColor": false,
+        "IsGrayscale": true,
+        "MinResolution": "0x1985",
+        "MaxResolution": "0x0",
+        "MinScaleFactor": "2",
+        "MaxScaleFactor": "0",
+        "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+        "ModelTileSize": "Auto (Estimate)"
+      }
+    ]
+  }
 }

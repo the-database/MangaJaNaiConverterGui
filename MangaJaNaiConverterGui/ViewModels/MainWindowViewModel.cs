@@ -1,4 +1,5 @@
-﻿using Avalonia.Data;
+﻿using Avalonia.Collections;
+using Avalonia.Data;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -67,6 +68,24 @@ namespace MangaJaNaiConverterGui.ViewModels
             _um = new UpdateManager(new GithubSource("https://github.com/the-database/MangaJaNaiConverterGui", null, false));
 
             CheckForUpdates();
+        }
+
+        private string[] _commonResolutions = [
+            "0x0",
+            "640x360",
+            "640x480",
+            "720x480",
+            "768x576",
+            "960x540",
+            "1024x576",
+            "1280x720",
+            "1440x1080",
+            "1920x1080"];
+
+        public string[] CommonResolutions
+        {
+            get => _commonResolutions;
+            set => this.RaiseAndSetIfChanged(ref _commonResolutions, value);
         }
 
         public Interaction<MainWindowViewModel, MainWindowViewModel?> ShowDialog { get; }
@@ -436,6 +455,14 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _showAdvancedSettings;
             set => this.RaiseAndSetIfChanged(ref _showAdvancedSettings, value);
+        }
+
+        private AvaloniaList<UpscaleChain> _chains;
+        [DataMember]
+        public AvaloniaList<UpscaleChain> Chains
+        {
+            get => _chains;
+            set => this.RaiseAndSetIfChanged(ref _chains, value);
         }
 
         private bool _valid = false;
@@ -879,6 +906,34 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        public void AddChain()
+        {
+            Chains.Add(new UpscaleChain());
+            UpdateChainHeaders();
+        }
+
+        public void DeleteChain(UpscaleChain chain)
+        {
+            try
+            {
+                Chains.Remove(chain);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+
+            }
+
+            UpdateChainHeaders();
+        }
+
+        public void UpdateChainHeaders()
+        {
+            for (var i = 0; i < Chains.Count; i++)
+            {
+                Chains[i].ChainNumber = (i + 1).ToString();
+            }
+        }
+
         public void Validate()
         {
             var valid = true;
@@ -1218,6 +1273,160 @@ namespace MangaJaNaiConverterGui.ViewModels
         private void Progress(int percent)
         {
             UpdateStatusText= $"Downloading update {_update?.TargetFullRelease.Version} ({percent}%)...";
+        }
+
+
+#pragma warning disable CA1822 // Mark members as static
+        public async void OpenModelsDirectory()
+#pragma warning restore CA1822 // Mark members as static
+        {
+            await Task.Run(() =>
+            {
+                Process.Start("explorer.exe", UpscaleChain.PthPath);
+            });
+        }
+    }
+
+    [DataContract]
+    public class UpscaleChain : ReactiveObject
+    {
+
+        private string _chainNumber = string.Empty;
+        [DataMember]
+        public string ChainNumber
+        {
+            get => _chainNumber;
+            set => this.RaiseAndSetIfChanged(ref _chainNumber, value);
+        }
+
+        private string _minResolution = "0x0";
+        [DataMember]
+        public string MinResolution
+        {
+            get => _minResolution;
+            set => this.RaiseAndSetIfChanged(ref _minResolution, value);
+        }
+
+        private string _maxResolution = "0x0";
+        [DataMember]
+        public string MaxResolution
+        {
+            get => _maxResolution;
+            set => this.RaiseAndSetIfChanged(ref _maxResolution, value);
+        }
+
+        private bool _isGrayscale = false;
+        [DataMember]
+        public bool IsGrayscale
+        {
+            get => _isGrayscale;
+            set => this.RaiseAndSetIfChanged(ref _isGrayscale, value);
+        }
+
+        private bool _isColor = false;
+        [DataMember]
+        public bool IsColor
+        {
+            get => _isColor;
+            set => this.RaiseAndSetIfChanged(ref _isColor, value);
+        }
+
+        private string _minScaleFactor = 0.ToString();
+        [DataMember]
+        public string MinScaleFactor
+        {
+            get => _minScaleFactor;
+            set => this.RaiseAndSetIfChanged(ref _minScaleFactor, value);
+        }
+
+        private string _maxScaleFactor = 0.ToString();
+        [DataMember]
+        public string MaxScaleFactor
+        {
+            get => _maxScaleFactor;
+            set => this.RaiseAndSetIfChanged(ref _maxScaleFactor, value);
+        }
+
+        private string _modelFilePath = string.Empty;
+        [DataMember]
+        public string ModelFilePath
+        {
+            get => _modelFilePath;
+            set => this.RaiseAndSetIfChanged(ref _modelFilePath, value);
+        }
+
+        private string _modelTileSize = "Auto (Estimate)";
+        [DataMember]
+        public string ModelTileSize
+        {
+            get => _modelTileSize;
+            set => this.RaiseAndSetIfChanged(ref _modelTileSize, value);
+        }
+
+        private bool _autoAdjustLevels = false;
+        [DataMember]
+        public bool AutoAdjustLevels
+        {
+            get => _autoAdjustLevels;
+            set => this.RaiseAndSetIfChanged(ref _autoAdjustLevels, value);
+        }
+
+        private string _resizeHeightBeforeUpscale = 0.ToString();
+        [DataMember]
+        public string ResizeHeightBeforeUpscale
+        {
+            get => _resizeHeightBeforeUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeHeightBeforeUpscale, value);
+        }
+
+        private string _resizeWidthBeforeUpscale = 0.ToString();
+        [DataMember]
+        public string ResizeWidthBeforeUpscale
+        {
+            get => _resizeWidthBeforeUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthBeforeUpscale, value);
+        }
+
+        private string _resizeFactorBeforeUpscale = 100.ToString();
+        [DataMember]
+        public string ResizeFactorBeforeUpscale
+        {
+            get => _resizeFactorBeforeUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value);
+        }
+
+
+        public AvaloniaList<string> AllModels => GetAllModels();
+            
+        
+
+        private string[] _tileSizes = [
+    "Auto (Estimate)",
+            "Maximum",
+            "No Tiling",
+            "128",
+            "192",
+            "256",
+            "384",
+            "512",
+            "768",
+            "1024",
+            "2048",
+            "4096"];
+
+        public string[] TileSizes
+        {
+            get => _tileSizes;
+            set => this.RaiseAndSetIfChanged(ref _tileSizes, value);
+        }
+
+        public static string PthPath => Path.GetFullPath(@".\chaiNNer\models");
+
+        public AvaloniaList<string> GetAllModels()
+        {
+            return new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename => Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase))
+                .Select(filename => Path.GetFileNameWithoutExtension(filename))
+                .Order().ToList());
         }
     }
 }

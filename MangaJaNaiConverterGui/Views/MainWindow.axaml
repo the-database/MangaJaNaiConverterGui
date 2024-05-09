@@ -41,437 +41,492 @@
     </Design.DataContext>
 
   <Grid>
-
     <!-- Main Content -->
-    <DockPanel>
+    <Grid ColumnDefinitions="300,*" RowDefinitions="*">
+      <StackPanel Grid.Column="0" Background="#33000000">
+        <TextBlock Margin="0">
 
-      <StackPanel DockPanel.Dock="Bottom">
-
-        <StackPanel Orientation="Horizontal">
-          <Button Margin="20,10,0,10" FontWeight="Bold" Background="Green" IsEnabled="{Binding UpscaleEnabled}" Command="{Binding RunUpscale}">
-            <StackPanel Orientation="Horizontal">
-              <materialIcons:MaterialIcon Kind="PlayCircle" />
-              <TextBlock Margin="5,0,0,0">Upscale</TextBlock>
-            </StackPanel>
-
-          </Button>
-          <Button Margin="20,10,0,10" FontWeight="Bold" Background="Red" IsEnabled="{Binding Upscaling}" Command="{Binding CancelUpscale}">
-            <StackPanel Orientation="Horizontal">
-              <materialIcons:MaterialIcon Kind="StopCircle" />
-              <TextBlock Margin="5,0,0,0">Cancel</TextBlock>          
-            </StackPanel>
-          </Button>
-        </StackPanel>
-
-        <StackPanel IsVisible="{Binding ShowConsole}" >
-          <DockPanel>
-            <TextBlock DockPanel.Dock="Left" Margin="20,10,0,0" FontWeight="Bold" Text="Console"></TextBlock>
-            <ToggleButton DockPanel.Dock="Right" Margin="0,0,20,0" IsChecked="{Binding !ShowConsole}">
-              <materialIcons:MaterialIcon Kind="Close" />
-            </ToggleButton>
-            <Rectangle/>
-          </DockPanel>
-        
-          <ScrollViewer x:Name="ConsoleScrollViewer" Margin="0,10,0,0" Background="#111111" Height="500" Width="500" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
-            <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
-          </ScrollViewer>
-        </StackPanel>
-
-        <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
-
-          <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
-          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-
-            <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowEstimates}">
-              <TextBlock TextAlignment="Center" Width="140" FontSize="10" Margin="10,10,20,0" Text="{Binding ElapsedTime, StringFormat={}Elapsed Time: {0}}" />
-              <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowArchiveProgressBar}">
-                <TextBlock TextAlignment="Center" Width="220" FontSize="10" Margin="10,10,20,0" Text="{Binding ArchiveEtr, StringFormat=Remaining Time (Current Archive): {0:hh\\:mm\\:ss}}" />
-              </StackPanel>
-              <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="10,10,20,0" Text="{Binding TotalEtr, StringFormat=Remaining Time (Total): {0:hh\\:mm\\:ss}}" />
-              <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="10,10,20,0" Text="{Binding TotalEta, StringFormat={}Estimated Finish Time: {0}}" />
-            </StackPanel>
-          
-            <!-- progress within current archive -->
-            <ProgressBar  Margin="5,0,0,0" Height="20"
-                          Minimum="0"
-                          Maximum="{Binding ProgressTotalFilesInCurrentArchive}"
-                          Value="{Binding ProgressCurrentFileInArchive}"
-                          ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
-                          FontSize="10"
-                          ShowProgressText="True"
-                          IsVisible="{Binding ShowArchiveProgressBar}" />
-
-            <!-- total progress across all files -->
-            <ProgressBar  Margin="5,0,5,0" Height="20"
-                          Minimum="0"
-                          Maximum="{Binding ProgressTotalFiles}"
-                          Value="{Binding ProgressCurrentFile}"
-                          ProgressTextFormat="{}{0:0} / {3:0} total files"
-                          FontSize="10"
-                          ShowProgressText="True"/>
-
-            <ToggleButton IsChecked="{Binding ShowConsole}" FontSize="10" Margin="5,0,5,0">
-              <StackPanel Orientation="Horizontal">
-                <materialIcons:MaterialIcon Kind="Console" VerticalAlignment="Center" />
-                <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">Console</TextBlock>
-              </StackPanel>
-            </ToggleButton>
-
-            <ToggleButton FontSize="10" Margin="5,0,5,0" IsChecked="{Binding RequestShowAppSettings}">
-              <StackPanel Orientation="Horizontal">
-                <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
-                <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">App Settings</TextBlock>
-              </StackPanel>
-            </ToggleButton>
+        </TextBlock>
+        <ToggleButton FontSize="13" Padding="10" IsChecked="{Binding RequestShowAppSettings}" Width="300" HorizontalContentAlignment="Left">
+          <StackPanel Orientation="Horizontal">
+            <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
+            <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">App Settings</TextBlock>
           </StackPanel>
+        </ToggleButton>
+        <TextBlock Margin="10">
+          Default Workflows
+        </TextBlock>
 
-          <Rectangle />
-        </DockPanel>
+        <ToggleButton FontSize="13" Padding="10" IsChecked="{Binding RequestShowAppSettings}" Width="300" HorizontalContentAlignment="Left">
+          <StackPanel Orientation="Horizontal">
+            <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
+            <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">Upscale (Default)</TextBlock>
+          </StackPanel>
+        </ToggleButton>
+
+        <TextBlock Margin="10">
+          Custom Workflows
+        </TextBlock>
+
+
       </StackPanel>
 
-      <ScrollViewer HorizontalScrollBarVisibility="Auto" IsVisible="{Binding ShowMainForm}">
-        <StackPanel Margin="20">
-          <DockPanel>
-            <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Input and Output"></TextBlock>
-            <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowAdvancedSettings}" Content="Show More Settings" />
+      <DockPanel IsVisible="{Binding ShowMainForm}" Grid.Column="1">
+
+        <StackPanel DockPanel.Dock="Bottom">
+
+          <StackPanel Orientation="Horizontal">
+            <Button Margin="20,10,0,10" FontWeight="Bold" Background="Green" IsEnabled="{Binding UpscaleEnabled}" Command="{Binding RunUpscale}">
+              <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="PlayCircle" />
+                <TextBlock Margin="5,0,0,0">Upscale</TextBlock>
+              </StackPanel>
+
+            </Button>
+            <Button Margin="20,10,0,10" FontWeight="Bold" Background="Red" IsEnabled="{Binding Upscaling}" Command="{Binding CancelUpscale}">
+              <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="StopCircle" />
+                <TextBlock Margin="5,0,0,0">Cancel</TextBlock>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <StackPanel IsVisible="{Binding ShowConsole}" >
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Left" Margin="20,10,0,0" FontWeight="Bold" Text="Console"></TextBlock>
+              <ToggleButton DockPanel.Dock="Right" Margin="0,0,20,0" IsChecked="{Binding !ShowConsole}">
+                <materialIcons:MaterialIcon Kind="Close" />
+              </ToggleButton>
+              <Rectangle/>
+            </DockPanel>
+
+            <ScrollViewer x:Name="ConsoleScrollViewer" Margin="130,10,0,0" Background="#111111" Height="450" HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+              <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
+            </ScrollViewer>
+          </StackPanel>
+
+          <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
+
+            <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+
+              <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowEstimates}">
+                <TextBlock TextAlignment="Center" Width="140" FontSize="10" Margin="10,10,20,0" Text="{Binding ElapsedTime, StringFormat={}Elapsed Time: {0}}" />
+                <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowArchiveProgressBar}">
+                  <TextBlock TextAlignment="Center" Width="220" FontSize="10" Margin="10,10,20,0" Text="{Binding ArchiveEtr, StringFormat=Remaining Time (Current Archive): {0:hh\\:mm\\:ss}}" />
+                </StackPanel>
+                <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="10,10,20,0" Text="{Binding TotalEtr, StringFormat=Remaining Time (Total): {0:hh\\:mm\\:ss}}" />
+                <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="10,10,20,0" Text="{Binding TotalEta, StringFormat={}Estimated Finish Time: {0}}" />
+              </StackPanel>
+
+              <!-- progress within current archive -->
+              <ProgressBar  Margin="5,0,0,0" Height="20"
+                            Minimum="0"
+                            Maximum="{Binding ProgressTotalFilesInCurrentArchive}"
+                            Value="{Binding ProgressCurrentFileInArchive}"
+                            ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
+                            FontSize="10"
+                            ShowProgressText="True"
+                            IsVisible="{Binding ShowArchiveProgressBar}" />
+
+              <!-- total progress across all files -->
+              <ProgressBar  Margin="5,0,5,0" Height="20"
+                            Minimum="0"
+                            Maximum="{Binding ProgressTotalFiles}"
+                            Value="{Binding ProgressCurrentFile}"
+                            ProgressTextFormat="{}{0:0} / {3:0} total files"
+                            FontSize="10"
+                            ShowProgressText="True"/>
+
+              <ToggleButton IsChecked="{Binding ShowConsole}" FontSize="10" Margin="5,0,5,0">
+                <StackPanel Orientation="Horizontal">
+                  <materialIcons:MaterialIcon Kind="Console" VerticalAlignment="Center" />
+                  <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">Console</TextBlock>
+                </StackPanel>
+              </ToggleButton>
+            </StackPanel>
+
             <Rectangle />
           </DockPanel>
-        
-          <Border Classes="border"
-                  IsEnabled="{Binding !Upscaling}">
-            <StackPanel>
-              <TabControl SelectedIndex="{Binding SelectedTabIndex}" Margin="0">
-                <TabItem VerticalContentAlignment="Center" FontSize="16" Margin="0">
-                  <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                      <materialIcons:MaterialIcon Kind="File" />
-                      <TextBlock Margin="5,0,5,0">Single File Upscale</TextBlock>
-                    </StackPanel>
-                  </TabItem.Header>
-                  <Border Classes="border">
-                    <StackPanel>
-                      <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                        <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
-                        <TextBox x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding InputFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True"/>
-                        <Button Content="Select File" Click="OpenInputFileButtonClick" />
-                        <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Path of the image or archive file (such as zip or cbz) to upscale. If an archive file is selected, each image in the archive will be upscaled and saved to a new archive.</TextBlock>
+        </StackPanel>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
+          <!-- Main Form -->
+          <StackPanel Margin="20">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Input and Output"></TextBlock>
+              <CheckBox DockPanel.Dock="Right" IsChecked="{Binding ShowAdvancedSettings}" Content="Show More Settings" />
+              <Rectangle />
+            </DockPanel>
+
+            <!--Input and Output -->
+            <Border Classes="border"
+                    IsEnabled="{Binding !Upscaling}">
+              <StackPanel>
+                <TabControl SelectedIndex="{Binding SelectedTabIndex}" Margin="0">
+                  <TabItem VerticalContentAlignment="Center" FontSize="16" Margin="0">
+                    <TabItem.Header>
+                      <StackPanel Orientation="Horizontal">
+                        <materialIcons:MaterialIcon Kind="File" />
+                        <TextBlock Margin="5,0,5,0">Single File Upscale</TextBlock>
                       </StackPanel>
-
-                    </StackPanel>
-                  </Border>
-
-                </TabItem>
-                <TabItem VerticalAlignment="Center" FontSize="16">
-                  <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                      <materialIcons:MaterialIcon Kind="Folder" />
-                      <TextBlock Margin="5,0,5,0">Batch Folder Upscale</TextBlock>
-                    </StackPanel>
-                  </TabItem.Header>
-                  <StackPanel>
-
+                    </TabItem.Header>
                     <Border Classes="border">
                       <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                          <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
-                          <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding InputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                          <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
-                          <TextBlock Foreground="Gray" Width="400" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                            Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below.
-                          </TextBlock>
+                          <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
+                          <TextBox x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding InputFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True"/>
+                          <Button Content="Select File" Click="OpenInputFileButtonClick" />
+                          <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Path of the image or archive file (such as zip or cbz) to upscale. If an archive file is selected, each image in the archive will be upscaled and saved to a new archive.</TextBlock>
                         </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                          <CheckBox Margin="0,0,5,0" IsChecked="{Binding UpscaleArchives}">Upscale Archives</CheckBox>
-                          <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                            Archive files (*.zip, *.cbz, *.rar, *.cbr) found in the selected Input Folder will be upscaled.
-                          </TextBlock>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                          <CheckBox IsChecked="{Binding UpscaleImages}">Upscale Images</CheckBox>
-                          <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                            Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp) found in the selected Input Folder will be upscaled.
-                          </TextBlock>
-                        </StackPanel>
                       </StackPanel>
-                    </Border>                  
+                    </Border>
 
+                  </TabItem>
+                  <TabItem VerticalAlignment="Center" FontSize="16">
+                    <TabItem.Header>
+                      <StackPanel Orientation="Horizontal">
+                        <materialIcons:MaterialIcon Kind="Folder" />
+                        <TextBlock Margin="5,0,5,0">Batch Folder Upscale</TextBlock>
+                      </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel>
+
+                      <Border Classes="border">
+                        <StackPanel>
+                          <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
+                            <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding InputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
+                            <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
+                            <TextBlock Foreground="Gray" Width="400" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                              Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below.
+                            </TextBlock>
+                          </StackPanel>
+
+                          <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                            <CheckBox Margin="0,0,5,0" IsChecked="{Binding UpscaleArchives}">Upscale Archives</CheckBox>
+                            <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                              Archive files (*.zip, *.cbz, *.rar, *.cbr) found in the selected Input Folder will be upscaled.
+                            </TextBlock>
+                          </StackPanel>
+
+                          <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                            <CheckBox IsChecked="{Binding UpscaleImages}">Upscale Images</CheckBox>
+                            <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                              Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp) found in the selected Input Folder will be upscaled.
+                            </TextBlock>
+                          </StackPanel>
+                        </StackPanel>
+                      </Border>
+
+                    </StackPanel>
+                  </TabItem>
+                </TabControl>
+
+                <Border Classes="border">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
+                      <TextBox x:Name="OutputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
+                      <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
+                      <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                        Path of the folder to save the upscaled image(s) or archive(s).
+                      </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                      <TextBlock Margin="0,0,5,0">Output Filename</TextBlock>
+                      <TextBox Text="{Binding OutputFilename}" Margin="0,0,5,0" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
+                      <SelectableTextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                        The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension. Archives will be output with .cbz extension; images will be output with the extension of the image format selected below.
+                      </SelectableTextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                      <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding OverwriteExistingFiles}">Allow Files in Output Path to be Overwritten</CheckBox>
+                      <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If unchecked, upscaling will be skipped for files that already exist in the output path. If checked, any files that already exist in the output path will be overwritten without warning. Use with caution.</TextBlock>
+                    </StackPanel>
                   </StackPanel>
-                </TabItem>
-              </TabControl>
+                </Border>
 
-              <Border Classes="border">
-                <StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
-                    <TextBox x:Name="OutputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding OutputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                    <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
-                    <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Path of the folder to save the upscaled image(s) or archive(s).
-                    </TextBlock>
-                  </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                    <TextBlock Margin="0,0,5,0">Output Filename</TextBlock>
-                    <TextBox Text="{Binding OutputFilename}" Margin="0,0,5,0" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                    <SelectableTextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension. Archives will be output with .cbz extension; images will be output with the extension of the image format selected below. 
-                    </SelectableTextBlock>
-                  </StackPanel>
-
-                  <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding OverwriteExistingFiles}">Allow Files in Output Path to be Overwritten</CheckBox>
-                    <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If unchecked, upscaling will be skipped for files that already exist in the output path. If checked, any files that already exist in the output path will be overwritten without warning. Use with caution.</TextBlock>
-                  </StackPanel>
-                </StackPanel>
-              </Border>
-            
-
-              <Border Classes="border">
-                <StackPanel>
-              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Image Format</TextBlock>
-                <ToggleButton IsChecked="{Binding WebpSelected}" Content="WebP" Command="{Binding SetWebpSelected}" />
-                <ToggleButton IsChecked="{Binding PngSelected}" Content="PNG" Command="{Binding SetPngSelected}" />
-                <ToggleButton IsChecked="{Binding JpegSelected}" Content="JPEG" Command="{Binding SetJpegSelected}" />
-                <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
+                <Border Classes="border">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
+                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Image Format</TextBlock>
+                      <ToggleButton IsChecked="{Binding WebpSelected}" Content="WebP" Command="{Binding SetWebpSelected}" />
+                      <ToggleButton IsChecked="{Binding PngSelected}" Content="PNG" Command="{Binding SetPngSelected}" />
+                      <ToggleButton IsChecked="{Binding JpegSelected}" Content="JPEG" Command="{Binding SetJpegSelected}" />
+                      <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
     <Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
     <Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
             </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
+                      <CheckBox Margin="0,0,5,0" IsChecked="{Binding UseLosslessCompression}">Use Lossless Compression</CheckBox>
+                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                        Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
+                      </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
+                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
+                      <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
+                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                        Quality level for compression. Note that a quality level of 100 is still lossy.
+                      </TextBlock>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
               </StackPanel>
+            </Border>
 
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowUseLosslessCompression}">
-                <CheckBox Margin="0,0,5,0" IsChecked="{Binding UseLosslessCompression}">Use Lossless Compression</CheckBox>
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
-                </TextBlock>
-              </StackPanel>
-
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowLossyCompressionQuality}">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
-                <NumericUpDown Margin="0,0,5,0" Text="{Binding LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Quality level for compression. Note that a quality level of 100 is still lossy.
-                </TextBlock>
-              </StackPanel>
-                </StackPanel>
-              </Border>
-            
-            </StackPanel>
-          </Border>
-
-          <StackPanel IsVisible="{Binding ShowAdvancedSettings}">
-
-            <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Preprocessing"></TextBlock>
+            <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Postprocessing"></TextBlock>
             <Border Classes="border" IsEnabled="{Binding !Upscaling}">
               <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
-                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
-                  <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
-                </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height After Upscale</TextBlock>
+                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                    Resize each image to this height before upscaling, set to 0 to disable.
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
+                    Resize each image to this height (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display.
                   </TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width After Upscale</TextBlock>
+                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                    Resize each image to this width before upscaling, set to 0 to disable.
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
+                    Resize each image to this width (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this width.
                   </TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor After Upscale</TextBlock>
+                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                   <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                    Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.
+                    Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. The final output images will be scaled by this factor, so when using the default 4x models, a setting of 50% can effectively result in a 2x upscale, and a setting of 75% is effectively 3x.
                   </TextBlock>
                 </StackPanel>
+
               </StackPanel>
             </Border>
 
-            <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Upscaling"></TextBlock>
             <Border Classes="border" IsEnabled="{Binding !Upscaling}">
               <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Grayscale Model Path</TextBlock>
-                  <TextBox x:Name="GrayscaleModelFilePathTextBox" Margin="0,0,5,0" Text="{Binding GrayscaleModelFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                  <Button Content="Select File" Click="OpenGrayscaleModelFileButtonClick" />
-                  <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" xml:space="preserve">File path of the PyTorch .pth model to run on black and white images. If unspecified, black and white images will not be upscaled.
-<Bold>4x_MangaJaNai_Grayscale_1200_V1_ESRGAN_70k</Bold>: Best quality model with balanced performance, recommended for most users. The 1200 model gives best results when the manga page is around 1200px tall. The Resize Height Before Upscale setting can be used to resize the image to 1200px before upscaling to improve results.
-<Bold>4x_MangaJaNai_Grayscale_1200_V1_OmniSR_100k</Bold>: Lower quality model, recommended for low end GPU or CPU users. The 1200 model gives best results when the manga page is around 1200px tall. The Resize Height Before Upscale setting can be used to resize the image to 1200px before upscaling to improve results.
-                </TextBlock>
-                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Chains}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:UpscaleChain">
+                      <StackPanel>
+                        <TextBlock Margin="10,10,0,10" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
+                        <Border Classes="border" Margin="0,0,0,20">
+                          <StackPanel Grid.Column="0">
+                            <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
+                            <Border Classes="border">
+                              <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resolution Range</TextBlock>
+                                  <ui:FAComboBox IsEnabled="False" IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
+                                                 ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
 
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Grayscale Model Tile Size</TextBlock>
-                  <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding GrayscaleModelTileSize, Mode=TwoWay}"
-                                 ItemsSource="{Binding TileSizes}" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling grayscale images. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
-                </StackPanel>
-                
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Color Model Path</TextBlock>
-                  <TextBox x:Name="ColorModelFilePathTextBox" Margin="0,0,5,0" Text="{Binding ColorModelFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                  <Button Content="Select File" Click="OpenColorModelFileButtonClick" />
-                  <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" xml:space="preserve">File path of the PyTorch .pth model to run on color images. If unspecified, color images will not be upscaled.
-<Bold>4x_IllustrationJaNai_V1_DAT2_190k</Bold>: Best quality model with slow performance, only recommended for users with high end GPUs. 
-<Bold>4x_IllustrationJaNai_V1_ESRGAN_135k</Bold>: High quality model with balanced performance, recommended for most users. 
-                  </TextBlock>
-                </StackPanel>
+                                  <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
+                                  <ui:FAComboBox IsEnabled="False" IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
+                                                 ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                  <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means that the chain will run on all video resolutions.</TextBlock>
+                                </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Color Model Tile Size</TextBlock>
-                  <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding ColorModelTileSize, Mode=TwoWay}"
-                                 ItemsSource="{Binding TileSizes}" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling color images. The image is cut into tiles in order to upscale without running into VRAM limits. Larger is better when possible. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
-                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scaling Factor Range</TextBlock>
+                                  <ui:NumberBox IsEnabled="False" Margin="0,0,5,0" Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
 
+                                  <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
+                                  <ui:NumberBox IsEnabled="False" Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
+                                  <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
+                                </StackPanel>
 
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsColor}">Is Color Image</CheckBox>
+                                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsGrayscale}">Is Grayscale Image</CheckBox>
+                                  <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.</TextBlock>
+                                </StackPanel>
+                                
+                              </StackPanel>
+                            </Border>
+
+                            <TextBlock Margin="10,20,0,5" Text="Upscale Settings" />
+                            <Border Classes="border">
+                              <StackPanel>
+                                <!-- TODO -->
+
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
+                                  <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
+                                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                                    Resize each image to this height before upscaling, set to 0 to disable.
+                                  </TextBlock>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
+                                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                                    Resize each image to this width before upscaling, set to 0 to disable.
+                                  </TextBlock>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
+                                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+                                  <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                                    Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.
+                                  </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model</TextBlock>
+                                  <ComboBox ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" Width="400" />
+                                  <Button Margin="5,0,0,0" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
+                                    <StackPanel Orientation="Horizontal">
+                                      <materialIcons:MaterialIcon Kind="Launch" />
+                                      <TextBlock Margin="5,0,0,0" Text="Open Models Directory" />
+                                    </StackPanel>
+                                  </Button>
+                                  <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add ONNX model files to the models directory.</TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model Tile Size</TextBlock>
+                                  <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
+                                                 ItemsSource="{Binding TileSizes}" />
+                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                  <TextBlock Width="500" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
+                                </StackPanel>
+                                
+                              </StackPanel>
+                            </Border>
+                            
+                          </StackPanel>
+                        </Border>
+
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
               </StackPanel>
-              
             </Border>
 
 
           </StackPanel>
+        </ScrollViewer>
 
-          <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Postprocessing"></TextBlock>
-          <Border Classes="border" IsEnabled="{Binding !Upscaling}">
-            <StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height After Upscale</TextBlock>
-                <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
-                  Resize each image to this height (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display.
-                </TextBlock>
+      </DockPanel>
+
+      
+        <!-- Settings Overlay -->
+        <StackPanel IsVisible="{Binding ShowAppSettings}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,30" Grid.Column="1">
+          <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="App Settings"></TextBlock>
+            </DockPanel>
+
+            <!-- App Settings -->
+            <Border Classes="border">
+              <StackPanel>
+                <StackPanel IsVisible="{Binding IsInstalled}">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                      <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
+                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                        Whether to automatically check for and install app updates.
+                      </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                      <TextBlock Text="Current Version" VerticalAlignment="Center"></TextBlock>
+                      <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0"></TextBlock>
+                      <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/AnimeJaNaiConverterGui/releases"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                      <TextBlock VerticalAlignment="Center" Text="{Binding UpdateStatusText}" Margin="0,0,0,0"></TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowCheckUpdateButton}">
+                      <Button Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowDownloadButton}">
+                      <Button Command="{Binding DownloadUpdate}">Download Update</Button>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowApplyButton}">
+                      <Button Command="{Binding ApplyUpdate}">Restart to Update MangaJaNaiConverterGui</Button>
+                    </StackPanel>
+                  </StackPanel>
+                </StackPanel>
+                <StackPanel IsVisible="{Binding !IsInstalled}">
+                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                    <TextBlock>App is not installed; auto update settings unavailable.</TextBlock>
+                  </StackPanel>
+                </StackPanel>
               </StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width After Upscale</TextBlock>
-                <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
-                  Resize each image to this width (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this width.
-                </TextBlock>
-              </StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor After Upscale</TextBlock>
-                <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-                <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. The final output images will be scaled by this factor, so when using the default 4x models, a setting of 50% can effectively result in a 2x upscale, and a setting of 75% is effectively 3x.
-                </TextBlock>
-              </StackPanel>
+            </Border>
 
-            </StackPanel>
-          </Border>
-          
-          
-        </StackPanel>
-      </ScrollViewer>
-
-    </DockPanel>
-
-    <!-- Settings Overlay -->
-    <StackPanel IsVisible="{Binding ShowAppSettings}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,30">
-      <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
-        <DockPanel>
-          <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="App Settings"></TextBlock>
-        </DockPanel>
-
-        <!-- App Settings -->
-        <Border Classes="border">
-          <StackPanel>
-            <StackPanel IsVisible="{Binding IsInstalled}">
+            <!-- Upscale Settings -->
+            <DockPanel Margin="0,10,0,0">
+              <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Upscale Settings"></TextBlock>
+            </DockPanel>
+            <Border Classes="border">
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">GPU</TextBlock>
+                  <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}"  />
                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                    Whether to automatically check for and install app updates.
+                    Which GPU to use for upscaling with PyTorch.
                   </TextBlock>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock Text="Current Version" VerticalAlignment="Center"></TextBlock>
-                  <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0"></TextBlock>
-                  <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/AnimeJaNaiConverterGui/releases"/>
+                  <CheckBox IsChecked="{Binding UseCpu}">CPU Mode</CheckBox>
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                    Use CPU for upscaling with PyTorch instead of GPU.
+                  </TextBlock>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock VerticalAlignment="Center" Text="{Binding UpdateStatusText}" Margin="0,0,0,0"></TextBlock>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowCheckUpdateButton}">
-                  <Button Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowDownloadButton}">
-                  <Button Command="{Binding DownloadUpdate}">Download Update</Button>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowApplyButton}">
-                  <Button Command="{Binding ApplyUpdate}">Restart to Update MangaJaNaiConverterGui</Button>
+                  <CheckBox IsChecked="{Binding UseFp16}">FP16 Mode</CheckBox>
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                    Runs PyTorch upscaling in FP16 mode for less VRAM usage and speedup on RTX GPUs.
+                  </TextBlock>
                 </StackPanel>
               </StackPanel>
-            </StackPanel>
-            <StackPanel IsVisible="{Binding !IsInstalled}">
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                <TextBlock>App is not installed; auto update settings unavailable.</TextBlock>
-              </StackPanel>
-            </StackPanel>
+            </Border>
+
+            <Border Classes="border">
+              <ToggleButton DockPanel.Dock="Right" Margin="10,10,0,10" IsChecked="{Binding !RequestShowAppSettings}">
+                <StackPanel Orientation="Horizontal">
+                  <materialIcons:MaterialIcon Kind="ArrowBackCircle" />
+                  <TextBlock Margin="5,0,0,0">Return</TextBlock>
+                </StackPanel>
+              </ToggleButton>
+            </Border>
           </StackPanel>
-        </Border>
+        </StackPanel>
 
-        <!-- Upscale Settings -->
-        <DockPanel Margin="0,10,0,0">
-          <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Upscale Settings"></TextBlock>
-        </DockPanel>
-        <Border Classes="border">
-          <StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">GPU</TextBlock>
-              <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}"  />
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Which GPU to use for upscaling with PyTorch.
-              </TextBlock>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-              <CheckBox IsChecked="{Binding UseCpu}">CPU Mode</CheckBox>
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Use CPU for upscaling with PyTorch instead of GPU. 
-              </TextBlock>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-              <CheckBox IsChecked="{Binding UseFp16}">FP16 Mode</CheckBox>
-              <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                Runs PyTorch upscaling in FP16 mode for less VRAM usage and speedup on RTX GPUs.
-              </TextBlock>
-            </StackPanel>
-          </StackPanel>
-        </Border>
-
-        <Border Classes="border">
-          <ToggleButton DockPanel.Dock="Right" Margin="10,10,0,10" IsChecked="{Binding !RequestShowAppSettings}">
-            <StackPanel Orientation="Horizontal">
-              <materialIcons:MaterialIcon Kind="ArrowBackCircle" />
-              <TextBlock Margin="5,0,0,0">Return</TextBlock>
-            </StackPanel>
-          </ToggleButton>
-        </Border>
-      </StackPanel>
-    </StackPanel>
+    </Grid>
 
     <Grid IsVisible="{Binding IsExtractingBackend}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
       <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Performing first time setup. This may take several minutes...</TextBlock>
