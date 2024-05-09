@@ -290,7 +290,7 @@
               <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                  <NumericUpDown Margin="0,0,5,0" Value="{Binding ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
                     Resize each image to this height (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display.
@@ -298,7 +298,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
                     Resize each image to this width (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this width.
@@ -306,7 +306,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
+                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                   <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                     Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. The final output images will be scaled by this factor, so when using the default 4x models, a setting of 50% can effectively result in a 2x upscale, and a setting of 75% is effectively 3x.
@@ -372,7 +372,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeHeightBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                                  <ui:NumberBox Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeHeightBeforeUpscale}" Minimum="0" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                                     Resize each image to this height before upscaling, set to 0 to disable.
@@ -380,7 +380,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" Text="{Binding ResizeWidthBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False"  />
+                                  <ui:NumberBox Margin="0,0,5,0" Text="{Binding ResizeWidthBeforeUpscale}" Minimum="0" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                                     Resize each image to this width before upscaling, set to 0 to disable.
@@ -388,7 +388,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorBeforeUpscale}" AllowSpin="False" ShowButtonSpinner="False" />
+                                  <ui:NumberBox Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding ResizeFactorBeforeUpscale}" Minimum="0" />
                                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                                   <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                                     Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.

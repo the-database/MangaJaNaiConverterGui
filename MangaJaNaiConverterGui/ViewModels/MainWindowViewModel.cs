@@ -29,12 +29,12 @@ namespace MangaJaNaiConverterGui.ViewModels
         public static readonly List<string> IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp"];
         public static readonly List<string> ARCHIVE_EXTENSIONS = [".zip", ".cbz", ".rar", ".cbr"];
 
-        private readonly DispatcherTimer _timer = new ();
+        private readonly DispatcherTimer _timer = new();
 
         private readonly UpdateManager _um;
         private UpdateInfo? _update = null;
 
-        public MainWindowViewModel() 
+        public MainWindowViewModel()
         {
             var g1 = this.WhenAnyValue
             (
@@ -71,16 +71,19 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         private string[] _commonResolutions = [
-            "0x0",
-            "640x360",
-            "640x480",
-            "720x480",
-            "768x576",
-            "960x540",
-            "1024x576",
-            "1280x720",
-            "1440x1080",
-            "1920x1080"];
+"0x0",
+"0x1250",
+"0x1251",
+"0x1350",
+"0x1351",
+"0x1450",
+"0x1451",
+"0x1550",
+"0x1551",
+"0x1760",
+"0x1761",
+"0x1984",
+"0x1985",];
 
         public string[] CommonResolutions
         {
@@ -103,7 +106,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         public TimeSpan ArchiveEtr => _archiveEtaCalculator.ETAIsAvailable ? _archiveEtaCalculator.ETR : TimeSpan.FromSeconds(0);
         public string ArchiveEta => _archiveEtaCalculator.ETAIsAvailable ? _archiveEtaCalculator.ETA.ToString("t") : "please wait";
 
-        public TimeSpan TotalEtr => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETR : ArchiveEtr + (ElapsedTime + ArchiveEtr)  * (ProgressTotalFiles - (ProgressCurrentFile + 1));
+        public TimeSpan TotalEtr => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETR : ArchiveEtr + (ElapsedTime + ArchiveEtr) * (ProgressTotalFiles - (ProgressCurrentFile + 1));
 
         public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
 
@@ -120,9 +123,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public bool ShowDownloadButton
         {
             get => _showDownloadButton;
-            set 
-            { 
-                this.RaiseAndSetIfChanged(ref _showDownloadButton, value); 
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _showDownloadButton, value);
                 this.RaisePropertyChanged(nameof(ShowCheckUpdateButton));
             }
         }
@@ -172,9 +175,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string[] DeviceList
         {
             get => _deviceList;
-            set 
+            set
             {
-                this.RaiseAndSetIfChanged(ref _deviceList, value); 
+                this.RaiseAndSetIfChanged(ref _deviceList, value);
                 this.RaisePropertyChanged(nameof(SelectedDeviceIndex));
             }
         }
@@ -204,7 +207,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         private bool _useFp16;
-        [DataMember] 
+        [DataMember]
         public bool UseFp16
         {
             get => _useFp16;
@@ -222,7 +225,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
                     this.RaisePropertyChanged(nameof(InputStatusText));
-                    
+
                 }
             }
         }
@@ -289,70 +292,6 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _upscaleArchives;
             set => this.RaiseAndSetIfChanged(ref _upscaleArchives, value);
-        }
-
-        private bool _autoAdjustLevels = false;
-        [DataMember]
-        public bool AutoAdjustLevels
-        {
-            get => _autoAdjustLevels;
-            set => this.RaiseAndSetIfChanged(ref _autoAdjustLevels, value);
-        }
-
-        private string _grayscaleModelFilePath = string.Empty;
-        [DataMember]
-        public string GrayscaleModelFilePath
-        {
-            get => _grayscaleModelFilePath;
-            set => this.RaiseAndSetIfChanged(ref _grayscaleModelFilePath, value);
-        }
-
-        private string _grayscaleModelTileSize = "Auto (Estimate)";
-        [DataMember]
-        public string GrayscaleModelTileSize
-        {
-            get => _grayscaleModelTileSize;
-            set => this.RaiseAndSetIfChanged(ref _grayscaleModelTileSize, value);
-        }
-
-        private string _colorModelFilePath = string.Empty;
-        [DataMember]
-        public string ColorModelFilePath
-        {
-            get => _colorModelFilePath;
-            set => this.RaiseAndSetIfChanged(ref _colorModelFilePath, value);
-        }
-
-        private string _colorModelTileSize = "Auto (Estimate)";
-        [DataMember]
-        public string ColorModelTileSize
-        {
-            get => _colorModelTileSize;
-            set => this.RaiseAndSetIfChanged(ref _colorModelTileSize, value);
-        }
-
-        private string _resizeHeightBeforeUpscale = 0.ToString();
-        [DataMember]
-        public string ResizeHeightBeforeUpscale
-        {
-            get => _resizeHeightBeforeUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeHeightBeforeUpscale, value);
-        }
-
-        private string _resizeWidthBeforeUpscale = 0.ToString();
-        [DataMember]
-        public string ResizeWidthBeforeUpscale
-        {
-            get => _resizeWidthBeforeUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeWidthBeforeUpscale, value);
-        }
-
-        private string _resizeFactorBeforeUpscale = 100.ToString();
-        [DataMember]
-        public string ResizeFactorBeforeUpscale
-        {
-            get => _resizeFactorBeforeUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value);
         }
 
         private string _resizeHeightAfterUpscale = 0.ToString();
@@ -651,10 +590,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     flags.Append("--overwrite-existing-files ");
                 }
-                if (AutoAdjustLevels)
-                {
-                    flags.Append("--auto-adjust-levels ");
-                }
+                //if (AutoAdjustLevels)
+                //{
+                //    flags.Append("--auto-adjust-levels ");
+                //}
                 if (UseLosslessCompression)
                 {
                     flags.Append("--use-lossless-compression ");
@@ -675,10 +614,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                     inputArgs = $"--input-folder-path \"{InputFolderPath}\" ";
                 }
 
-                var grayscaleModelFilePath = string.IsNullOrWhiteSpace(GrayscaleModelFilePath) ? GrayscaleModelFilePath : Path.GetFullPath(GrayscaleModelFilePath);
-                var colorModelFilePath = string.IsNullOrWhiteSpace(ColorModelFilePath) ? ColorModelFilePath : Path.GetFullPath(ColorModelFilePath);
+                var grayscaleModelFilePath = "";// TODO string.IsNullOrWhiteSpace(GrayscaleModelFilePath) ? GrayscaleModelFilePath : Path.GetFullPath(GrayscaleModelFilePath);
+                var colorModelFilePath = "";// TODO string.IsNullOrWhiteSpace(ColorModelFilePath) ? ColorModelFilePath : Path.GetFullPath(ColorModelFilePath);
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --selected-device {SelectedDeviceIndex} {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-width-before-upscale {ResizeWidthBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{grayscaleModelFilePath}"" --grayscale-model-tile-size ""{GrayscaleModelTileSize}"" --color-model-path ""{colorModelFilePath}"" --color-model-tile-size ""{ColorModelTileSize}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-width-after-upscale {ResizeWidthAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
+                var cmd = ""; // TODO  $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --selected-device {SelectedDeviceIndex} {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-width-before-upscale {ResizeWidthBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{grayscaleModelFilePath}"" --grayscale-model-tile-size ""{GrayscaleModelTileSize}"" --color-model-path ""{colorModelFilePath}"" --color-model-tile-size ""{ColorModelTileSize}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-width-after-upscale {ResizeWidthAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -755,16 +694,17 @@ namespace MangaJaNaiConverterGui.ViewModels
                     StringBuilder status = new();
                     var skipFiles = 0;
 
-                    
 
-                    if (IMAGE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x))) 
+
+                    if (IMAGE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
                     {
                         var outputFilePath = Path.ChangeExtension(
                                                 Path.Join(
-                                                    Path.GetFullPath(OutputFolderPath), 
-                                                    OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(InputFilePath))), 
+                                                    Path.GetFullPath(OutputFolderPath),
+                                                    OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(InputFilePath))),
                                                 ImageFormat);
-                        if (File.Exists(outputFilePath)) {
+                        if (File.Exists(outputFilePath))
+                        {
                             status.Append($" (1 image already exists and will be {overwriteText})");
                             if (!OverwriteExistingFiles)
                             {
@@ -868,7 +808,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                                                             Path.GetFullPath(OutputFolderPath),
                                                             OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
                                                         "cbz");
-                            var fileExists = File.Exists(outputArchivePath); 
+                            var fileExists = File.Exists(outputArchivePath);
 
                             if (fileExists)
                             {
@@ -1060,7 +1000,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     process.BeginErrorReadLine(); // Start asynchronous reading of the output
                     await process.WaitForExitAsync();
                 }
-                
+
             }
         }
 
@@ -1137,12 +1077,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 _archiveEtaCalculator.Update(ProgressCurrentFileInArchive / (float)ProgressTotalFilesInCurrentArchive);
             }
-            
+
             if (ProgressTotalFiles > 0)
             {
                 _totalEtaCalculator.Update(ProgressCurrentFile / (float)ProgressTotalFiles);
             }
-            
+
             this.RaisePropertyChanged(nameof(ArchiveEtr));
             this.RaisePropertyChanged(nameof(ArchiveEta));
             this.RaisePropertyChanged(nameof(TotalEtr));
@@ -1200,7 +1140,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     {
                         _update = await _um.CheckForUpdatesAsync().ConfigureAwait(true);
                     });
-                    
+
                     UpdateStatus();
 
                     if (AutoUpdateEnabled)
@@ -1272,7 +1212,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private void Progress(int percent)
         {
-            UpdateStatusText= $"Downloading update {_update?.TargetFullRelease.Version} ({percent}%)...";
+            UpdateStatusText = $"Downloading update {_update?.TargetFullRelease.Version} ({percent}%)...";
         }
 
 
@@ -1371,9 +1311,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _autoAdjustLevels, value);
         }
 
-        private string _resizeHeightBeforeUpscale = 0.ToString();
+        private int? _resizeHeightBeforeUpscale = 0;
         [DataMember]
-        public string ResizeHeightBeforeUpscale
+        public int? ResizeHeightBeforeUpscale
         {
             get => _resizeHeightBeforeUpscale;
             set => this.RaiseAndSetIfChanged(ref _resizeHeightBeforeUpscale, value);
@@ -1396,9 +1336,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
 
-        public AvaloniaList<string> AllModels => GetAllModels();
-            
-        
+        public static AvaloniaList<string> AllModels => GetAllModels();
+
+
 
         private string[] _tileSizes = [
     "Auto (Estimate)",
@@ -1422,7 +1362,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public static string PthPath => Path.GetFullPath(@".\chaiNNer\models");
 
-        public AvaloniaList<string> GetAllModels()
+        public static AvaloniaList<string> GetAllModels()
         {
             return new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename => Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase))
                 .Select(filename => Path.GetFileNameWithoutExtension(filename))

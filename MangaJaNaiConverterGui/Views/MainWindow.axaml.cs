@@ -43,8 +43,6 @@ namespace MangaJaNaiConverterGui.Views
             inputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFilePath);
             inputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFolderPath);
             outputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetOutputFolderPath);
-            grayscaleModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetGrayscaleModelFilePath);
-            colorModelFilePathTextBox?.AddHandler(DragDrop.DropEvent, SetColorModelFilePath);
         }
 
         private async void MainWindow_Opened(object? sender, EventArgs e)
@@ -173,42 +171,6 @@ namespace MangaJaNaiConverterGui.Views
             }
         }
 
-        public void SetGrayscaleModelFilePath(object? sender, DragEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                var files = e.Data.GetFiles().ToList();
-
-
-                if (files.Count > 0)
-                {
-                    var filePath = files[0].TryGetLocalPath();
-                    if (File.Exists(filePath))
-                    {
-                        vm.GrayscaleModelFilePath = filePath;
-                    }
-                }
-            }
-        }
-
-        public void SetColorModelFilePath(object? sender, DragEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                var files = e.Data.GetFiles().ToList();
-
-
-                if (files.Count > 0)
-                {
-                    var filePath = files[0].TryGetLocalPath();
-                    if (File.Exists(filePath))
-                    {
-                        vm.ColorModelFilePath = filePath;
-                    }
-                }
-            }
-        }
-
         private async void OpenInputFileButtonClick(object? sender, RoutedEventArgs e)
         {
             if (DataContext is MainWindowViewModel vm)
@@ -305,75 +267,6 @@ namespace MangaJaNaiConverterGui.Views
                 if (files.Count >= 1)
                 {
                     vm.OutputFolderPath = files[0].TryGetLocalPath() ?? "";
-                }
-            }
-        }
-
-        private async void OpenGrayscaleModelFileButtonClick(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                // Get top level from the current control. Alternatively, you can use Window reference instead.
-                var topLevel = GetTopLevel(this);
-
-                var storageProvider = topLevel.StorageProvider;
-
-                var folderPath = @".\chaiNNer\models";
-
-                if (Directory.Exists(Path.GetDirectoryName(vm.GrayscaleModelFilePath)))
-                {
-                    folderPath = Path.GetDirectoryName(vm.GrayscaleModelFilePath);
-                }
-
-                // Start async operation to open the dialog.
-                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    Title = "Open Model File for Grayscale Images",
-                    AllowMultiple = false,
-                    FileTypeFilter = new FilePickerFileType[]
-                    {
-                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.safetensors" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
-                    },
-                    SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folderPath))),
-                });
-
-                if (files.Count >= 1)
-                {
-                    vm.GrayscaleModelFilePath = files[0].TryGetLocalPath() ?? "";
-                }
-            }
-        }
-
-        private async void OpenColorModelFileButtonClick(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                // Get top level from the current control. Alternatively, you can use Window reference instead.
-                var topLevel = TopLevel.GetTopLevel(this);
-                var storageProvider = topLevel.StorageProvider;
-
-                var folderPath = @".\chaiNNer\models";
-
-                if (Directory.Exists(Path.GetDirectoryName(vm.ColorModelFilePath)))
-                {
-                    folderPath = Path.GetDirectoryName(vm.ColorModelFilePath);
-                }
-
-                // Start async operation to open the dialog.
-                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    Title = "Open Model File for Color Images",
-                    AllowMultiple = false,
-                    FileTypeFilter = new FilePickerFileType[]
-                    {
-                    new("Model File") { Patterns = new[] { "*.pth", "*.pt", "*.ckpt", "*.safetensors" }, MimeTypes = new[] { "*/*" } }, FilePickerFileTypes.All,
-                    },
-                    SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(folderPath))),
-                });
-
-                if (files.Count >= 1)
-                {
-                    vm.ColorModelFilePath = files[0].TryGetLocalPath() ?? "";
                 }
             }
         }
