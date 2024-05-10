@@ -129,7 +129,7 @@ namespace MangaJaNaiConverterGui.Views
                     var filePath = files[0].TryGetLocalPath();
                     if (File.Exists(filePath))
                     {
-                        vm.InputFilePath = filePath;
+                        vm.CurrentWorkflow.InputFilePath = filePath;
                     }
                 }
             }
@@ -147,7 +147,7 @@ namespace MangaJaNaiConverterGui.Views
                     var filePath = files[0].TryGetLocalPath();
                     if (Directory.Exists(filePath))
                     {
-                        vm.InputFolderPath = filePath;
+                        vm.CurrentWorkflow.InputFolderPath = filePath;
                     }
                 }
             }
@@ -165,7 +165,7 @@ namespace MangaJaNaiConverterGui.Views
                     var filePath = files[0].TryGetLocalPath();
                     if (Directory.Exists(filePath))
                     {
-                        vm.OutputFolderPath = filePath;
+                        vm.CurrentWorkflow.OutputFolderPath = filePath;
                     }
                 }
             }
@@ -182,7 +182,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 IStorageFolder? suggestedStartLocation = null;
 
-                var inputFolder = Path.GetDirectoryName(vm.InputFilePath);
+                var inputFolder = Path.GetDirectoryName(vm.CurrentWorkflow.InputFilePath);
 
                 if (Directory.Exists(inputFolder))
                 {
@@ -204,7 +204,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 if (files.Count >= 1)
                 {
-                    vm.InputFilePath = files[0].TryGetLocalPath() ?? "";
+                    vm.CurrentWorkflow.InputFilePath = files[0].TryGetLocalPath() ?? "";
                 }
             }
         }
@@ -220,9 +220,9 @@ namespace MangaJaNaiConverterGui.Views
 
                 IStorageFolder? suggestedStartLocation = null;
 
-                if (Directory.Exists(vm.InputFolderPath))
+                if (Directory.Exists(vm.CurrentWorkflow.InputFolderPath))
                 {
-                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(vm.InputFolderPath)));
+                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(vm.CurrentWorkflow.InputFolderPath)));
                 }
 
                 // Start async operation to open the dialog.
@@ -235,7 +235,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 if (files.Count >= 1)
                 {
-                    vm.InputFolderPath = files[0].TryGetLocalPath() ?? "";   
+                    vm.CurrentWorkflow.InputFolderPath = files[0].TryGetLocalPath() ?? "";   
                 }
             }
         }
@@ -251,9 +251,9 @@ namespace MangaJaNaiConverterGui.Views
 
                 IStorageFolder? suggestedStartLocation = null;
 
-                if (Directory.Exists(vm.OutputFolderPath))
+                if (Directory.Exists(vm.CurrentWorkflow.OutputFolderPath))
                 {
-                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(vm.OutputFolderPath)));
+                    suggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(new Uri(Path.GetFullPath(vm.CurrentWorkflow.OutputFolderPath)));
                 }
 
                 // Start async operation to open the dialog.
@@ -266,7 +266,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 if (files.Count >= 1)
                 {
-                    vm.OutputFolderPath = files[0].TryGetLocalPath() ?? "";
+                    vm.CurrentWorkflow.OutputFolderPath = files[0].TryGetLocalPath() ?? "";
                 }
             }
         }

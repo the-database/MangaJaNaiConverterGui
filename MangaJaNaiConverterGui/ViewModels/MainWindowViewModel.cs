@@ -36,30 +36,6 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public MainWindowViewModel()
         {
-            var g1 = this.WhenAnyValue
-            (
-                x => x.InputFilePath,
-                x => x.OutputFilename,
-                x => x.InputFolderPath,
-                x => x.OutputFolderPath
-            );
-
-            var g2 = this.WhenAnyValue
-            (
-                x => x.SelectedTabIndex,
-                x => x.UpscaleImages,
-                x => x.UpscaleArchives,
-                x => x.OverwriteExistingFiles,
-                x => x.WebpSelected,
-                x => x.PngSelected,
-                x => x.JpegSelected
-            );
-
-            g1.CombineLatest(g2).Subscribe(x =>
-            {
-                Validate();
-            });
-
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += _timer_Tick;
 
@@ -214,208 +190,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _useFp16, value);
         }
 
-        private int _selectedTabIndex;
-        [DataMember]
-        public int SelectedTabIndex
-        {
-            get => _selectedTabIndex;
-            set
-            {
-                if (_selectedTabIndex != value)
-                {
-                    this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
-                    this.RaisePropertyChanged(nameof(InputStatusText));
-
-                }
-            }
-        }
-
-        private string _inputFilePath = string.Empty;
-        [DataMember]
-        public string InputFilePath
-        {
-            get => _inputFilePath;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _inputFilePath, value);
-                this.RaisePropertyChanged(nameof(InputStatusText));
-            }
-        }
-
-        private string _inputFolderPath = string.Empty;
-        [DataMember]
-        public string InputFolderPath
-        {
-            get => _inputFolderPath;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _inputFolderPath, value);
-                this.RaisePropertyChanged(nameof(InputStatusText));
-            }
-        }
-
-        private string _outputFilename = "%filename%-mangajanai";
-        [DataMember]
-        public string OutputFilename
-        {
-            get => _outputFilename;
-            set => this.RaiseAndSetIfChanged(ref _outputFilename, value);
-        }
-
-        private string _outputFolderPath = string.Empty;
-        [DataMember]
-        public string OutputFolderPath
-        {
-            get => _outputFolderPath;
-            set => this.RaiseAndSetIfChanged(ref _outputFolderPath, value);
-        }
-
-        private bool _overwriteExistingFiles = false;
-        [DataMember]
-        public bool OverwriteExistingFiles
-        {
-            get => _overwriteExistingFiles;
-            set => this.RaiseAndSetIfChanged(ref _overwriteExistingFiles, value);
-        }
-
-        private bool _upscaleImages = false;
-        [DataMember]
-        public bool UpscaleImages
-        {
-            get => _upscaleImages;
-            set => this.RaiseAndSetIfChanged(ref _upscaleImages, value);
-        }
-
-        private bool _upscaleArchives = true;
-        [DataMember]
-        public bool UpscaleArchives
-        {
-            get => _upscaleArchives;
-            set => this.RaiseAndSetIfChanged(ref _upscaleArchives, value);
-        }
-
-        private int? _resizeHeightAfterUpscale = 0;
-        [DataMember]
-        public int? ResizeHeightAfterUpscale
-        {
-            get => _resizeHeightAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value ?? 0);
-        }
-
-        private int? _resizeWidthAfterUpscale = 0;
-        [DataMember]
-        public int? ResizeWidthAfterUpscale
-        {
-            get => _resizeWidthAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value ?? 0);
-        }
-
-        private double? _resizeFactorAfterUpscale = 100;
-        [DataMember]
-        public double? ResizeFactorAfterUpscale
-        {
-            get => _resizeFactorAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value ?? 100);
-        }
-
-        private bool _webpSelected = true;
-        [DataMember]
-        public bool WebpSelected
-        {
-            get => _webpSelected;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _webpSelected, value);
-                this.RaisePropertyChanged(nameof(ShowUseLosslessCompression));
-                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
-            }
-        }
-
-        private bool _pngSelected = false;
-        [DataMember]
-        public bool PngSelected
-        {
-            get => _pngSelected;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _pngSelected, value);
-            }
-        }
-
-        private bool _jpegSelected = false;
-        [DataMember]
-        public bool JpegSelected
-        {
-            get => _jpegSelected;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _jpegSelected, value);
-                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
-            }
-        }
-
-        private string ImageFormat => WebpSelected ? "webp" : PngSelected ? "png" : "jpg";
-
-        public bool ShowUseLosslessCompression => WebpSelected;
-
-        private bool _useLosslessCompression = false;
-        [DataMember]
-        public bool UseLosslessCompression
-        {
-            get => _useLosslessCompression;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _useLosslessCompression, value);
-                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
-            }
-        }
-
-        public bool ShowLossyCompressionQuality => JpegSelected || (WebpSelected && !UseLosslessCompression);
-
-        private int? _lossyCompressionQuality = 80;
-        [DataMember]
-        public int? LossyCompressionQuality
-        {
-            get => _lossyCompressionQuality;
-            set => this.RaiseAndSetIfChanged(ref _lossyCompressionQuality, value ?? 80);
-        }
-
-        private bool _showLossySettings = true;
-        [DataMember]
-        public bool ShowLossySettings
-        {
-            get => _showLossySettings;
-            set => this.RaiseAndSetIfChanged(ref _showLossySettings, value);
-        }
-
-        private bool _showAdvancedSettings = false;
-        [DataMember]
-        public bool ShowAdvancedSettings
-        {
-            get => _showAdvancedSettings;
-            set => this.RaiseAndSetIfChanged(ref _showAdvancedSettings, value);
-        }
-
-        private AvaloniaList<UpscaleChain> _chains;
-        [DataMember]
-        public AvaloniaList<UpscaleChain> Chains
-        {
-            get => _chains;
-            set => this.RaiseAndSetIfChanged(ref _chains, value);
-        }
-
-        private bool _valid = false;
-        [IgnoreDataMember]
-        public bool Valid
-        {
-            get => _valid;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _valid, value);
-                this.RaisePropertyChanged(nameof(UpscaleEnabled));
-                this.RaisePropertyChanged(nameof(LeftStatus));
-            }
-        }
 
         private bool _upscaling = false;
         [IgnoreDataMember]
@@ -509,7 +283,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public string LeftStatus => !Valid ? ValidationText.Replace("\n", " ") : $"{InputStatusText} selected for upscaling.";
+        public string LeftStatus => !CurrentWorkflow.Valid ? ValidationText.Replace("\n", " ") : $"{InputStatusText} selected for upscaling.";
 
         private int _progressCurrentFile = 0;
         public int ProgressCurrentFile
@@ -546,7 +320,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _showArchiveProgressBar, value);
         }
 
-        public bool UpscaleEnabled => Valid && !Upscaling;
+        public bool UpscaleEnabled => CurrentWorkflow.Valid && !Upscaling;
 
         private TimeSpan _elapsedTime = TimeSpan.FromSeconds(0);
         public TimeSpan ElapsedTime
@@ -556,6 +330,45 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _elapsedTime, value);
             }
+        }
+
+        private AvaloniaList<UpscaleWorkflow> _workflows;
+        [DataMember]
+        public AvaloniaList<UpscaleWorkflow> Workflows
+        {
+            get => _workflows;
+            set => this.RaiseAndSetIfChanged(ref _workflows, value);
+        }
+
+        public AvaloniaList<UpscaleWorkflow> CustomWorkflows => new AvaloniaList<UpscaleWorkflow>(Workflows.Skip(1).ToList());
+
+        private int _selectedWorkflowIndex = 0;
+        [DataMember]
+        public int SelectedWorkflowIndex
+        {
+            get => _selectedWorkflowIndex;
+            set 
+            { 
+                this.RaiseAndSetIfChanged(ref _selectedWorkflowIndex, value); 
+                this.RaisePropertyChanged(nameof(CurrentWorkflow));
+                this.RaisePropertyChanged(nameof(CurrentWorkflow.ActiveWorkflow));
+            }
+        }
+
+        public UpscaleWorkflow CurrentWorkflow
+        {
+            get => Workflows[SelectedWorkflowIndex];
+        }
+
+        public void HandleWorkflowSelected(int workflowIndex)
+        {
+            SelectedWorkflowIndex = workflowIndex;
+            RequestShowAppSettings = false;
+        }
+
+        public void HandleAppSettingsSelected()
+        {
+            RequestShowAppSettings = true;
         }
 
 
@@ -578,15 +391,15 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ShowArchiveProgressBar = false;
 
                 var flags = new StringBuilder();
-                if (UpscaleArchives)
+                if (CurrentWorkflow.UpscaleArchives)
                 {
                     flags.Append("--upscale-archives ");
                 }
-                if (UpscaleImages)
+                if (CurrentWorkflow.UpscaleImages)
                 {
                     flags.Append("--upscale-images ");
                 }
-                if (OverwriteExistingFiles)
+                if (CurrentWorkflow.OverwriteExistingFiles)
                 {
                     flags.Append("--overwrite-existing-files ");
                 }
@@ -594,7 +407,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 //{
                 //    flags.Append("--auto-adjust-levels ");
                 //}
-                if (UseLosslessCompression)
+                if (CurrentWorkflow.UseLosslessCompression)
                 {
                     flags.Append("--use-lossless-compression ");
                 }
@@ -607,11 +420,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                     flags.Append("--use-fp16 ");
                 }
 
-                var inputArgs = $"--input-file-path \"{InputFilePath}\" ";
+                var inputArgs = $"--input-file-path \"{CurrentWorkflow.InputFilePath}\" ";
 
-                if (SelectedTabIndex == 1)
+                if (CurrentWorkflow.SelectedTabIndex == 1)
                 {
-                    inputArgs = $"--input-folder-path \"{InputFolderPath}\" ";
+                    inputArgs = $"--input-folder-path \"{CurrentWorkflow.InputFolderPath}\" ";
                 }
 
                 var grayscaleModelFilePath = "";// TODO string.IsNullOrWhiteSpace(GrayscaleModelFilePath) ? GrayscaleModelFilePath : Path.GetFullPath(GrayscaleModelFilePath);
@@ -621,7 +434,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
-                Valid = true;
+                CurrentWorkflow.Valid = true;
             }, ct);
 
             try
@@ -629,7 +442,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 _timer.Start();
                 await task;
                 _timer.Stop();
-                Validate();
+                CurrentWorkflow.Validate();
             }
             catch (OperationCanceledException e)
             {
@@ -656,73 +469,53 @@ namespace MangaJaNaiConverterGui.ViewModels
                     _runningProcess.Kill(true);
                     _runningProcess = null; // Clear the reference to the terminated process
                 }
-                Validate();
+                CurrentWorkflow.Validate();
             }
             catch { }
         }
 
-        public void SetWebpSelected()
-        {
-            WebpSelected = true;
-            PngSelected = false;
-            JpegSelected = false;
-        }
-
-        public void SetPngSelected()
-        {
-            PngSelected = true;
-            WebpSelected = false;
-            JpegSelected = false;
-        }
-
-        public void SetJpegSelected()
-        {
-            JpegSelected = true;
-            WebpSelected = false;
-            PngSelected = false;
-        }
 
         private void CheckInputs()
         {
-            if (Valid && !Upscaling)
+            if (CurrentWorkflow.Valid && !Upscaling)
             {
-                var overwriteText = OverwriteExistingFiles ? "overwritten" : "skipped";
+                var overwriteText = CurrentWorkflow.OverwriteExistingFiles ? "overwritten" : "skipped";
 
                 // input file
-                if (SelectedTabIndex == 0)
+                if (CurrentWorkflow.SelectedTabIndex == 0)
                 {
                     StringBuilder status = new();
                     var skipFiles = 0;
 
 
 
-                    if (IMAGE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    if (IMAGE_EXTENSIONS.Any(x => CurrentWorkflow.InputFilePath.ToLower().EndsWith(x)))
                     {
                         var outputFilePath = Path.ChangeExtension(
                                                 Path.Join(
-                                                    Path.GetFullPath(OutputFolderPath),
-                                                    OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(InputFilePath))),
-                                                ImageFormat);
+                                                    Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
+                                                    CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(CurrentWorkflow.InputFilePath))),
+                                                CurrentWorkflow.ImageFormat);
                         if (File.Exists(outputFilePath))
                         {
                             status.Append($" (1 image already exists and will be {overwriteText})");
-                            if (!OverwriteExistingFiles)
+                            if (!CurrentWorkflow.OverwriteExistingFiles)
                             {
                                 skipFiles++;
                             }
                         }
                     }
-                    else if (ARCHIVE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    else if (ARCHIVE_EXTENSIONS.Any(x => CurrentWorkflow.InputFilePath.ToLower().EndsWith(x)))
                     {
                         var outputFilePath = Path.ChangeExtension(
                                                 Path.Join(
-                                                    Path.GetFullPath(OutputFolderPath),
-                                                    OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(InputFilePath))),
+                                                    Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
+                                                    CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(CurrentWorkflow.InputFilePath))),
                                                 "cbz");
                         if (File.Exists(outputFilePath))
                         {
                             status.Append($" (1 archive already exists and will be {overwriteText})");
-                            if (!OverwriteExistingFiles)
+                            if (!CurrentWorkflow.OverwriteExistingFiles)
                             {
                                 skipFiles++;
                             }
@@ -734,11 +527,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                     }
 
                     var s = skipFiles > 0 ? "s" : "";
-                    if (IMAGE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    if (IMAGE_EXTENSIONS.Any(x => CurrentWorkflow.InputFilePath.ToLower().EndsWith(x)))
                     {
                         status.Insert(0, $"{1 - skipFiles} image{s}");
                     }
-                    else if (ARCHIVE_EXTENSIONS.Any(x => InputFilePath.ToLower().EndsWith(x)))
+                    else if (ARCHIVE_EXTENSIONS.Any(x => CurrentWorkflow.InputFilePath.ToLower().EndsWith(x)))
                     {
                         status.Insert(0, $"{1 - skipFiles} archive{s}");
                     }
@@ -761,9 +554,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                     var existArchiveCount = 0;
                     var totalFileCount = 0;
 
-                    if (UpscaleImages)
+                    if (CurrentWorkflow.UpscaleImages)
                     {
-                        var images = Directory.EnumerateFiles(InputFolderPath, "*.*", SearchOption.AllDirectories)
+                        var images = Directory.EnumerateFiles(CurrentWorkflow.InputFolderPath, "*.*", SearchOption.AllDirectories)
                             .Where(file => IMAGE_EXTENSIONS.Any(ext => file.ToLower().EndsWith(ext)));
                         var imagesCount = 0;
 
@@ -771,9 +564,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                         {
                             var outputImagePath = Path.ChangeExtension(
                                                     Path.Join(
-                                                        Path.GetFullPath(OutputFolderPath),
-                                                        OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))),
-                                                    ImageFormat);
+                                                        Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
+                                                        CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))),
+                                                    CurrentWorkflow.ImageFormat);
                             // if out file exists, exist count ++
                             // if overwrite image OR out file doesn't exist, count image++
                             var fileExists = File.Exists(outputImagePath);
@@ -783,7 +576,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                                 existImageCount++;
                             }
 
-                            if (!fileExists || OverwriteExistingFiles)
+                            if (!fileExists || CurrentWorkflow.OverwriteExistingFiles)
                             {
                                 imagesCount++;
                             }
@@ -795,9 +588,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                         statuses.Add($"{imagesCount} image{imageS} ({existImageCount} image{existImageS} already exist and will be {overwriteText})");
                         totalFileCount += imagesCount;
                     }
-                    if (UpscaleArchives)
+                    if (CurrentWorkflow.UpscaleArchives)
                     {
-                        var archives = Directory.EnumerateFiles(InputFolderPath, "*.*", SearchOption.AllDirectories)
+                        var archives = Directory.EnumerateFiles(CurrentWorkflow.InputFolderPath, "*.*", SearchOption.AllDirectories)
                             .Where(file => ARCHIVE_EXTENSIONS.Any(ext => file.ToLower().EndsWith(ext)));
                         var archivesCount = 0;
 
@@ -805,8 +598,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                         {
                             var outputArchivePath = Path.ChangeExtension(
                                                         Path.Join(
-                                                            Path.GetFullPath(OutputFolderPath),
-                                                            OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
+                                                            Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
+                                                            CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
                                                         "cbz");
                             var fileExists = File.Exists(outputArchivePath);
 
@@ -815,7 +608,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                                 existArchiveCount++;
                             }
 
-                            if (!fileExists || OverwriteExistingFiles)
+                            if (!fileExists || CurrentWorkflow.OverwriteExistingFiles)
                             {
                                 archivesCount++;
                             }
@@ -827,7 +620,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         totalFileCount += archivesCount;
                     }
 
-                    if (!UpscaleArchives && !UpscaleImages)
+                    if (!CurrentWorkflow.UpscaleArchives && !CurrentWorkflow.UpscaleImages)
                     {
                         InputStatusText = "0 files";
                     }
@@ -848,7 +641,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void AddChain()
         {
-            Chains.Add(new UpscaleChain());
+            CurrentWorkflow.Chains.Add(new UpscaleChain());
             UpdateChainHeaders();
         }
 
@@ -856,7 +649,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             try
             {
-                Chains.Remove(chain);
+                CurrentWorkflow.Chains.Remove(chain);
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -868,66 +661,13 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void UpdateChainHeaders()
         {
-            for (var i = 0; i < Chains.Count; i++)
+            for (var i = 0; i < CurrentWorkflow.Chains.Count; i++)
             {
-                Chains[i].ChainNumber = (i + 1).ToString();
+                CurrentWorkflow.Chains[i].ChainNumber = (i + 1).ToString();
             }
         }
 
-        public void Validate()
-        {
-            var valid = true;
-            var validationText = new List<string>();
-            if (SelectedTabIndex == 0)
-            {
 
-                if (string.IsNullOrWhiteSpace(InputFilePath))
-                {
-                    valid = false;
-                    validationText.Add("Input File is required.");
-                }
-                else if (!File.Exists(InputFilePath))
-                {
-                    valid = false;
-                    validationText.Add("Input File does not exist.");
-                }
-
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(InputFolderPath))
-                {
-                    valid = false;
-                    validationText.Add("Input Folder is required.");
-                }
-                else if (!Directory.Exists(InputFolderPath))
-                {
-                    valid = false;
-                    validationText.Add("Input Folder does not exist.");
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(OutputFilename))
-            {
-                valid = false;
-                validationText.Add("Output Filename is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(OutputFolderPath))
-            {
-                valid = false;
-                validationText.Add("Output Folder is required.");
-            }
-
-            Valid = valid;
-            CheckInputs();
-            if (ProgressTotalFiles == 0)
-            {
-                Valid = false;
-                validationText.Add($"{InputStatusText} selected for upscaling. At least one file must be selected.");
-            }
-            ValidationText = string.Join("\n", validationText);
-        }
 
         public async Task RunCommand(string command)
         {
@@ -1224,6 +964,367 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 Process.Start("explorer.exe", UpscaleChain.PthPath);
             });
+        }
+    }
+
+    [DataContract]
+    public class UpscaleWorkflow : ReactiveObject
+    {
+        public UpscaleWorkflow()
+        {
+            var g1 = this.WhenAnyValue
+            (
+                x => x.InputFilePath,
+                x => x.OutputFilename,
+                x => x.InputFolderPath,
+                x => x.OutputFolderPath
+            );
+
+            var g2 = this.WhenAnyValue
+            (
+                x => x.SelectedTabIndex,
+                x => x.UpscaleImages,
+                x => x.UpscaleArchives,
+                x => x.OverwriteExistingFiles,
+                x => x.WebpSelected,
+                x => x.PngSelected,
+                x => x.JpegSelected
+            );
+
+            g1.CombineLatest(g2).Subscribe(x =>
+            {
+                Validate();
+            });
+
+            this.WhenAnyValue(x => x.Vm).Subscribe(x =>
+            {
+                sub?.Dispose();
+                sub = Vm.WhenAnyValue(
+                    x => x.SelectedWorkflowIndex,
+                    x => x.RequestShowAppSettings
+                    ).Subscribe(x =>
+                    {
+                        this.RaisePropertyChanged(nameof(ActiveWorkflow));
+                        Vm?.RaisePropertyChanged("Workflows");
+                    });
+            });
+        }
+
+        private IDisposable? sub;
+
+        private MainWindowViewModel? _vm;
+        public MainWindowViewModel? Vm
+        {
+            get => _vm;
+            set => this.RaiseAndSetIfChanged(ref _vm, value);
+        }
+
+        private string _workflowName;
+        [DataMember]
+        public string WorkflowName
+        {
+            get => _workflowName;
+            set => this.RaiseAndSetIfChanged( ref _workflowName, value );
+        }
+
+        private int _workflowIndex;
+        [DataMember]
+        public int WorkflowIndex
+        {
+            get => _workflowIndex;
+            set => this.RaiseAndSetIfChanged(ref _workflowIndex, value);
+            
+        }
+
+        public string WorkflowIcon => $"Numeric{WorkflowIndex}Circle";
+
+        public bool ActiveWorkflow {
+            get
+            {
+                Debug.WriteLine($"ActiveWorkflow {WorkflowIndex} == {Vm?.SelectedWorkflowIndex}; {Vm == null}");
+                return WorkflowIndex == Vm?.SelectedWorkflowIndex && (!Vm?.ShowAppSettings ?? false);
+            }
+            
+        }
+
+        private int _selectedTabIndex;
+        [DataMember]
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set
+            {
+                if (_selectedTabIndex != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
+                    //this.RaisePropertyChanged(nameof(InputStatusText));  // TODO
+
+                }
+            }
+        }
+
+        private string _inputFilePath = string.Empty;
+        [DataMember]
+        public string InputFilePath
+        {
+            get => _inputFilePath;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _inputFilePath, value);
+                //this.RaisePropertyChanged(nameof(InputStatusText));  // TODO
+            }
+        }
+
+        private string _inputFolderPath = string.Empty;
+        [DataMember]
+        public string InputFolderPath
+        {
+            get => _inputFolderPath;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _inputFolderPath, value);
+                //this.RaisePropertyChanged(nameof(InputStatusText)); // TODO
+            }
+        }
+
+        private string _outputFilename = "%filename%-mangajanai";
+        [DataMember]
+        public string OutputFilename
+        {
+            get => _outputFilename;
+            set => this.RaiseAndSetIfChanged(ref _outputFilename, value);
+        }
+
+        private string _outputFolderPath = string.Empty;
+        [DataMember]
+        public string OutputFolderPath
+        {
+            get => _outputFolderPath;
+            set => this.RaiseAndSetIfChanged(ref _outputFolderPath, value);
+        }
+
+        private bool _overwriteExistingFiles = false;
+        [DataMember]
+        public bool OverwriteExistingFiles
+        {
+            get => _overwriteExistingFiles;
+            set => this.RaiseAndSetIfChanged(ref _overwriteExistingFiles, value);
+        }
+
+        private bool _upscaleImages = false;
+        [DataMember]
+        public bool UpscaleImages
+        {
+            get => _upscaleImages;
+            set => this.RaiseAndSetIfChanged(ref _upscaleImages, value);
+        }
+
+        private bool _upscaleArchives = true;
+        [DataMember]
+        public bool UpscaleArchives
+        {
+            get => _upscaleArchives;
+            set => this.RaiseAndSetIfChanged(ref _upscaleArchives, value);
+        }
+
+        private int? _resizeHeightAfterUpscale = 0;
+        [DataMember]
+        public int? ResizeHeightAfterUpscale
+        {
+            get => _resizeHeightAfterUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value ?? 0);
+        }
+
+        private int? _resizeWidthAfterUpscale = 0;
+        [DataMember]
+        public int? ResizeWidthAfterUpscale
+        {
+            get => _resizeWidthAfterUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value ?? 0);
+        }
+
+        private double? _resizeFactorAfterUpscale = 100;
+        [DataMember]
+        public double? ResizeFactorAfterUpscale
+        {
+            get => _resizeFactorAfterUpscale;
+            set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value ?? 100);
+        }
+
+        private bool _webpSelected = true;
+        [DataMember]
+        public bool WebpSelected
+        {
+            get => _webpSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _webpSelected, value);
+                this.RaisePropertyChanged(nameof(ShowUseLosslessCompression));
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+            }
+        }
+
+        private bool _pngSelected = false;
+        [DataMember]
+        public bool PngSelected
+        {
+            get => _pngSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _pngSelected, value);
+            }
+        }
+
+        private bool _jpegSelected = false;
+        [DataMember]
+        public bool JpegSelected
+        {
+            get => _jpegSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _jpegSelected, value);
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+            }
+        }
+
+        public string ImageFormat => WebpSelected ? "webp" : PngSelected ? "png" : "jpg";
+
+        public bool ShowUseLosslessCompression => WebpSelected;
+
+        private bool _useLosslessCompression = false;
+        [DataMember]
+        public bool UseLosslessCompression
+        {
+            get => _useLosslessCompression;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _useLosslessCompression, value);
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+            }
+        }
+
+        public bool ShowLossyCompressionQuality => JpegSelected || (WebpSelected && !UseLosslessCompression);
+
+        private int? _lossyCompressionQuality = 80;
+        [DataMember]
+        public int? LossyCompressionQuality
+        {
+            get => _lossyCompressionQuality;
+            set => this.RaiseAndSetIfChanged(ref _lossyCompressionQuality, value ?? 80);
+        }
+
+        private bool _showLossySettings = true;
+        [DataMember]
+        public bool ShowLossySettings
+        {
+            get => _showLossySettings;
+            set => this.RaiseAndSetIfChanged(ref _showLossySettings, value);
+        }
+
+        private bool _showAdvancedSettings = false;
+        [DataMember]
+        public bool ShowAdvancedSettings
+        {
+            get => _showAdvancedSettings;
+            set => this.RaiseAndSetIfChanged(ref _showAdvancedSettings, value);
+        }
+
+        private AvaloniaList<UpscaleChain> _chains;
+        [DataMember]
+        public AvaloniaList<UpscaleChain> Chains
+        {
+            get => _chains;
+            set => this.RaiseAndSetIfChanged(ref _chains, value);
+        }
+
+        private bool _valid = false;
+        [IgnoreDataMember]
+        public bool Valid
+        {
+            get => _valid;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _valid, value);
+                //this.RaisePropertyChanged(nameof(UpscaleEnabled));  // TODO
+                //this.RaisePropertyChanged(nameof(LeftStatus));  // TODO
+            }
+        }
+
+        public void SetWebpSelected()
+        {
+            WebpSelected = true;
+            PngSelected = false;
+            JpegSelected = false;
+        }
+
+        public void SetPngSelected()
+        {
+            PngSelected = true;
+            WebpSelected = false;
+            JpegSelected = false;
+        }
+
+        public void SetJpegSelected()
+        {
+            JpegSelected = true;
+            WebpSelected = false;
+            PngSelected = false;
+        }
+
+        public void Validate()
+        {
+            var valid = true;
+            var validationText = new List<string>();
+            if (SelectedTabIndex == 0)
+            {
+
+                if (string.IsNullOrWhiteSpace(InputFilePath))
+                {
+                    valid = false;
+                    validationText.Add("Input File is required.");
+                }
+                else if (!File.Exists(InputFilePath))
+                {
+                    valid = false;
+                    validationText.Add("Input File does not exist.");
+                }
+
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(InputFolderPath))
+                {
+                    valid = false;
+                    validationText.Add("Input Folder is required.");
+                }
+                else if (!Directory.Exists(InputFolderPath))
+                {
+                    valid = false;
+                    validationText.Add("Input Folder does not exist.");
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(OutputFilename))
+            {
+                valid = false;
+                validationText.Add("Output Filename is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(OutputFolderPath))
+            {
+                valid = false;
+                validationText.Add("Output Folder is required.");
+            }
+
+            Valid = valid;
+            // TODO
+            //CheckInputs();
+            //if (ProgressTotalFiles == 0)
+            //{
+            //    Valid = false;
+            //    validationText.Add($"{InputStatusText} selected for upscaling. At least one file must be selected.");
+            //}
+            //ValidationText = string.Join("\n", validationText);
         }
     }
 

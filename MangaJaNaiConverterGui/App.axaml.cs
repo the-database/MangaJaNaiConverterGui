@@ -42,6 +42,10 @@ namespace MangaJaNaiConverterGui
             
             // Load the saved view model state.
             var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
+            foreach (var wf in state.Workflows)
+            {
+                wf.Vm = state;
+            }
             new MainWindow { DataContext = state }.Show();
             base.OnFrameworkInitializationCompleted();
         }
