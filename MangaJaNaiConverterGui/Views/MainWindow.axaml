@@ -349,117 +349,120 @@
               </StackPanel>
             </Border>
 
-            <Border Classes="border" IsEnabled="{Binding !Upscaling}" IsVisible="{Binding CurrentWorkflow.ShowAdvancedSettings}">
-              <StackPanel>
-                <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:UpscaleChain">
-                      <StackPanel>
-                        <TextBlock Margin="10,10,0,10" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
-                        <Border Classes="border" Margin="0,0,0,20">
-                          <StackPanel Grid.Column="0">
-                            <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
-                            <Border Classes="border">
-                              <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10" VerticalAlignment="Center">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resolution Range</TextBlock>
-                                  <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
-                                                 ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+            <StackPanel IsVisible="{Binding CurrentWorkflow.ShowAdvancedSettings}" IsEnabled="{Binding !Upscaling}">
+              <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Advanced Settings"></TextBlock>
+              <Border Classes="border" IsEnabled="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
+                <StackPanel>
+                  <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:UpscaleChain">
+                        <StackPanel>
+                          <TextBlock Margin="10,10,0,10" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
+                          <Border Classes="border" Margin="0,0,0,20">
+                            <StackPanel Grid.Column="0">
+                              <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
+                              <Border Classes="border">
+                                <StackPanel>
+                                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10" VerticalAlignment="Center">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resolution Range</TextBlock>
+                                    <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
+                                                   ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
 
-                                  <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
-                                  <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
-                                                 ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                  <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means that the chain will run on all video resolutions.</TextBlock>
-                                </StackPanel>
+                                    <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
+                                    <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
+                                                   ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                    <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means that the chain will run on all video resolutions.</TextBlock>
+                                  </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scaling Factor Range</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
+                                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scaling Factor Range</TextBlock>
+                                    <NumericUpDown Margin="0,0,5,0" Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
 
-                                  <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
-                                  <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
-                                </StackPanel>
+                                    <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
+                                    <NumericUpDown Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
+                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
+                                  </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsColor}">Is Color Image</CheckBox>
-                                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsGrayscale}">Is Grayscale Image</CheckBox>
-                                  <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.</TextBlock>
-                                </StackPanel>
-                                
-                              </StackPanel>
-                            </Border>
+                                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsColor}">Is Color Image</CheckBox>
+                                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsGrayscale}">Is Grayscale Image</CheckBox>
+                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.</TextBlock>
+                                  </StackPanel>
 
-                            <TextBlock Margin="10,20,0,5" Text="Upscale Settings" />
-                            <Border Classes="border">
-                              <StackPanel>
-                                <!-- TODO -->
+                                </StackPanel>
+                              </Border>
 
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
-                                  <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
-                                  <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeHeightBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                                    Resize each image to this height before upscaling, set to 0 to disable.
-                                  </TextBlock>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" Value="{Binding ResizeWidthBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                                    Resize each image to this width before upscaling, set to 0 to disable.
-                                  </TextBlock>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
-                                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeFactorBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-                                  <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                                    Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.
-                                  </TextBlock>
-                                </StackPanel>
+                              <TextBlock Margin="10,20,0,5" Text="Upscale Settings" />
+                              <Border Classes="border">
+                                <StackPanel>
+                                  <!-- TODO -->
 
-                                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model</TextBlock>
-                                  <ComboBox ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" Width="400" />
-                                  <Button Margin="5,0,0,0" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
-                                    <StackPanel Orientation="Horizontal">
-                                      <materialIcons:MaterialIcon Kind="Launch" />
-                                      <TextBlock Margin="5,0,0,0" Text="Open Models Directory" />
-                                    </StackPanel>
-                                  </Button>
-                                  <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add ONNX model files to the models directory.</TextBlock>
-                                </StackPanel>
+                                  <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                                    <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
+                                    <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
+                                  </StackPanel>
+                                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
+                                    <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeHeightBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                                      Resize each image to this height before upscaling, set to 0 to disable.
+                                    </TextBlock>
+                                  </StackPanel>
+                                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
+                                    <NumericUpDown Margin="0,0,5,0" Value="{Binding ResizeWidthBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                                      Resize each image to this width before upscaling, set to 0 to disable.
+                                    </TextBlock>
+                                  </StackPanel>
+                                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
+                                    <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeFactorBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
+                                    <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                                      Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.
+                                    </TextBlock>
+                                  </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model Tile Size</TextBlock>
-                                  <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
-                                                 ItemsSource="{Binding TileSizes}" />
-                                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                  <TextBlock Width="500" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
-                                </StackPanel>
-                                
-                              </StackPanel>
-                            </Border>
-                            
-                          </StackPanel>
-                        </Border>
+                                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model</TextBlock>
+                                    <ComboBox ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" Width="400" />
+                                    <Button Margin="5,0,0,0" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
+                                      <StackPanel Orientation="Horizontal">
+                                        <materialIcons:MaterialIcon Kind="Launch" />
+                                        <TextBlock Margin="5,0,0,0" Text="Open Models Directory" />
+                                      </StackPanel>
+                                    </Button>
+                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add ONNX model files to the models directory.</TextBlock>
+                                  </StackPanel>
 
-                      </StackPanel>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </StackPanel>
-            </Border>
+                                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model Tile Size</TextBlock>
+                                    <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
+                                                   ItemsSource="{Binding TileSizes}" />
+                                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                                    <TextBlock Width="500" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
+                                  </StackPanel>
+
+                                </StackPanel>
+                              </Border>
+
+                            </StackPanel>
+                          </Border>
+
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+            </StackPanel>
 
 
           </StackPanel>
