@@ -44,11 +44,11 @@
 
 
   <ItemGroup>
-    <None Update="appstate.json">
+    <None Update="appstate2.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Content Include="chaiNNer\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <!--<CopyToOutputDirectory>Always</CopyToOutputDirectory>-->
     </Content>
   </ItemGroup>

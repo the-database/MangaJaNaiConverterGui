@@ -23,7 +23,7 @@ namespace MangaJaNaiConverterGui
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
                 "MangaJaNaiConverterGui"
             );
-            var appStatePath = Path.Combine(appStateFolder, "appstate.json");
+            var appStatePath = Path.Combine(appStateFolder, "appstate2.json");
 
             if (!Directory.Exists(appStateFolder))
             {
@@ -32,7 +32,7 @@ namespace MangaJaNaiConverterGui
 
             if (!File.Exists(appStatePath))
             {
-                File.Copy("appstate.json", appStatePath);
+                File.Copy("appstate2.json", appStatePath);
             }
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
