@@ -182,14 +182,13 @@
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
           <!-- Main Form -->
           <StackPanel Margin="20">
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
               <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Workflow Name</TextBlock>
               <TextBox Width="500" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.WorkflowName}"/>
             </StackPanel>
-            <TextBlock Text="{Binding CurrentWorkflow.ActiveWorkflow}"/>
             <DockPanel>
               <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Input and Output"></TextBlock>
-              <CheckBox DockPanel.Dock="Right" IsChecked="{Binding CurrentWorkflow.ShowAdvancedSettings}" Content="Show More Settings" />
+              <CheckBox DockPanel.Dock="Right" IsChecked="{Binding CurrentWorkflow.ShowAdvancedSettings}" Content="Show Advanced Settings" />
               <Rectangle />
             </DockPanel>
 
@@ -350,7 +349,7 @@
               </StackPanel>
             </Border>
 
-            <Border Classes="border" IsEnabled="{Binding !Upscaling}">
+            <Border Classes="border" IsEnabled="{Binding !Upscaling}" IsVisible="{Binding CurrentWorkflow.ShowAdvancedSettings}">
               <StackPanel>
                 <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
                   <ItemsControl.ItemTemplate>

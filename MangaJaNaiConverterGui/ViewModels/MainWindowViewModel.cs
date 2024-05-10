@@ -1047,6 +1047,8 @@ namespace MangaJaNaiConverterGui.ViewModels
             
         }
 
+        public bool IsDefaultWorkflow => WorkflowIndex == 0;
+
         private int _selectedTabIndex;
         [DataMember]
         public int SelectedTabIndex
