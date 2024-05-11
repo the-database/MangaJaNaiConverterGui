@@ -1,38 +1,25 @@
 import sys
-import functools
 import os
 from pathlib import Path
 from ctypes import windll
 import io
 import cv2
-from tqdm import tqdm
-from PIL import Image, ImageOps, ImageFilter, ImageCms
+from PIL import Image, ImageFilter, ImageCms
 import numpy as np
 import argparse
 import zipfile
 import rarfile
 import time
-from multiprocessing import Queue, Process, Manager
+from multiprocessing import Queue, Process
 from chainner_ext import resize, ResizeFilter
 
 from api import (
-    BaseOutput,
-    Collector,
-    ExecutionOptions,
-    InputId,
-    Iterator,
     NodeContext,
-    NodeData,
-    NodeId,
-    OutputId,
     SettingsParser,
-    registry,
 )
-from progress_controller import Aborted, ProgressController, ProgressToken
+from progress_controller import ProgressController, ProgressToken
 from nodes.utils.utils import get_h_w_c
 from nodes.impl.image_utils import cv_save_image, to_uint8, to_uint16, normalize
-from packages.chaiNNer_standard.image.io.load_image import load_image_node
-from packages.chaiNNer_standard.image_adjustment.adjustments.stretch_contrast import stretch_contrast_node, StretchMode
 from packages.chaiNNer_pytorch.pytorch.io.load_model import load_model_node
 from packages.chaiNNer_pytorch.pytorch.processing.upscale_image import upscale_image_node
 from nodes.impl.upscale.auto_split_tiles import (
@@ -40,8 +27,6 @@ from nodes.impl.upscale.auto_split_tiles import (
     NO_TILING,
     MAX_TILE_SIZE,
     TileSize,
-    estimate_tile_size,
-    parse_tile_size_input,
 )
 
 
@@ -648,8 +633,8 @@ def postprocess_worker_zip(postprocess_queue, output_zip_path, image_format, los
                                resize_width_after_upscale, resize_factor_after_upscale, is_grayscale)
             else:  # copy file
                 output_zip.writestr(file_name, image)
-            print(f"PROGRESS=postprocess_worker_zip_image", flush=True)
-        print(f"PROGRESS=postprocess_worker_zip_archive", flush=True)
+            print("PROGRESS=postprocess_worker_zip_image", flush=True)
+        print("PROGRESS=postprocess_worker_zip_archive", flush=True)
 
 
 def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lossy_compression_quality,
@@ -667,7 +652,7 @@ def postprocess_worker_folder(postprocess_queue, output_folder, image_format, lo
         save_image(image, os.path.join(output_folder, str(Path(f"{file_name}.{image_format}"))), image_format,
                    lossy_compression_quality, use_lossless_compression, resize_height_after_upscale,
                    resize_width_after_upscale, resize_factor_after_upscale, is_grayscale)
-        print(f"PROGRESS=postprocess_worker_folder", flush=True)
+        print("PROGRESS=postprocess_worker_folder", flush=True)
 
     # print("postprocess_worker_folder exiting")
 
@@ -686,7 +671,7 @@ def postprocess_worker_image(postprocess_queue, output_file_path, image_format, 
 
         save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression,
                    resize_height_after_upscale, resize_width_after_upscale, resize_factor_after_upscale, is_grayscale)
-        print(f"PROGRESS=postprocess_worker_image", flush=True)
+        print("PROGRESS=postprocess_worker_image", flush=True)
 
 
 def upscale_archive_file(input_zip_path, output_zip_path, auto_adjust_levels, resize_height_before_upscale,
