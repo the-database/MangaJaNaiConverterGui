@@ -475,7 +475,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
 
-        private void CheckInputs()
+        public void CheckInputs()
         {
             if (CurrentWorkflow.Valid && !Upscaling)
             {
@@ -1059,8 +1059,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (_selectedTabIndex != value)
                 {
                     this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
-                    //this.RaisePropertyChanged(nameof(InputStatusText));  // TODO
-
+                    Vm?.RaisePropertyChanged(nameof(Vm.InputStatusText));  // TODO
                 }
             }
         }
@@ -1073,7 +1072,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _inputFilePath, value);
-                //this.RaisePropertyChanged(nameof(InputStatusText));  // TODO
+                Vm?.RaisePropertyChanged(nameof(Vm.InputStatusText));  // TODO
             }
         }
 
@@ -1085,7 +1084,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _inputFolderPath, value);
-                //this.RaisePropertyChanged(nameof(InputStatusText)); // TODO
+                Vm?.RaisePropertyChanged(nameof(Vm.InputStatusText)); // TODO
             }
         }
 
@@ -1298,8 +1297,11 @@ namespace MangaJaNaiConverterGui.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _valid, value);
-                //this.RaisePropertyChanged(nameof(UpscaleEnabled));  // TODO
-                //this.RaisePropertyChanged(nameof(LeftStatus));  // TODO
+                if (Vm != null)
+                {
+                    Vm.RaisePropertyChanged(nameof(Vm.UpscaleEnabled));  // TODO
+                    Vm.RaisePropertyChanged(nameof(Vm.LeftStatus));  // TODO
+                }
             }
         }
 
@@ -1391,14 +1393,18 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
 
             Valid = valid;
-            // TODO
-            //CheckInputs();
-            //if (ProgressTotalFiles == 0)
-            //{
-            //    Valid = false;
-            //    validationText.Add($"{InputStatusText} selected for upscaling. At least one file must be selected.");
-            //}
-            //ValidationText = string.Join("\n", validationText);
+
+            if (Vm != null)
+            {
+                // TODO
+                Vm.CheckInputs();
+                if (Vm?.ProgressTotalFiles == 0)
+                {
+                    Valid = false;
+                    validationText.Add($"{Vm?.InputStatusText} selected for upscaling. At least one file must be selected.");
+                }
+                Vm.ValidationText = string.Join("\n", validationText);
+            }
         }
     }
 
