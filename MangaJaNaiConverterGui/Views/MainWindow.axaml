@@ -318,34 +318,51 @@
               </StackPanel>
             </Border>
 
-            <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Postprocessing"></TextBlock>
+            <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Upscaling"></TextBlock>
             <Border Classes="border" IsEnabled="{Binding !Upscaling}">
+
               <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
-                    Resize each image to this height (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display.
-                  </TextBlock>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Upscale Mode</TextBlock>
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeScaleSelected}" Content="Scale" Command="{Binding CurrentWorkflow.SetModeScaleSelected}" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeWidthSelected}" Content="Width" Command="{Binding CurrentWorkflow.SetModeWidthSelected}" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeHeightSelected}" Content="Height" Command="{Binding CurrentWorkflow.SetModeHeightSelected}" />
+                  <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>Scale</Bold>: All images will be upscaled by the specified scaling factor. A factor of 2x will double the width and height of each image.
+<Bold>Width</Bold>: All images will be upscaled to the specified width, while maintaining aspect ratio of the image. 
+<Bold>Height</Bold>: All images will be upscaled to the specified height, while maintaining aspect ratio of the image. 
+            </TextBlock>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="650" TextWrapping="WrapWithOverflow">
-                    Resize each image to this width (maintaining aspect ratio) after upscaling, set to 0 to disable. The final output images will have this width.
-                  </TextBlock>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor After Upscale</TextBlock>
-                  <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding CurrentWorkflow.ResizeFactorAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="0" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-                  <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                    Resize each image by this factor after upscaling. This setting is ignored if Resize Height After Upscale is specified. The final output images will be scaled by this factor, so when using the default 4x models, a setting of 50% can effectively result in a 2x upscale, and a setting of 75% is effectively 3x.
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeScaleSelected}">
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scale Factor</TextBlock>
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.Is1x}" Content="1x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="1" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.Is2x}" Content="2x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="2" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.Is3x}" Content="3x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="3" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.Is4x}" Content="4x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="4" />
+                  <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0">
+                    All images will be upscaled by the specified scaling factor. A factor of 2x will double the width and height of each image.
                   </TextBlock>
                 </StackPanel>
 
+
+
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeHeightSelected}">
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Height</TextBlock>
+                  <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" />
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
+                    All images will be upscaled to this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display.
+                  </TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeWidthSelected}">
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Width</TextBlock>
+                  <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" />
+                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
+                    All images will be upscaled to this width. For reading on tablets, this can be used to set hte image width to the resolution of your tablet's display.
+                  </TextBlock>
+                </StackPanel>
               </StackPanel>
             </Border>
 
@@ -359,7 +376,8 @@
                         <StackPanel>
                           <TextBlock Margin="10,10,0,10" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
                           <Border Classes="border" Margin="0,0,0,20">
-                            <StackPanel Grid.Column="0">
+                            <Grid>
+                              <StackPanel Grid.Column="0">
                               <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
                               <Border Classes="border">
                                 <StackPanel>
@@ -373,7 +391,7 @@
                                     <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
                                                    ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                    <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means that the chain will run on all video resolutions.</TextBlock>
+                                    <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means no resolution limit.</TextBlock>
                                   </StackPanel>
 
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
@@ -399,7 +417,6 @@
                               <TextBlock Margin="10,20,0,5" Text="Upscale Settings" />
                               <Border Classes="border">
                                 <StackPanel>
-                                  <!-- TODO -->
 
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
                                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
@@ -439,7 +456,7 @@
                                         <TextBlock Margin="5,0,0,0" Text="Open Models Directory" />
                                       </StackPanel>
                                     </Button>
-                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add ONNX model files to the models directory.</TextBlock>
+                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add PyTorch (*.pth) model files to the models directory.</TextBlock>
                                   </StackPanel>
 
                                   <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
@@ -451,15 +468,38 @@
                                   </StackPanel>
 
                                 </StackPanel>
-                              </Border>
 
+                              </Border>
+                              
                             </StackPanel>
+                              <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top"
+        IsVisible="{Binding !$parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CurrentWorkflow.IsDefaultWorkflow}"
+        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteChain}"
+        CommandParameter="{Binding}">
+                                <StackPanel Orientation="Horizontal">
+                                  <materialIcons:MaterialIcon Kind="MinusCircle" />
+                                  <TextBlock Margin="5,0,0,0" Text="{Binding ChainNumber, StringFormat=Remove Chain {0}}" />
+                                </StackPanel>
+                              </Button>
+                            </Grid>
                           </Border>
 
                         </StackPanel>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
+                  <StackPanel Orientation="Horizontal" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
+                    <Button Margin="10,20,0,20" Command="{Binding AddChain}">
+                      <StackPanel Orientation="Horizontal">
+                        <materialIcons:MaterialIcon Kind="PlusCircle" />
+                        <TextBlock Margin="5,0,0,0">Add Chain</TextBlock>
+                      </StackPanel>
+                    </Button>
+                    <TextBlock Width="700" TextWrapping="WrapWithOverflow" FontSize="12" Opacity=".5" VerticalAlignment="Center" Margin="20,0,0,0">
+                      A chain is a a set of upscale settings which can be activated based on conditions such as the image resolution and whether the image is color or grayscale. 
+                      This allows you to specify different upscale models for different types of images. 
+                    </TextBlock>
+                  </StackPanel>
                 </StackPanel>
               </Border>
             </StackPanel>

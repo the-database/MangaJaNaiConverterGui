@@ -1129,28 +1129,20 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _upscaleArchives, value);
         }
 
-        private int? _resizeHeightAfterUpscale = 0;
+        private int? _resizeHeightAfterUpscale = 2160;
         [DataMember]
         public int? ResizeHeightAfterUpscale
         {
             get => _resizeHeightAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value ?? 0);
+            set => this.RaiseAndSetIfChanged(ref _resizeHeightAfterUpscale, value ?? 2160);
         }
 
-        private int? _resizeWidthAfterUpscale = 0;
+        private int? _resizeWidthAfterUpscale = 3840;
         [DataMember]
         public int? ResizeWidthAfterUpscale
         {
             get => _resizeWidthAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value ?? 0);
-        }
-
-        private double? _resizeFactorAfterUpscale = 100;
-        [DataMember]
-        public double? ResizeFactorAfterUpscale
-        {
-            get => _resizeFactorAfterUpscale;
-            set => this.RaiseAndSetIfChanged(ref _resizeFactorAfterUpscale, value ?? 100);
+            set => this.RaiseAndSetIfChanged(ref _resizeWidthAfterUpscale, value ?? 3840);
         }
 
         private bool _webpSelected = true;
@@ -1223,6 +1215,65 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _showLossySettings, value);
         }
 
+        private bool _modeScaleSelected = true;
+        [DataMember]
+        public bool ModeScaleSelected
+        {
+            get => _modeScaleSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _modeScaleSelected, value);
+            }
+        }
+
+        private int _upscaleScaleFactor = 4;
+        [DataMember]
+        public int UpscaleScaleFactor
+        {
+            get => _upscaleScaleFactor;
+            set 
+            { 
+                this.RaiseAndSetIfChanged(ref _upscaleScaleFactor, value); 
+                this.RaisePropertyChanged(nameof(Is1x));
+                this.RaisePropertyChanged(nameof(Is2x));
+                this.RaisePropertyChanged(nameof(Is3x));
+                this.RaisePropertyChanged(nameof(Is4x));
+            }
+        }
+
+        public bool Is1x => UpscaleScaleFactor == 1;
+        public bool Is2x => UpscaleScaleFactor == 2;
+        public bool Is3x => UpscaleScaleFactor == 3;
+        public bool Is4x => UpscaleScaleFactor == 4;
+
+
+        public void SetUpscaleScaleFactor(int scaleFactor)
+        {
+            UpscaleScaleFactor = scaleFactor;
+        }
+
+        private bool _modeWidthSelected = false;
+        [DataMember]
+        public bool ModeWidthSelected
+        {
+            get => _modeWidthSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _modeWidthSelected, value);
+            }
+        }
+
+        private bool _modeHeightSelected = false;
+        [DataMember]
+        public bool ModeHeightSelected
+        {
+            get => _modeHeightSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _modeHeightSelected, value);
+            }
+        }
+
         private bool _showAdvancedSettings = false;
         [DataMember]
         public bool ShowAdvancedSettings
@@ -1271,6 +1322,27 @@ namespace MangaJaNaiConverterGui.ViewModels
             JpegSelected = true;
             WebpSelected = false;
             PngSelected = false;
+        }
+
+        public void SetModeScaleSelected()
+        {
+            ModeScaleSelected = true;
+            ModeWidthSelected = false;
+            ModeHeightSelected = false;
+        }
+
+        public void SetModeWidthSelected()
+        {
+            ModeWidthSelected = true;
+            ModeScaleSelected = false;
+            ModeHeightSelected = false;
+        }
+
+        public void SetModeHeightSelected()
+        {
+            ModeHeightSelected = true;
+            ModeScaleSelected = false;
+            ModeWidthSelected = false;
         }
 
         public void Validate()
