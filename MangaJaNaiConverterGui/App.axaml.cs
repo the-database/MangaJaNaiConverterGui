@@ -6,6 +6,8 @@ using MangaJaNaiConverterGui.Views;
 using ReactiveUI;
 using System;
 using System.IO;
+using System.Reactive.Linq;
+using System.Reactive;
 using System.Reflection;
 
 namespace MangaJaNaiConverterGui
@@ -31,9 +33,10 @@ namespace MangaJaNaiConverterGui
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
             RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
-            RxApp.SuspensionHost.SetupDefaultSuspendResume(new NewtonsoftJsonSuspensionDriver(Program.AppStatePath));
-            suspension.OnFrameworkInitializationCompleted();
-            
+            //var suspensionDriver = new NewtonsoftJsonSuspensionDriver(Program.AppStatePath);
+            RxApp.SuspensionHost.SetupDefaultSuspendResume(Program.SuspensionDriver);
+            suspension.OnFrameworkInitializationCompleted();            
+
             // Load the saved view model state.
             var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
             foreach (var wf in state.Workflows)

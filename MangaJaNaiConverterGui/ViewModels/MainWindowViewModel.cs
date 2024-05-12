@@ -387,6 +387,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             var task = Task.Run(async () =>
             {
+                await Program.SuspensionDriver.SaveState(this);
                 ElapsedTime = TimeSpan.FromSeconds(0);
                 ShowEstimates = true;
                 _archiveEtaCalculator.Reset();

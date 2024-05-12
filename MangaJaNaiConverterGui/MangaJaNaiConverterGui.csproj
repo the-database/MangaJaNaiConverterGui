@@ -48,8 +48,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Content Include="chaiNNer\**">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      <!--<CopyToOutputDirectory>Always</CopyToOutputDirectory>-->
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@ using Velopack;
 using System;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using ReactiveUI;
 
 namespace MangaJaNaiConverterGui
 {
@@ -16,6 +17,8 @@ namespace MangaJaNaiConverterGui
         );
         public static readonly string AppStateFilename = "appstate2.json";
         public static readonly string AppStatePath = Path.Combine(AppStateFolder, AppStateFilename);
+
+        public static readonly ISuspensionDriver SuspensionDriver = new NewtonsoftJsonSuspensionDriver(AppStatePath);
 
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
