@@ -19,25 +19,19 @@ namespace MangaJaNaiConverterGui
 
         public override void OnFrameworkInitializationCompleted()
         {
-            var appStateFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
-                "MangaJaNaiConverterGui"
-            );
-            var appStatePath = Path.Combine(appStateFolder, "appstate2.json");
-
-            if (!Directory.Exists(appStateFolder))
+            if (!Directory.Exists(Program.AppStateFolder))
             {
-                Directory.CreateDirectory(appStateFolder);
+                Directory.CreateDirectory(Program.AppStateFolder);
             }
 
-            if (!File.Exists(appStatePath))
+            if (!File.Exists(Program.AppStatePath))
             {
-                File.Copy("appstate2.json", appStatePath);
+                File.Copy(Program.AppStateFilename, Program.AppStatePath);
             }
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
             RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
-            RxApp.SuspensionHost.SetupDefaultSuspendResume(new NewtonsoftJsonSuspensionDriver(appStatePath));
+            RxApp.SuspensionHost.SetupDefaultSuspendResume(new NewtonsoftJsonSuspensionDriver(Program.AppStatePath));
             suspension.OnFrameworkInitializationCompleted();
             
             // Load the saved view model state.
@@ -46,6 +40,9 @@ namespace MangaJaNaiConverterGui
             {
                 wf.Vm = state;
             }
+
+            state.CurrentWorkflow?.Validate();
+
             new MainWindow { DataContext = state }.Show();
             base.OnFrameworkInitializationCompleted();
         }

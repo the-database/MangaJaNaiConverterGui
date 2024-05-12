@@ -69,7 +69,7 @@
         <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleWorkflowSelected}" CommandParameter="0"
                 Classes.active="{Binding Workflows[0].ActiveWorkflow}">
           <StackPanel Orientation="Horizontal">
-            <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
+            <materialIcons:MaterialIcon Kind="Book" VerticalAlignment="Center" />
             <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding Workflows[0].WorkflowName}" />
           </StackPanel>
         </Button>
@@ -292,8 +292,8 @@
                       <ToggleButton IsChecked="{Binding CurrentWorkflow.PngSelected}" Content="PNG" Command="{Binding CurrentWorkflow.SetPngSelected}" />
                       <ToggleButton IsChecked="{Binding CurrentWorkflow.JpegSelected}" Content="JPEG" Command="{Binding CurrentWorkflow.SetJpegSelected}" />
                       <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
-    <Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
-    <Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
+<Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
+<Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
             </TextBlock>
                     </StackPanel>
 

@@ -36,6 +36,14 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public MainWindowViewModel()
         {
+            var g1 = this.WhenAnyValue
+            (
+                x => x.SelectedWorkflowIndex
+            ).Subscribe(x =>
+            {
+                CurrentWorkflow?.Validate();
+            });
+
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += _timer_Tick;
 
@@ -355,9 +363,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public UpscaleWorkflow CurrentWorkflow
+        public UpscaleWorkflow? CurrentWorkflow
         {
-            get => Workflows[SelectedWorkflowIndex];
+            get => Workflows?[SelectedWorkflowIndex];
         }
 
         public void HandleWorkflowSelected(int workflowIndex)
@@ -390,47 +398,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var flags = new StringBuilder();
-                if (CurrentWorkflow.UpscaleArchives)
-                {
-                    flags.Append("--upscale-archives ");
-                }
-                if (CurrentWorkflow.UpscaleImages)
-                {
-                    flags.Append("--upscale-images ");
-                }
-                if (CurrentWorkflow.OverwriteExistingFiles)
-                {
-                    flags.Append("--overwrite-existing-files ");
-                }
-                //if (AutoAdjustLevels)
-                //{
-                //    flags.Append("--auto-adjust-levels ");
-                //}
-                if (CurrentWorkflow.UseLosslessCompression)
-                {
-                    flags.Append("--use-lossless-compression ");
-                }
-                if (UseCpu)
-                {
-                    flags.Append("--use-cpu ");
-                }
-                if (UseFp16)
-                {
-                    flags.Append("--use-fp16 ");
-                }
-
-                var inputArgs = $"--input-file-path \"{CurrentWorkflow.InputFilePath}\" ";
-
-                if (CurrentWorkflow.SelectedTabIndex == 1)
-                {
-                    inputArgs = $"--input-folder-path \"{CurrentWorkflow.InputFolderPath}\" ";
-                }
-
-                var grayscaleModelFilePath = "";// TODO string.IsNullOrWhiteSpace(GrayscaleModelFilePath) ? GrayscaleModelFilePath : Path.GetFullPath(GrayscaleModelFilePath);
-                var colorModelFilePath = "";// TODO string.IsNullOrWhiteSpace(ColorModelFilePath) ? ColorModelFilePath : Path.GetFullPath(ColorModelFilePath);
-
-                var cmd = ""; // TODO  $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --selected-device {SelectedDeviceIndex} {inputArgs} --output-folder-path ""{OutputFolderPath}"" --output-filename ""{OutputFilename}"" --resize-height-before-upscale {ResizeHeightBeforeUpscale} --resize-width-before-upscale {ResizeWidthBeforeUpscale} --resize-factor-before-upscale {ResizeFactorBeforeUpscale} --grayscale-model-path ""{grayscaleModelFilePath}"" --grayscale-model-tile-size ""{GrayscaleModelTileSize}"" --color-model-path ""{colorModelFilePath}"" --color-model-tile-size ""{ColorModelTileSize}"" --image-format {ImageFormat} --lossy-compression-quality {LossyCompressionQuality} --resize-height-after-upscale {ResizeHeightAfterUpscale} --resize-width-after-upscale {ResizeWidthAfterUpscale} --resize-factor-after-upscale {ResizeFactorAfterUpscale} {flags}";
+                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --settings {Program.AppStatePath}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -1545,8 +1513,13 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public static AvaloniaList<string> GetAllModels()
         {
-            return new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename => Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase))
-                .Select(filename => Path.GetFileNameWithoutExtension(filename))
+            return new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename => 
+                Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase) ||
+                Path.GetExtension(filename).Equals(".pt", StringComparison.CurrentCultureIgnoreCase) ||
+                Path.GetExtension(filename).Equals(".ckpt", StringComparison.CurrentCultureIgnoreCase) ||
+                Path.GetExtension(filename).Equals(".safetensors", StringComparison.CurrentCultureIgnoreCase)
+            )
+                .Select(filename => Path.GetFileName(filename))
                 .Order().ToList());
         }
     }

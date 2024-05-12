@@ -43,7 +43,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -58,7 +58,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -73,7 +73,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -88,7 +88,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -103,7 +103,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -118,7 +118,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -133,7 +133,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -148,7 +148,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -163,7 +163,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -178,7 +178,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -193,7 +193,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -208,7 +208,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -223,7 +223,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -238,7 +238,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -253,7 +253,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -294,7 +294,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -309,7 +309,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -324,7 +324,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -339,7 +339,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -354,7 +354,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -369,7 +369,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -384,7 +384,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -399,7 +399,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -414,7 +414,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -429,7 +429,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -444,7 +444,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -459,7 +459,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -474,7 +474,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -489,7 +489,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -504,7 +504,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -545,7 +545,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -560,7 +560,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -575,7 +575,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -590,7 +590,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -605,7 +605,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -620,7 +620,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -635,7 +635,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -650,7 +650,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -665,7 +665,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -680,7 +680,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -695,7 +695,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -710,7 +710,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -725,7 +725,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -740,7 +740,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -755,7 +755,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -796,7 +796,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -811,7 +811,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -826,7 +826,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -841,7 +841,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -856,7 +856,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -871,7 +871,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -886,7 +886,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -901,7 +901,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -916,7 +916,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -931,7 +931,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -946,7 +946,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -961,7 +961,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -976,7 +976,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -991,7 +991,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1006,7 +1006,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -1047,7 +1047,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1062,7 +1062,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1077,7 +1077,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1092,7 +1092,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1107,7 +1107,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1122,7 +1122,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1137,7 +1137,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1152,7 +1152,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1167,7 +1167,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1182,7 +1182,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1197,7 +1197,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1212,7 +1212,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1227,7 +1227,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1242,7 +1242,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1257,7 +1257,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -1298,7 +1298,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1313,7 +1313,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1328,7 +1328,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1343,7 +1343,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1358,7 +1358,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1373,7 +1373,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1388,7 +1388,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1403,7 +1403,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1418,7 +1418,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1433,7 +1433,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1448,7 +1448,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1463,7 +1463,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1478,7 +1478,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1493,7 +1493,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1508,7 +1508,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -1549,7 +1549,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1564,7 +1564,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1579,7 +1579,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1594,7 +1594,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1609,7 +1609,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1624,7 +1624,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1639,7 +1639,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1654,7 +1654,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1669,7 +1669,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1684,7 +1684,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1699,7 +1699,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1714,7 +1714,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1729,7 +1729,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1744,7 +1744,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1759,7 +1759,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -1800,7 +1800,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1815,7 +1815,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1830,7 +1830,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1845,7 +1845,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1860,7 +1860,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1875,7 +1875,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1890,7 +1890,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1905,7 +1905,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1920,7 +1920,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1935,7 +1935,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1950,7 +1950,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1965,7 +1965,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1980,7 +1980,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -1995,7 +1995,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2010,7 +2010,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -2051,7 +2051,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2066,7 +2066,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2081,7 +2081,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2096,7 +2096,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2111,7 +2111,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2126,7 +2126,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2141,7 +2141,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2156,7 +2156,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2171,7 +2171,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2186,7 +2186,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2201,7 +2201,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2216,7 +2216,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2231,7 +2231,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2246,7 +2246,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2261,7 +2261,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -2302,7 +2302,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2317,7 +2317,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2332,7 +2332,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2347,7 +2347,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2362,7 +2362,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2377,7 +2377,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2392,7 +2392,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2407,7 +2407,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2422,7 +2422,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2437,7 +2437,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2452,7 +2452,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2467,7 +2467,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2482,7 +2482,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2497,7 +2497,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2512,7 +2512,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
@@ -2553,7 +2553,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k",
+              "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2568,7 +2568,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2583,7 +2583,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2598,7 +2598,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2613,7 +2613,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k",
+              "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2628,7 +2628,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2643,7 +2643,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2658,7 +2658,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2673,7 +2673,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2688,7 +2688,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k",
+              "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2703,7 +2703,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2718,7 +2718,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k",
+              "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2733,7 +2733,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k",
+              "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2748,7 +2748,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k",
+              "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
               "ModelTileSize": "Auto (Estimate)"
             },
             {
@@ -2763,7 +2763,7 @@
               "ResizeWidthBeforeUpscale": 0,
               "ResizeHeightBeforeUpscale": 0,
               "ResizeFactorBeforeUpscale": 100,
-              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k",
+              "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
               "ModelTileSize": "Auto (Estimate)"
             }
           ]
