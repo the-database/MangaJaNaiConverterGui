@@ -517,7 +517,7 @@ def preprocess_worker_archive_file(upscale_queue, input_archive, target_scale, t
                 upscale_queue.put((image, decoded_filename, True, is_grayscale, original_height, get_tile_size(chain['ModelTileSize']), model))
         except:
             print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
-            upscale_queue.put((image_data, decoded_filename, False, False))
+            upscale_queue.put((image_data, decoded_filename, False, False, None, None, None))
         #     pass
     upscale_queue.put(UPSCALE_SENTINEL)
 
