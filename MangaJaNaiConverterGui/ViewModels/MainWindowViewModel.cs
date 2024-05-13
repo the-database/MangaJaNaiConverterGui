@@ -257,7 +257,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        private bool _isExtractingBackend = false;
+        private bool _isExtractingBackend = true;
         public bool IsExtractingBackend
         {
             get => _isExtractingBackend;
@@ -378,6 +378,8 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             RequestShowAppSettings = true;
         }
+
+
 
 
         public async Task RunUpscale()
@@ -610,7 +612,10 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void AddChain()
         {
-            CurrentWorkflow.Chains.Add(new UpscaleChain());
+            CurrentWorkflow?.Chains.Add(new UpscaleChain { 
+                Vm = this,
+                AllModels = UpscaleChain.GetAllModels(),
+            });
             UpdateChainHeaders();
         }
 
@@ -826,7 +831,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                     using ArchiveFile archiveFile = new(backendArchivePath);
                     archiveFile.Extract(".");
                     archiveFile.Dispose();
-                    File.Delete(backendArchivePath);
+                    //File.Delete(backendArchivePath); // TODO restore
+                    IsExtractingBackend = false;
+                }
+                else
+                {
                     IsExtractingBackend = false;
                 }
             });
@@ -1380,6 +1389,35 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class UpscaleChain : ReactiveObject
     {
+        public UpscaleChain()
+        {
+            this.WhenAnyValue(x => x.Vm).Subscribe(x =>
+            {
+                sub?.Dispose();
+                sub = Vm.WhenAnyValue(
+                    x => x.IsExtractingBackend
+                    ).Subscribe(x =>
+                    {
+                        //AllModels = GetAllModels();
+                        AllModels.Clear();
+                        AllModels.AddRange(GetAllModels());
+                        this.RaisePropertyChanged(nameof(ModelFilePath)); // TODO ???
+                    });
+            });
+
+            //AllModels = GetAllModels();
+            AllModels.Clear();
+            AllModels.AddRange(GetAllModels());
+        }
+
+        private IDisposable? sub;
+
+        private MainWindowViewModel? _vm;
+        public MainWindowViewModel? Vm
+        {
+            get => _vm;
+            set => this.RaiseAndSetIfChanged(ref _vm, value);
+        }
 
         private string _chainNumber = string.Empty;
         [DataMember]
@@ -1485,10 +1523,39 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
+        public static string PthPath => Path.GetFullPath(@".\chaiNNer\models");
 
-        public static AvaloniaList<string> AllModels => GetAllModels();
+        private AvaloniaList<string> _allModels = [];
 
+        public AvaloniaList<string> AllModels 
+        {
+            get => _allModels;
+            set => this.RaiseAndSetIfChanged(ref _allModels, value);
+        }
 
+        public static AvaloniaList<string> GetAllModels()
+        {
+            try
+            {
+                var models = new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename =>
+    Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase) ||
+    Path.GetExtension(filename).Equals(".pt", StringComparison.CurrentCultureIgnoreCase) ||
+    Path.GetExtension(filename).Equals(".ckpt", StringComparison.CurrentCultureIgnoreCase) ||
+    Path.GetExtension(filename).Equals(".safetensors", StringComparison.CurrentCultureIgnoreCase)
+)
+    .Select(filename => Path.GetFileName(filename))
+    .Order().ToList());
+
+                Debug.WriteLine($"GetAllModels: {models.Count}");
+
+                return models;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                Debug.WriteLine($"GetAllModels: DirectoryNotFoundException");
+                return [];
+            }
+        }
 
         private string[] _tileSizes = [
     "Auto (Estimate)",
@@ -1508,20 +1575,6 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _tileSizes;
             set => this.RaiseAndSetIfChanged(ref _tileSizes, value);
-        }
-
-        public static string PthPath => Path.GetFullPath(@".\chaiNNer\models");
-
-        public static AvaloniaList<string> GetAllModels()
-        {
-            return new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename => 
-                Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase) ||
-                Path.GetExtension(filename).Equals(".pt", StringComparison.CurrentCultureIgnoreCase) ||
-                Path.GetExtension(filename).Equals(".ckpt", StringComparison.CurrentCultureIgnoreCase) ||
-                Path.GetExtension(filename).Equals(".safetensors", StringComparison.CurrentCultureIgnoreCase)
-            )
-                .Select(filename => Path.GetFileName(filename))
-                .Order().ToList());
         }
     }
 }

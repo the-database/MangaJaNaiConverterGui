@@ -33,15 +33,20 @@ namespace MangaJaNaiConverterGui
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
             RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
-            //var suspensionDriver = new NewtonsoftJsonSuspensionDriver(Program.AppStatePath);
             RxApp.SuspensionHost.SetupDefaultSuspendResume(Program.SuspensionDriver);
             suspension.OnFrameworkInitializationCompleted();            
 
             // Load the saved view model state.
             var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
+
             foreach (var wf in state.Workflows)
             {
                 wf.Vm = state;
+
+                foreach (var chain in wf.Chains)
+                {
+                    chain.Vm = state;
+                }
             }
 
             state.CurrentWorkflow?.Validate();
