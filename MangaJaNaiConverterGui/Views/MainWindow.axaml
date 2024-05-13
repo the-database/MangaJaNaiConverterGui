@@ -102,8 +102,7 @@
 
       <DockPanel IsVisible="{Binding ShowMainForm}" Grid.Column="1">
 
-        <StackPanel DockPanel.Dock="Bottom">
-
+        <StackPanel DockPanel.Dock="Bottom">          
           <StackPanel Orientation="Horizontal">
             <Button Margin="20,10,0,10" FontWeight="Bold" Background="Green" IsEnabled="{Binding UpscaleEnabled}" Command="{Binding RunUpscale}">
               <StackPanel Orientation="Horizontal">
@@ -126,12 +125,16 @@
               <ToggleButton DockPanel.Dock="Right" Margin="0,0,20,0" IsChecked="{Binding !ShowConsole}">
                 <materialIcons:MaterialIcon Kind="Close" />
               </ToggleButton>
-              <Rectangle/>
+
+              <ScrollViewer x:Name="ConsoleScrollViewer" Margin="10,10,0,0" Background="#111111" Height="450"
+Width="40"
+HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+                <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
+              </ScrollViewer>
             </DockPanel>
 
-            <ScrollViewer x:Name="ConsoleScrollViewer" Margin="130,10,0,0" Background="#111111" Height="450" HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
-              <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
-            </ScrollViewer>
+
+
           </StackPanel>
 
           <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
@@ -232,22 +235,16 @@
                             <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
                             <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.InputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
                             <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
-                            <TextBlock Foreground="Gray" Width="400" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                              Path of the folder to upscale. The folder will be scanned and images and/or archives will be upscaled depending on the selection below.
+                            <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
+                              Path of the folder to upscale. The folder and all of its subfolders will be scanned and images and/or archives will be upscaled depending on the selection below.
                             </TextBlock>
                           </StackPanel>
 
                           <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                             <CheckBox Margin="0,0,5,0" IsChecked="{Binding CurrentWorkflow.UpscaleArchives}">Upscale Archives</CheckBox>
-                            <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                              Archive files (*.zip, *.cbz, *.rar, *.cbr) found in the selected Input Folder will be upscaled.
-                            </TextBlock>
-                          </StackPanel>
-
-                          <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                             <CheckBox IsChecked="{Binding CurrentWorkflow.UpscaleImages}">Upscale Images</CheckBox>
                             <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                              Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp) found in the selected Input Folder will be upscaled.
+                              Whether to upscale Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp) and/or Archive files (*.zip, *.cbz, *.rar, *.cbr) in the selected Input Folder.
                             </TextBlock>
                           </StackPanel>
                         </StackPanel>
@@ -297,14 +294,14 @@
             </TextBlock>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding CurrentWorkflow.ShowUseLosslessCompression}">
+                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ShowUseLosslessCompression}">
                       <CheckBox Margin="0,0,5,0" IsChecked="{Binding CurrentWorkflow.UseLosslessCompression}">Use Lossless Compression</CheckBox>
                       <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                         Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
                       </TextBlock>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding CurrentWorkflow.ShowLossyCompressionQuality}">
+                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ShowLossyCompressionQuality}">
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
                       <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
@@ -384,11 +381,13 @@
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10" VerticalAlignment="Center">
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resolution Range</TextBlock>
                                     <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
+                                                   VerticalAlignment="Center"
                                                    ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
 
                                     <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
                                     <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
+                                                   VerticalAlignment="Center"
                                                    ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                                     <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means no resolution limit.</TextBlock>
@@ -420,7 +419,7 @@
 
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
                                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
-                                    <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
+                                    <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
                                   </StackPanel>
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
@@ -462,9 +461,10 @@
                                   <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model Tile Size</TextBlock>
                                     <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
+                                                   VerticalAlignment="Center"
                                                    ItemsSource="{Binding TileSizes}" />
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                    <TextBlock Width="500" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
+                                    <TextBlock Width="700" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
                                   </StackPanel>
 
                                 </StackPanel>
