@@ -5,6 +5,7 @@ from pathlib import Path
 from ctypes import windll
 import io
 import cv2
+import pillow_avif
 from PIL import Image, ImageFilter, ImageCms
 import numpy as np
 import argparse
@@ -32,15 +33,23 @@ from nodes.impl.upscale.auto_split_tiles import (
 
 
 class _ExecutorNodeContext(NodeContext):
-    def __init__(self, progress: ProgressToken, settings: SettingsParser) -> None:
+    def __init__(
+        self, progress: ProgressToken, settings: SettingsParser, storage_dir: Path
+    ) -> None:
         super().__init__()
 
         self.progress = progress
         self.__settings = settings
+        self._storage_dir = storage_dir
 
     @property
     def aborted(self) -> bool:
         return self.progress.aborted
+
+    @property
+    def paused(self) -> bool:
+        time.sleep(0.001)
+        return self.progress.paused
 
     def set_progress(self, progress: float) -> None:
         self.check_aborted()
@@ -53,6 +62,10 @@ class _ExecutorNodeContext(NodeContext):
         Returns the settings of the current node execution.
         """
         return self.__settings
+
+    @property
+    def storage_dir(self) -> Path:
+        return self._storage_dir
 
 
 def get_tile_size(tile_size_str):
@@ -209,6 +222,44 @@ def _read_cv_from_path(path):
     return img
 
 
+def _read_image(img_stream, filename):
+
+    for extension in CV2_IMAGE_EXTENSIONS:
+        if filename.lower().endswith(extension):
+            return _read_cv(img_stream)
+
+    return _read_pil(img_stream)
+
+
+def _read_image_from_path(path):
+
+    for extension in CV2_IMAGE_EXTENSIONS:
+        if path.lower().endswith(extension):
+            return _read_cv_from_path(path)
+
+    return _read_pil_from_path(path)
+
+
+def _read_pil(img_stream):
+    im = Image.open(img_stream.read())
+    return _pil_to_cv2(im)
+
+
+def _read_pil_from_path(path):
+    im = Image.open(path)
+    return _pil_to_cv2(im)
+
+
+def _pil_to_cv2(im):
+    img = np.array(im)
+    _, _, c = get_h_w_c(img)
+    if c == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    elif c == 4:
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
+    return img
+
+
 def cv_image_is_grayscale(image):
     _, _, c = get_h_w_c(image)
 
@@ -243,16 +294,6 @@ def cv_image_is_grayscale(image):
     ratio = diff_sum / size_without_black_and_white
 
     return ratio < 1
-
-
-def _read_pil(im) -> np.ndarray | None:
-    img = np.array(im)
-    _, _, c = get_h_w_c(img)
-    if c == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    elif c == 4:
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
-    return img
 
 
 def get_chain_for_image(image, target_scale, target_width, target_height, chains):
@@ -305,7 +346,7 @@ def should_chain_activate_for_image(original_width, original_height, is_grayscal
 def ai_upscale_image(image, model_tile_size, model):
     global context
     if model is not None:
-        return upscale_image_node(context, image, model, model_tile_size, False)
+        return upscale_image_node(context, image, model, False, 0, model_tile_size, None, False)
     return image
 
 
@@ -373,7 +414,7 @@ def save_image_zip(image, file_name, output_zip, image_format, lossy_compression
 
 def save_image(image, output_file_path, image_format, lossy_compression_quality, use_lossless_compression,
                original_height, target_scale, target_width, target_height, is_grayscale):
-    print(f"save image: {output_file_path}", get_h_w_c(image), target_scale, target_width, target_height, flush=True)
+    print(f"save image: {output_file_path}", flush=True)
 
     params = []
     if image_format == 'jpg':
@@ -400,8 +441,6 @@ def save_image(image, output_file_path, image_format, lossy_compression_quality,
     elif precision == "f32":
         # chainner images are always f32
         pass
-
-    print('targets', target_scale, target_width, target_height, original_height)
 
     # resize height, keep proportional width
     if target_height != 0:
@@ -462,14 +501,11 @@ def preprocess_worker_archive_file(upscale_queue, input_archive, target_scale, t
         try:
             with input_archive.open(filename) as file_in_archive:
                 # Read the image data
-                # load_queue.put((file_in_archive.read(), filename))
 
                 image_data = file_in_archive.read()
 
-                # with Image.open(io.BytesIO(image_data)) as img:
                 image_bytes = io.BytesIO(image_data)
-                # image = _read_pil(img)
-                image = _read_cv(image_bytes)
+                image = _read_image(image_bytes, filename)
 
                 chain, is_grayscale, original_height = get_chain_for_image(image, target_scale, target_width,
                                                                            target_height, chains)
@@ -552,7 +588,7 @@ def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_pat
                         continue
 
                     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-                    image = _read_cv_from_path(os.path.join(root, filename))
+                    image = _read_image_from_path(os.path.join(root, filename))
 
                     chain, is_grayscale, original_height = get_chain_for_image(image, target_scale, target_width,
                                                                                target_height, chains)
@@ -633,7 +669,7 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
     if input_image_path.lower().endswith(IMAGE_EXTENSIONS):
         os.makedirs(os.path.dirname(output_image_path), exist_ok=True)
         # with Image.open(input_image_path) as img:
-        image = _read_cv_from_path(input_image_path)
+        image = _read_image_from_path(input_image_path)
 
         chain, is_grayscale, original_height = get_chain_for_image(image, target_scale, target_width, target_height,
                                                                    chains)
@@ -908,7 +944,8 @@ workflow = settings['Workflows']['$values'][settings['SelectedWorkflowIndex']]
 
 UPSCALE_SENTINEL = (None, None, None, None, None, None, None)
 POSTPROCESS_SENTINEL = (None, None, None, None, None)
-IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
+CV2_IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
+IMAGE_EXTENSIONS = CV2_IMAGE_EXTENSIONS + tuple('.avif')
 ZIP_EXTENSIONS = ('.zip', '.cbz')
 RAR_EXTENSIONS = ('.rar', '.cbr')
 ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS + RAR_EXTENSIONS
@@ -922,7 +959,7 @@ settings = SettingsParser({
     'budget_limit': 0
 })
 
-context = _ExecutorNodeContext(ProgressController(), settings)
+context = _ExecutorNodeContext(ProgressController(), settings, None)
 
 gamma1icc = ImageCms.getOpenProfile(r'.\ImageMagick\Custom Gray Gamma 1.0.icc')
 dotgain20icc = ImageCms.getOpenProfile(r'.\ImageMagick\Dot Gain 20%.icc')
