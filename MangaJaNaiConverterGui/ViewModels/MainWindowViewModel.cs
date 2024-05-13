@@ -614,7 +614,6 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             CurrentWorkflow?.Chains.Add(new UpscaleChain { 
                 Vm = this,
-                AllModels = UpscaleChain.GetAllModels(),
             });
             UpdateChainHeaders();
         }
@@ -1398,16 +1397,13 @@ namespace MangaJaNaiConverterGui.ViewModels
                     x => x.IsExtractingBackend
                     ).Subscribe(x =>
                     {
-                        //AllModels = GetAllModels();
-                        AllModels.Clear();
-                        AllModels.AddRange(GetAllModels());
-                        this.RaisePropertyChanged(nameof(ModelFilePath)); // TODO ???
+                        this.RaisePropertyChanged(nameof(AllModels));
+                        this.RaisePropertyChanged(nameof(ModelFilePath));
                     });
             });
 
-            //AllModels = GetAllModels();
-            AllModels.Clear();
-            AllModels.AddRange(GetAllModels());
+            this.RaisePropertyChanged(nameof(AllModels));
+            this.RaisePropertyChanged(nameof(ModelFilePath));
         }
 
         private IDisposable? sub;
@@ -1525,13 +1521,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public static string PthPath => Path.GetFullPath(@".\chaiNNer\models");
 
-        private AvaloniaList<string> _allModels = [];
-
-        public AvaloniaList<string> AllModels 
-        {
-            get => _allModels;
-            set => this.RaiseAndSetIfChanged(ref _allModels, value);
-        }
+        public static AvaloniaList<string> AllModels => GetAllModels();
 
         public static AvaloniaList<string> GetAllModels()
         {
