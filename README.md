@@ -18,4 +18,4 @@ This project provides a Windows GUI for upscaling manga images and archives with
 
 ## Acknowledgments 
 - [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. This project uses its backend for running upscaling models.
-- [ImageMagick](https://imagemagick.org): Image processing library.
+- [7-zip](https://www.7-zip.org/) and [SevenZipExtractor](https://github.com/adoconnection/SevenZipExtractor): File archiver and C# wrapper for 7z.dll.

@@ -17,12 +17,12 @@ class BackendStatusData(TypedDict):
 
 
 class BackendStatusEvent(TypedDict):
-    event: Literal["backend-status"]
+    event: Literal["backend-status", "package-install-status"]
     data: BackendStatusData
 
 
 class BackendStateEvent(TypedDict):
-    event: Literal["backend-ready"] | Literal["backend-started"]
+    event: Literal["backend-started"]
     data: None
 
 
@@ -44,6 +44,7 @@ class ExecutionErrorSource(TypedDict):
 class ExecutionErrorData(TypedDict):
     message: str
     exception: str
+    exceptionTrace: str
     source: ExecutionErrorSource | None
 
 
@@ -120,8 +121,7 @@ Event = Union[ExecutionEvent, BackendEvent]
 
 class EventConsumer(ABC):
     @abstractmethod
-    async def put(self, event: Event) -> None:
-        ...
+    async def put(self, event: Event) -> None: ...
 
     @staticmethod
     def filter(queue: EventConsumer, allowed: set[str]) -> EventConsumer:

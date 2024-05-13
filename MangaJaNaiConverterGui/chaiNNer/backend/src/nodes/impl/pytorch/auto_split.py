@@ -6,6 +6,8 @@ import numpy as np
 import torch
 from spandrel import ImageModelDescriptor
 
+from api import Progress
+
 from ..upscale.auto_split import Split, Tiler, auto_split
 from .utils import safe_cuda_cache_empty
 
@@ -53,11 +55,19 @@ def pytorch_auto_split(
     device: torch.device,
     use_fp16: bool,
     tiler: Tiler,
+    progress: Progress,
 ) -> np.ndarray:
     dtype = torch.float16 if use_fp16 else torch.float32
     model = model.to(device, dtype)
 
     def upscale(img: np.ndarray, _: object):
+        progress.check_aborted()
+        if progress.paused:
+            # clear resources before pausing
+            gc.collect()
+            safe_cuda_cache_empty()
+            progress.suspend()
+
         input_tensor = None
         try:
             # convert to tensor

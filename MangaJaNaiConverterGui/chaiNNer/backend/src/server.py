@@ -4,16 +4,16 @@ import asyncio
 import gc
 import importlib
 import logging
-import os
 import sys
+import tempfile
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
+from functools import cached_property
 from json import dumps as stringify
-from typing import TypedDict
+from pathlib import Path
+from typing import Final, TypedDict
 
-import psutil
 from sanic import Sanic
 from sanic.log import access_logger, logger
 from sanic.request import Request
@@ -31,10 +31,8 @@ from chain.cache import OutputCache
 from chain.chain import Chain, FunctionNode
 from chain.json import JsonNode, parse_json
 from chain.optimize import optimize
-from custom_types import UpdateProgressFn
-from dependencies.store import DependencyInfo, install_dependencies, installed_packages
+from dependencies.store import installed_packages
 from events import EventConsumer, EventQueue, ExecutionErrorData
-from gpu import get_nvidia_helper
 from process import ExecutionId, Executor, NodeExecutionError, NodeOutput
 from progress_controller import Aborted
 from response import (
@@ -44,20 +42,44 @@ from response import (
     success_response,
 )
 from server_config import ServerConfig
-from system import is_arm_mac
 
 
 class AppContext:
     def __init__(self):
-        self.config: ServerConfig = None  # type: ignore
+        self.config: Final[ServerConfig] = ServerConfig.parse_argv()
         self.executor: Executor | None = None
         self.individual_executors: dict[ExecutionId, Executor] = {}
         self.cache: dict[NodeId, NodeOutput] = {}
-        # This will be initialized by after_server_start.
-        # This is necessary because we don't know Sanic's event loop yet.
-        self.queue: EventQueue = None  # type: ignore
-        self.setup_queue: EventQueue = None  # type: ignore
-        self.pool = ThreadPoolExecutor(max_workers=4)
+        self.pool: Final[ThreadPoolExecutor] = ThreadPoolExecutor(max_workers=4)
+
+    @cached_property
+    def queue(self) -> EventQueue:
+        return EventQueue()
+
+    @cached_property
+    def storage_dir(self) -> Path:
+        if self.config.storage_dir is not None:
+            logger.info(f"Using given storage directory: {self.config.storage_dir}")
+            return Path(self.config.storage_dir)
+
+        default_sub_dir = "chaiNNer/backend-storage"
+
+        # try using the chaiNNer's app dir
+        try:
+            # appdirs is likely only installed on dev machines
+            from appdirs import user_data_dir
+
+            app_data_dir = Path(user_data_dir(roaming=True)) / default_sub_dir
+            logger.info(f"Using app data as storage directory: {app_data_dir}")
+            return app_data_dir
+        except:  # noqa: E722
+            # ignore errors
+            pass
+
+        # last resort: use the system's temporary directory
+        temp = Path(tempfile.gettempdir()) / default_sub_dir
+        logger.info(f"No storage directory given. Using temporary directory: {temp}")
+        return Path(temp)
 
     @staticmethod
     def get(app_instance: Sanic) -> AppContext:
@@ -65,7 +87,7 @@ class AppContext:
         return app_instance.ctx
 
 
-app = Sanic("chaiNNer", ctx=AppContext())
+app = Sanic("chaiNNer_executor", ctx=AppContext())
 app.config.REQUEST_TIMEOUT = sys.maxsize
 app.config.RESPONSE_TIMEOUT = sys.maxsize
 CORS(app)
@@ -75,7 +97,7 @@ class SSEFilter(logging.Filter):
     def filter(self, record):  # noqa: ANN001
         request = record.request  # type: ignore
         return not (
-            (request.endswith(("/sse", "/setup-sse"))) and record.status == 200  # type: ignore
+            (request.endswith("/sse")) and record.status == 200  # type: ignore
         )
 
 
@@ -127,6 +149,7 @@ async def nodes(_request: Request):
             ],
             "iteratorInputs": [x.to_dict() for x in node.iterator_inputs],
             "iteratorOutputs": [x.to_dict() for x in node.iterator_outputs],
+            "keyInfo": node.key_info.to_dict() if node.key_info else None,
             "description": node.description,
             "seeAlso": node.see_also,
             "icon": node.icon,
@@ -181,6 +204,7 @@ async def run(request: Request):
             loop=app.loop,
             queue=ctx.queue,
             pool=ctx.pool,
+            storage_dir=ctx.storage_dir,
             parent_cache=OutputCache(static_data=ctx.cache.copy()),
         )
         try:
@@ -194,13 +218,27 @@ async def run(request: Request):
 
         return json(success_response(), status=200)
     except Exception as exception:
-        logger.error(exception, exc_info=True)
-        logger.error(traceback.format_exc())
+        logger.error(exception)
+        if (
+            isinstance(exception, NodeExecutionError)
+            and exception.__cause__ is not None
+        ):
+            trace = "".join(
+                traceback.format_exception(
+                    type(exception.__cause__),
+                    exception.__cause__,
+                    exception.__cause__.__traceback__,
+                )
+            )
+        else:
+            trace = traceback.format_exc()
+        logger.error(trace)
 
         error: ExecutionErrorData = {
             "message": "Error running nodes!",
             "source": None,
             "exception": str(exception),
+            "exceptionTrace": trace,
         }
         if isinstance(exception, NodeExecutionError):
             error["source"] = {
@@ -252,6 +290,7 @@ async def run_individual(request: Request):
             options=ExecutionOptions.parse(full_data["options"]),
             loop=app.loop,
             queue=queue,
+            storage_dir=ctx.storage_dir,
             pool=ctx.pool,
         )
 
@@ -357,47 +396,15 @@ async def kill(request: Request):
         return json(error_response("Error killing execution!", exception), status=500)
 
 
-@app.route("/python-info", methods=["GET"])
-async def python_info(_request: Request):
-    version = (
-        f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-    )
-    return json({"python": sys.executable, "version": version})
-
-
-@dataclass
-class SystemStat:
-    label: str
-    percent: float
-
-
-@app.route("/system-usage", methods=["GET"])
-async def system_usage(_request: Request):
-    stats_list = []
-    cpu_usage = psutil.cpu_percent()
-    mem_usage = psutil.virtual_memory().percent
-    stats_list.append(SystemStat("CPU", cpu_usage))
-    stats_list.append(SystemStat("RAM", mem_usage))
-    nv = get_nvidia_helper()
-    if nv is not None:
-        for i in range(nv.num_gpus):
-            total, used, _ = nv.get_current_vram_usage(i)
-            stats_list.append(
-                SystemStat(
-                    f"VRAM {i}" if nv.num_gpus > 1 else "VRAM",
-                    used / total * 100,
-                )
-            )
-    return json([asdict(x) for x in stats_list])
-
-
 @app.route("/packages", methods=["GET"])
-async def get_packages(_request: Request):
+async def get_packages(request: Request):
     await nodes_available()
+
+    hide_internal = request.args.get("hideInternal", "true") == "true"
 
     packages = []
     for package in api.registry.packages.values():
-        if package.name == "chaiNNer_standard":
+        if package.name == "chaiNNer_standard" and hide_internal:
             continue
 
         pkg_dependencies = []
@@ -412,34 +419,9 @@ async def get_packages(_request: Request):
                 pkg_dep_item["installed"] = installed_version
             pkg_dependencies.append(pkg_dep_item)
 
-        packages.append(
-            {
-                "id": package.id,
-                "name": package.name,
-                "description": package.description,
-                "icon": package.icon,
-                "color": package.color,
-                "dependencies": [d.to_dict() for d in package.dependencies],
-                "features": [f.to_dict() for f in package.features],
-                "settings": [asdict(x) for x in package.settings],
-            }
-        )
+        packages.append(package.to_dict())
 
     return json(packages)
-
-
-@app.route("/installed-dependencies", methods=["GET"])
-async def get_installed_dependencies(_request: Request):
-    await nodes_available()
-
-    installed_deps: dict[str, str] = {}
-    for package in api.registry.packages.values():
-        for pkg_dep in package.dependencies:
-            installed_version = installed_packages.get(pkg_dep.pypi_name, None)
-            if installed_version is not None:
-                installed_deps[pkg_dep.pypi_name] = installed_version
-
-    return json(installed_deps)
 
 
 @app.route("/features")
@@ -489,83 +471,26 @@ async def sse(request: Request):
     ctx = AppContext.get(request.app)
     headers = {"Cache-Control": "no-cache"}
     response = await request.respond(headers=headers, content_type="text/event-stream")
+    if response is None:
+        return
+
     while True:
         message = await ctx.queue.get()
-        if response is not None:
-            await response.send(f"event: {message['event']}\n")
-            await response.send(f"data: {stringify(message['data'])}\n\n")
-
-
-@app.get("/setup-sse")
-async def setup_sse(request: Request):
-    ctx = AppContext.get(request.app)
-    headers = {"Cache-Control": "no-cache"}
-    response = await request.respond(headers=headers, content_type="text/event-stream")
-    while True:
-        message = await ctx.setup_queue.get()
-        if response is not None:
-            await response.send(f"event: {message['event']}\n")
-            await response.send(f"data: {stringify(message['data'])}\n\n")
+        await response.send(
+            f"event: {message['event']}\n" f"data: {stringify(message['data'])}\n\n"
+        )
 
 
 async def import_packages(
     config: ServerConfig,
-    update_progress_cb: UpdateProgressFn,
 ):
-    async def install_deps(dependencies: list[api.Dependency]):
-        dep_info: list[DependencyInfo] = [
-            {
-                "package_name": dep.pypi_name,
-                "display_name": dep.display_name,
-                "version": dep.version,
-                "from_file": None,
-            }
-            for dep in dependencies
-        ]
-        await install_dependencies(dep_info, update_progress_cb, logger)
-
-    # Manually import built-in packages to get ordering correct
-    # Using importlib here so we don't have to ignore that it isn't used
     importlib.import_module("packages.chaiNNer_standard")
     importlib.import_module("packages.chaiNNer_pytorch")
     importlib.import_module("packages.chaiNNer_ncnn")
     importlib.import_module("packages.chaiNNer_onnx")
     importlib.import_module("packages.chaiNNer_external")
 
-    logger.info("Checking dependencies...")
-
-    to_install: list[api.Dependency] = []
-    for package in api.registry.packages.values():
-        logger.info(f"Checking dependencies for {package.name}...")
-
-        if config.install_builtin_packages:
-            to_install.extend(package.dependencies)
-            continue
-
-        if package.name == "chaiNNer_standard":
-            to_install.extend(package.dependencies)
-
-        # check auto updates
-        for dep in package.dependencies:
-            is_installed = installed_packages.get(dep.pypi_name, None) is not None
-            if dep.auto_update and is_installed:
-                to_install.append(dep)
-
-    if len(to_install) > 0:
-        try:
-            await install_deps(to_install)
-        except Exception as ex:
-            logger.error(f"Error installing dependencies: {ex}")
-            if config.close_after_start:
-                raise ValueError("Error installing dependencies") from ex
-
-    logger.info("Done checking dependencies...")
-
-    # TODO: in the future, for external packages dir, scan & import
-    # for package in os.listdir(packages_dir):
-    #     importlib.import_module(package)
-
-    await update_progress_cb("Loading Nodes...", 1.0, None)
+    logger.info("Loading Nodes...")
 
     load_errors = api.registry.load_nodes(__file__)
     if len(load_errors) > 0:
@@ -580,68 +505,31 @@ async def import_packages(
 
         if len(import_errors) > 0:
             logger.warning(f"Failed to import {len(import_errors)} modules:")
+
+            by_error: dict[str, list[api.LoadErrorInfo]] = {}
             for e in import_errors:
-                logger.warning(f"{e.error}  ->  {e.module}")
+                key = str(e.error)
+                if key not in by_error:
+                    by_error[key] = []
+                by_error[key].append(e)
+
+            for error in sorted(by_error.keys()):
+                modules = [e.module for e in by_error[error]]
+                if len(modules) == 1:
+                    logger.warning(f"{error}  ->  {modules[0]}")
+                else:
+                    count = len(modules)
+                    if count > 3:
+                        modules = modules[:2] + [f"and {count - 2} more ..."]
+                    l = "\n".join("  ->  " + m for m in modules)
+                    logger.warning(f"{error}  ->  {count} modules ...\n{l}")
 
         if config.error_on_failed_node:
             raise ValueError("Error importing nodes")
 
 
-async def apple_silicon_setup():
-    # enable mps fallback on apple silicon
-    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-
-
 async def setup(sanic_app: Sanic):
-    setup_queue = AppContext.get(sanic_app).setup_queue
-
-    async def update_progress(
-        message: str, progress: float, status_progress: float | None = None
-    ):
-        await setup_queue.put_and_wait(
-            {
-                "event": "backend-status",
-                "data": {
-                    "message": message,
-                    "progress": progress,
-                    "statusProgress": status_progress,
-                },
-            },
-            timeout=1,
-        )
-
-    logger.info("Starting setup...")
-    await setup_queue.put_and_wait(
-        {
-            "event": "backend-started",
-            "data": None,
-        },
-        timeout=1,
-    )
-
-    if is_arm_mac:
-        await apple_silicon_setup()
-
-    await update_progress("Importing nodes...", 0.0, None)
-
-    logger.info("Importing nodes...")
-
-    # Now we can load all the nodes
-    await import_packages(AppContext.get(sanic_app).config, update_progress)
-
-    logger.info("Sending backend ready...")
-
-    await update_progress("Loading Nodes...", 1.0, None)
-
-    await setup_queue.put_and_wait(
-        {
-            "event": "backend-ready",
-            "data": None,
-        },
-        timeout=1,
-    )
-
-    logger.info("Done.")
+    await import_packages(AppContext.get(sanic_app).config)
 
 
 exit_code = 0
@@ -666,11 +554,7 @@ async def close_server(sanic_app: Sanic):
 async def after_server_start(sanic_app: Sanic, loop: asyncio.AbstractEventLoop):
     # pylint: disable=global-statement
     global setup_task
-
-    # initialize the queues
     ctx = AppContext.get(sanic_app)
-    ctx.queue = EventQueue()
-    ctx.setup_queue = EventQueue()
 
     # start the setup task
     setup_task = loop.create_task(setup(sanic_app))
@@ -681,8 +565,7 @@ async def after_server_start(sanic_app: Sanic, loop: asyncio.AbstractEventLoop):
 
 
 def main():
-    config = ServerConfig.parse_argv()
-    AppContext.get(app).config = config
+    config = AppContext.get(app).config
     app.run(port=config.port, single_process=True)
     if exit_code != 0:
         sys.exit(exit_code)

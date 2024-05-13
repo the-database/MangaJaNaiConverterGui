@@ -16,6 +16,12 @@ from ...utils.utils import split_file_path
 from ..image_utils import cv_save_image
 from .format import SRGB_FORMATS, DxgiFormat
 
+__TEXCONV_DIR = os.path.join(
+    os.path.dirname(sys.modules["__main__"].__file__),  # type: ignore
+    "texconv",  # type: ignore
+)
+__TEXCONV_EXE = os.path.join(__TEXCONV_DIR, "texconv.exe")
+
 
 def __decode(b: bytes) -> str:
     try:
