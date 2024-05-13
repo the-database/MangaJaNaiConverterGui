@@ -830,7 +830,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     using ArchiveFile archiveFile = new(backendArchivePath);
                     archiveFile.Extract(".");
                     archiveFile.Dispose();
-                    //File.Delete(backendArchivePath); // TODO restore
+                    File.Delete(backendArchivePath);
                     IsExtractingBackend = false;
                 }
                 else
