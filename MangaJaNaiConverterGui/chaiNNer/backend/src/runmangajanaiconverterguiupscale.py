@@ -226,8 +226,9 @@ def _read_image(img_stream, filename):
 
     for extension in CV2_IMAGE_EXTENSIONS:
         if filename.lower().endswith(extension):
+            print("try cv2", extension)
             return _read_cv(img_stream)
-
+    print("try pil")
     return _read_pil(img_stream)
 
 
@@ -235,13 +236,14 @@ def _read_image_from_path(path):
 
     for extension in CV2_IMAGE_EXTENSIONS:
         if path.lower().endswith(extension):
+            print("try cv2", extension)
             return _read_cv_from_path(path)
 
     return _read_pil_from_path(path)
 
 
 def _read_pil(img_stream):
-    im = Image.open(img_stream.read())
+    im = Image.open(img_stream, formats=['AVIF'])
     return _pil_to_cv2(im)
 
 
@@ -355,57 +357,75 @@ def postprocess_image(image):
     return to_uint8(image, normalized=True)
 
 
-def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression,
-                   original_height, target_scale, target_width, target_height, is_grayscale):
-    print(f"save image to zip: {file_name}", flush=True)
-
-    params = []
-    if image_format == 'jpg':
-        params = [
-            cv2.IMWRITE_JPEG_QUALITY,
-            int(lossy_compression_quality),
-            cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
-            cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
-            cv2.IMWRITE_JPEG_PROGRESSIVE,
-            1,  # jpeg_progressive
-        ]
-    elif image_format == "webp":
-        params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else int(lossy_compression_quality)]
-    else:
-        params = []
-
-    # the bit depth depends on the image format and settings
-    precision = "u8"
-
-    if precision == "u8":
-        image = to_uint8(image, normalized=True)
-    elif precision == "u16":
-        image = to_uint16(image, normalized=True)
-    elif precision == "f32":
-        # chainner images are always f32
-        pass
-
+def final_target_resize(image, target_scale, target_width, target_height, original_height, is_grayscale):
     # resize height, keep proportional width
     if target_height != 0:
         h, w = image.shape[:2]
         if h != target_height:
-            image = image_resize(image, (round(w * target_height / h), target_height),
-                             is_grayscale)
+            return image_resize(image, (round(w * target_height / h), target_height), is_grayscale)
     # resize width, keep proportional height
     elif target_width != 0:
         h, w = image.shape[:2]
         if w != target_width:
-            image = image_resize(image, (target_width, round(h * target_width / w)),
-                             is_grayscale)
+            return image_resize(image, (target_width, round(h * target_width / w)), is_grayscale)
     else:
         h, w = image.shape[:2]
         new_target_height = original_height * target_scale
         if h != new_target_height:
-            image = image_resize(image, (round(w * new_target_height / h), new_target_height), is_grayscale)
+            return image_resize(image, (round(w * new_target_height / h), new_target_height), is_grayscale)
 
-    # Convert the resized image back to bytes
-    _, buf_img = cv2.imencode(f".{image_format}", image, params)
-    output_buffer = io.BytesIO(buf_img)
+
+def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression,
+                   original_height, target_scale, target_width, target_height, is_grayscale):
+    print(f"save image to zip: {file_name}", flush=True)
+
+    if image_format == 'avif':
+        image = to_uint8(image, normalized=True)
+        channels = get_h_w_c(image)[2]
+        if channels == 1:
+            pass
+        elif channels == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        elif channels == 4:
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+
+        image = final_target_resize(image, target_scale, target_width, target_height, original_height, is_grayscale)
+
+        with Image.fromarray(image) as pil_im:
+            output_buffer = io.BytesIO()
+            pil_im.save(output_buffer, format=image_format)
+    else:
+        if image_format == 'jpg':
+            params = [
+                cv2.IMWRITE_JPEG_QUALITY,
+                int(lossy_compression_quality),
+                cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
+                cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
+                cv2.IMWRITE_JPEG_PROGRESSIVE,
+                1,  # jpeg_progressive
+            ]
+        elif image_format == "webp":
+            params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else int(lossy_compression_quality)]
+        else:
+            params = []
+
+        # the bit depth depends on the image format and settings
+        precision = "u8"
+
+        if precision == "u8":
+            image = to_uint8(image, normalized=True)
+        elif precision == "u16":
+            image = to_uint16(image, normalized=True)
+        elif precision == "f32":
+            # chainner images are always f32
+            pass
+
+        image = final_target_resize(image, target_scale, target_width, target_height, original_height, is_grayscale)
+
+        # Convert the resized image back to bytes
+        _, buf_img = cv2.imencode(f".{image_format}", image, params)
+        output_buffer = io.BytesIO(buf_img)
+
     upscaled_image_data = output_buffer.getvalue()
 
     # Add the resized image to the output zip
@@ -416,49 +436,51 @@ def save_image(image, output_file_path, image_format, lossy_compression_quality,
                original_height, target_scale, target_width, target_height, is_grayscale):
     print(f"save image: {output_file_path}", flush=True)
 
-    params = []
-    if image_format == 'jpg':
-        params = [
-            cv2.IMWRITE_JPEG_QUALITY,
-            int(lossy_compression_quality),
-            cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
-            cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
-            cv2.IMWRITE_JPEG_PROGRESSIVE,
-            1,  # jpeg_progressive
-        ]
-    elif image_format == "webp":
-        params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else int(lossy_compression_quality)]
-    else:
-        params = []
-
-    # the bit depth depends on the image format and settings
-    precision = "u8"
-
-    if precision == "u8":
+    # save with pillow
+    if image_format == 'avif':
         image = to_uint8(image, normalized=True)
-    elif precision == "u16":
-        image = to_uint16(image, normalized=True)
-    elif precision == "f32":
-        # chainner images are always f32
-        pass
+        channels = get_h_w_c(image)[2]
+        if channels == 1:
+            pass
+        elif channels == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        elif channels == 4:
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
 
-    # resize height, keep proportional width
-    if target_height != 0:
-        h, w = image.shape[:2]
-        if h != target_height:
-            image = image_resize(image, (round(w * target_height / h), target_height), is_grayscale)
-    # resize width, keep proportional height
-    elif target_width != 0:
-        h, w = image.shape[:2]
-        if w != target_width:
-            image = image_resize(image, (target_width, round(h * target_width / w)), is_grayscale)
+        image = final_target_resize(image, target_scale, target_width, target_height, original_height, is_grayscale)
+
+        with Image.fromarray(image) as pil_im:
+            pil_im.save(output_file_path, quality=lossy_compression_quality)
     else:
-        h, w = image.shape[:2]
-        new_target_height = original_height * target_scale
-        if h != new_target_height:
-            image = image_resize(image, (round(w * new_target_height / h), new_target_height), is_grayscale)
+        # save with cv2
+        if image_format == 'jpg':
+            params = [
+                cv2.IMWRITE_JPEG_QUALITY,
+                int(lossy_compression_quality),
+                cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
+                cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
+                cv2.IMWRITE_JPEG_PROGRESSIVE,
+                1,  # jpeg_progressive
+            ]
+        elif image_format == "webp":
+            params = [cv2.IMWRITE_WEBP_QUALITY, 101 if use_lossless_compression else int(lossy_compression_quality)]
+        else:
+            params = []
 
-    cv_save_image(output_file_path, image, params)
+        # the bit depth depends on the image format and settings
+        precision = "u8"
+
+        if precision == "u8":
+            image = to_uint8(image, normalized=True)
+        elif precision == "u16":
+            image = to_uint16(image, normalized=True)
+        elif precision == "f32":
+            # chainner images are always f32
+            pass
+
+        image = final_target_resize(image, target_scale, target_width, target_height, original_height, is_grayscale)
+
+        cv_save_image(output_file_path, image, params)
 
 
 def preprocess_worker_archive(upscale_queue, input_archive_path,
@@ -551,8 +573,8 @@ def preprocess_worker_archive_file(upscale_queue, input_archive, target_scale, t
                 else:
                     image = normalize(image)
                 upscale_queue.put((image, decoded_filename, True, is_grayscale, original_height, get_tile_size(chain['ModelTileSize']), model))
-        except:
-            print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}", flush=True)
+        except Exception as e:
+            print(f"could not read as image, copying file to zip instead of upscaling: {decoded_filename}, {e}", flush=True)
             upscale_queue.put((image_data, decoded_filename, False, False, None, None, None))
         #     pass
     upscale_queue.put(UPSCALE_SENTINEL)
@@ -977,6 +999,8 @@ if __name__ == '__main__':
         image_format = "webp"
     elif workflow["PngSelected"]:
         image_format = "png"
+    elif workflow["AvifSelected"]:
+        image_format = "avif"
     else:
         image_format = "jpeg"
 

@@ -282,11 +282,13 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Image Format</TextBlock>
                       <ToggleButton IsChecked="{Binding CurrentWorkflow.WebpSelected}" Content="WebP" Command="{Binding CurrentWorkflow.SetWebpSelected}" />
+                      <ToggleButton IsChecked="{Binding CurrentWorkflow.AvifSelected}" Content="AVIF" Command="{Binding CurrentWorkflow.SetAvifSelected}" />
                       <ToggleButton IsChecked="{Binding CurrentWorkflow.PngSelected}" Content="PNG" Command="{Binding CurrentWorkflow.SetPngSelected}" />
                       <ToggleButton IsChecked="{Binding CurrentWorkflow.JpegSelected}" Content="JPEG" Command="{Binding CurrentWorkflow.SetJpegSelected}" />
-                      <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression. Supports lossless and lossy compression. 
-<Bold>PNG</Bold>: Lossless compressed format with good compatibility, but worse compression efficiency than WebP. 
-<Bold>JPEG</Bold>: Lossy compressed format with good compatibility, but worse compression efficiency than WebP. 
+                      <TextBlock Foreground="Gray" Width="950" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression, with good compatibility on modern devices. Supports lossless and lossy compression. 
+<Bold>AVIF</Bold>: Modern format with better lossy compression efficiency than WebP, but not as widely supported and slower to save and load compared to WebP.
+<Bold>PNG</Bold>: Lossless compressed format with excellent compatibility, but worse compression efficiency than WebP and AVIF. 
+<Bold>JPEG</Bold>: Lossy compressed format with excellent compatibility, but worse compression efficiency than WebP and AVIF. 
             </TextBlock>
                     </StackPanel>
 

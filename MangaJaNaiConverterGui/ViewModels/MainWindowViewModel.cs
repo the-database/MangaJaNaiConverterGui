@@ -26,7 +26,7 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class MainWindowViewModel : ViewModelBase
     {
-        public static readonly List<string> IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp"];
+        public static readonly List<string> IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".avif"];
         public static readonly List<string> ARCHIVE_EXTENSIONS = [".zip", ".cbz", ".rar", ".cbr"];
 
         private readonly DispatcherTimer _timer = new();
@@ -954,18 +954,19 @@ namespace MangaJaNaiConverterGui.ViewModels
                 x => x.InputFilePath,
                 x => x.OutputFilename,
                 x => x.InputFolderPath,
-                x => x.OutputFolderPath
+                x => x.OutputFolderPath,
+                x => x.SelectedTabIndex
             );
 
             var g2 = this.WhenAnyValue
             (
-                x => x.SelectedTabIndex,
                 x => x.UpscaleImages,
                 x => x.UpscaleArchives,
                 x => x.OverwriteExistingFiles,
                 x => x.WebpSelected,
                 x => x.PngSelected,
-                x => x.JpegSelected
+                x => x.JpegSelected,
+                x => x.AvifSelected
             );
 
             g1.CombineLatest(g2).Subscribe(x =>
@@ -1134,6 +1135,19 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private bool _avifSelected = false;
+        [DataMember]
+        public bool AvifSelected
+        {
+            get => _avifSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _avifSelected, value);
+                this.RaisePropertyChanged(nameof(ShowLossyCompressionQuality));
+                this.RaisePropertyChanged(nameof(ShowUseLosslessCompression));
+            }
+        }
+
         private bool _pngSelected = false;
         [DataMember]
         public bool PngSelected
@@ -1157,7 +1171,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public string ImageFormat => WebpSelected ? "webp" : PngSelected ? "png" : "jpg";
+        public string ImageFormat => WebpSelected ? "webp" : PngSelected ? "png" : AvifSelected ? "avif" : "jpg";
 
         public bool ShowUseLosslessCompression => WebpSelected;
 
@@ -1173,7 +1187,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public bool ShowLossyCompressionQuality => JpegSelected || (WebpSelected && !UseLosslessCompression);
+        public bool ShowLossyCompressionQuality => JpegSelected || (WebpSelected && !UseLosslessCompression) || AvifSelected;
 
         private int? _lossyCompressionQuality = 80;
         [DataMember]
@@ -1287,6 +1301,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             WebpSelected = true;
             PngSelected = false;
             JpegSelected = false;
+            AvifSelected = false;
         }
 
         public void SetPngSelected()
@@ -1294,11 +1309,21 @@ namespace MangaJaNaiConverterGui.ViewModels
             PngSelected = true;
             WebpSelected = false;
             JpegSelected = false;
+            AvifSelected = false;
         }
 
         public void SetJpegSelected()
         {
             JpegSelected = true;
+            WebpSelected = false;
+            PngSelected = false;
+            AvifSelected = false;
+        }
+
+        public void SetAvifSelected()
+        {
+            AvifSelected = true;
+            JpegSelected = false;
             WebpSelected = false;
             PngSelected = false;
         }
