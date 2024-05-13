@@ -299,7 +299,7 @@
 
                     <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ShowLossyCompressionQuality}">
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
-                      <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100"  />
+                      <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100" Width="120"  />
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
                       <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                         Quality level for compression. Note that a quality level of 100 is still lossy.
@@ -386,7 +386,7 @@
                                                    VerticalAlignment="Center"
                                                    ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                    <TextBlock Width="800" TextWrapping="WrapWithOverflow" Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means no resolution limit.</TextBlock>
+                                    <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means no resolution limit.</TextBlock>
                                   </StackPanel>
 
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
@@ -397,13 +397,13 @@
                                     <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
                                     <NumericUpDown Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
                                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
-                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
+                                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
                                   </StackPanel>
 
                                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsColor}">Is Color Image</CheckBox>
                                     <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsGrayscale}">Is Grayscale Image</CheckBox>
-                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.</TextBlock>
+                                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.</TextBlock>
                                   </StackPanel>
 
                                 </StackPanel>
@@ -451,7 +451,7 @@
                                         <TextBlock Margin="5,0,0,0" Text="Open Models Directory" />
                                       </StackPanel>
                                     </Button>
-                                    <TextBlock Opacity=".5" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add PyTorch (*.pth) model files to the models directory.</TextBlock>
+                                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add PyTorch (*.pth) model files to the models directory.</TextBlock>
                                   </StackPanel>
 
                                   <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
@@ -491,7 +491,7 @@
                         <TextBlock Margin="5,0,0,0">Add Chain</TextBlock>
                       </StackPanel>
                     </Button>
-                    <TextBlock Width="700" TextWrapping="WrapWithOverflow" FontSize="12" Opacity=".5" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <TextBlock Foreground="Gray" Width="700" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                       A chain is a a set of upscale settings which can be activated based on conditions such as the image resolution and whether the image is color or grayscale. 
                       This allows you to specify different upscale models for different types of images. 
                     </TextBlock>
