@@ -374,6 +374,8 @@ def final_target_resize(image, target_scale, target_width, target_height, origin
         if h != new_target_height:
             return image_resize(image, (round(w * new_target_height / h), new_target_height), is_grayscale)
 
+    return image
+
 
 def save_image_zip(image, file_name, output_zip, image_format, lossy_compression_quality, use_lossless_compression,
                    original_height, target_scale, target_width, target_height, is_grayscale):
