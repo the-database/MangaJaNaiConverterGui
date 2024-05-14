@@ -52,53 +52,61 @@
   <Grid>
     <!-- Main Content -->
     <Grid ColumnDefinitions="300,*" RowDefinitions="*" IsVisible="{Binding !IsExtractingBackend}">
-      <StackPanel Grid.Column="0" Background="#33000000">
-        <TextBlock Margin="0">
+      <DockPanel Grid.Column="0" Background="#33000000">
 
-        </TextBlock>
-        <Button FontSize="13" Padding="10" Classes.active="{Binding ShowAppSettings}" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleAppSettingsSelected}">
-          <StackPanel Orientation="Horizontal">
-            <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
-            <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">App Settings</TextBlock>
+        <StackPanel DockPanel.Dock="Bottom">
+          <TextBlock Margin="0">
+
+          </TextBlock>
+          <Button FontSize="13" Padding="10" Classes.active="{Binding ShowAppSettings}" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleAppSettingsSelected}">
+            <StackPanel Orientation="Horizontal">
+              <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
+              <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">App Settings</TextBlock>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+
+        <StackPanel>
+          <TextBlock Margin="10">
+            Default Workflows
+          </TextBlock>
+
+          <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleWorkflowSelected}" CommandParameter="0"
+                  Classes.active="{Binding Workflows[0].ActiveWorkflow}">
+            <StackPanel Orientation="Horizontal">
+              <materialIcons:MaterialIcon Kind="Book" VerticalAlignment="Center" />
+              <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding Workflows[0].WorkflowName}" />
+            </StackPanel>
+          </Button>
+
+          <StackPanel Orientation="Horizontal" Margin="10" ToolTip.Tip="Custom workflows provide convenient access to save and load preset settings for upscaling." ToolTip.ShowDelay="200">
+            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">
+              Custom Workflows
+            </TextBlock>
+            <materialIcons:MaterialIcon Kind="QuestionMarkCircle" VerticalAlignment="Center" Opacity="0.5" />
           </StackPanel>
-        </Button>
-        <TextBlock Margin="10">
-          Default Workflows
-        </TextBlock>
 
-        <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleWorkflowSelected}" CommandParameter="0"
-                Classes.active="{Binding Workflows[0].ActiveWorkflow}">
-          <StackPanel Orientation="Horizontal">
-            <materialIcons:MaterialIcon Kind="Book" VerticalAlignment="Center" />
-            <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding Workflows[0].WorkflowName}" />
-          </StackPanel>
-        </Button>
-
-        <TextBlock Margin="10">
-          Custom Workflows
-        </TextBlock>
-
-        <ItemsControl ItemsSource="{Binding CustomWorkflows}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:UpscaleWorkflow">
-              <StackPanel>
-                <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left"
-                        ClickMode="Press"
-                        Classes.active="{Binding ActiveWorkflow}"
-                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).HandleWorkflowSelected}" 
-                        CommandParameter="{Binding WorkflowIndex}">
-                  <StackPanel Orientation="Horizontal">
-                    <materialIcons:MaterialIcon Kind="{Binding WorkflowIcon}" VerticalAlignment="Center" />
-                    <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding WorkflowName}" />
-                  </StackPanel>
-                </Button>
-              </StackPanel>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-
-      </StackPanel>
+          <ItemsControl ItemsSource="{Binding CustomWorkflows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:UpscaleWorkflow">
+                <StackPanel>
+                  <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left"
+                          ClickMode="Press"
+                          Classes.active="{Binding ActiveWorkflow}"
+                          Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).HandleWorkflowSelected}"
+                          CommandParameter="{Binding WorkflowIndex}">
+                    <StackPanel Orientation="Horizontal">
+                      <materialIcons:MaterialIcon Kind="{Binding WorkflowIcon}" VerticalAlignment="Center" />
+                      <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding WorkflowName}" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        
+      </DockPanel>
 
       <DockPanel IsVisible="{Binding ShowMainForm}" Grid.Column="1">
 
@@ -323,7 +331,7 @@
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeScaleSelected}" Content="Scale" Command="{Binding CurrentWorkflow.SetModeScaleSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeWidthSelected}" Content="Width" Command="{Binding CurrentWorkflow.SetModeWidthSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeHeightSelected}" Content="Height" Command="{Binding CurrentWorkflow.SetModeHeightSelected}" />
-                  <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>Scale</Bold>: All images will be upscaled by the specified scaling factor. A factor of 2x will double the width and height of each image.
+                  <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>Scale</Bold>: All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.
 <Bold>Width</Bold>: All images will be upscaled to the specified width, while maintaining aspect ratio of the image. 
 <Bold>Height</Bold>: All images will be upscaled to the specified height, while maintaining aspect ratio of the image. 
             </TextBlock>
@@ -336,7 +344,7 @@
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.Is3x}" Content="3x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="3" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.Is4x}" Content="4x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="4" />
                   <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0">
-                    All images will be upscaled by the specified scaling factor. A factor of 2x will double the width and height of each image.
+                    All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.
                   </TextBlock>
                 </StackPanel>
 
@@ -362,7 +370,14 @@
             </Border>
 
             <StackPanel IsVisible="{Binding CurrentWorkflow.ShowAdvancedSettings}" IsEnabled="{Binding !Upscaling}">
-              <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Advanced Settings"></TextBlock>
+              <StackPanel Margin="0,40,0,0" VerticalAlignment="Center" Orientation="Horizontal" ToolTip.Tip="Advanced settings allow you to select different settings to use depending on the image selected for upscaling.&#013;&#013;A chain is a set of conditions and the desired settings to apply when those conditions are met. When upscaling each image, if that image meets the activation conditions of a chain, then that chain's settings are applied to an image. If the image meets the activation conditions of multiple chains, only the settings of the highest matching chain in the list are applied. If the image doesn't meet the activation condition of any chain, then no processing or upscaling is applied to that image.&#013;&#013;The default settings use one upscaling model for color images, IllustrationJaNai, and several different MangaJaNai models for grayscale images. Each MangaJaNai model is optimized to work on images with a different height, ranging from 1200p to 2048p, so the chains are used to select the most suitable MangaJaNai model based on the resolution of the image.">
+                <TextBlock Margin="0,0,5,0" FontWeight="Bold" Text="Advanced Settings"/>
+                <materialIcons:MaterialIcon Kind="QuestionMarkCircle" Opacity="0.5" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock FontSize="12" Foreground="Gray" Margin="0,10,0,10" IsVisible="{Binding CurrentWorkflow.IsDefaultWorkflow}">
+                Advanced settings are locked for the default workflow, and are displayed below for reference only. Select any custom workflow to modify the advanced settings for that workflow.
+              </TextBlock>
+              
               <Border Classes="border" IsEnabled="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
                 <StackPanel>
                   <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
