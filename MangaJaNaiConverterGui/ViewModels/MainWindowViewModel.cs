@@ -14,12 +14,15 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
 using Velopack.Sources;
+using static System.Net.WebRequestMethods;
+using File = System.IO.File;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
@@ -348,7 +351,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _workflows, value);
         }
 
-        public AvaloniaList<UpscaleWorkflow> CustomWorkflows => new AvaloniaList<UpscaleWorkflow>(Workflows.Skip(1).ToList());
+        public AvaloniaList<UpscaleWorkflow> CustomWorkflows => new(Workflows.Skip(1).ToList());
 
         private int _selectedWorkflowIndex = 0;
         [DataMember]
@@ -366,6 +369,15 @@ namespace MangaJaNaiConverterGui.ViewModels
         public UpscaleWorkflow? CurrentWorkflow
         {
             get => Workflows?[SelectedWorkflowIndex];
+            set 
+            { 
+                if (Workflows != null)
+                {
+                    Workflows[SelectedWorkflowIndex] = value;
+                    this.RaisePropertyChanged(nameof(CurrentWorkflow));
+                    this.RaisePropertyChanged(nameof(CustomWorkflows));
+                }
+            }
         }
 
         public void HandleWorkflowSelected(int workflowIndex)
@@ -818,6 +830,28 @@ namespace MangaJaNaiConverterGui.ViewModels
             this.RaisePropertyChanged(nameof(ConsoleText));
         }
 
+        public void ReadWorkflowFileToCurrentWorkflow(string fullPath)
+        {
+            if (!File.Exists(fullPath))
+            {
+                return;
+            }
+
+            var lines = File.ReadAllText(fullPath);
+            var workflow = JsonConvert.DeserializeObject<UpscaleWorkflow>(lines, NewtonsoftJsonSuspensionDriver.Settings);
+            if (workflow != null && CurrentWorkflow != null)
+            {
+                workflow.WorkflowIndex = CurrentWorkflow.WorkflowIndex;
+                CurrentWorkflow = workflow;
+            }
+        }
+
+        public void WriteCurrentWorkflowToFile(string fullPath)
+        {
+            var lines = JsonConvert.SerializeObject(CurrentWorkflow, NewtonsoftJsonSuspensionDriver.Settings);
+            File.WriteAllText(fullPath, lines);
+        }
+
         public async void CheckAndExtractBackend()
         {
             await Task.Run(() =>
@@ -844,6 +878,35 @@ namespace MangaJaNaiConverterGui.ViewModels
             if (DeviceList.Length == 0)
             {
                 UseCpu = true;
+            }
+        }
+
+        public void ResetCurrentWorkflow()
+        {
+            if (CurrentWorkflow != null) 
+            {
+                var lines = JsonConvert.SerializeObject(Workflows[0], NewtonsoftJsonSuspensionDriver.Settings);
+                var workflow = JsonConvert.DeserializeObject<UpscaleWorkflow>(lines, NewtonsoftJsonSuspensionDriver.Settings);
+                var workflowIndex = CurrentWorkflow.WorkflowIndex;
+                var workflowName = $"Custom Workflow {workflowIndex}";
+
+                if (workflow != null)
+                {
+                    var defaultWorkflow = new UpscaleWorkflow
+                    {
+                        Vm = this,
+                        WorkflowIndex = workflowIndex,
+                        WorkflowName = workflowName,
+                        Chains = workflow.Chains
+                    };
+
+                    foreach (var chain in defaultWorkflow.Chains)
+                    {
+                        chain.Vm = this;
+                    }
+
+                    CurrentWorkflow = defaultWorkflow;
+                }
             }
         }
 

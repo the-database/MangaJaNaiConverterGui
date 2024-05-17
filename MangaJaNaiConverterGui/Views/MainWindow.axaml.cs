@@ -17,6 +17,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Material.Icons.Avalonia;
 using Velopack;
+using FluentAvalonia.UI.Controls;
 
 namespace MangaJaNaiConverterGui.Views
 {
@@ -267,6 +268,146 @@ namespace MangaJaNaiConverterGui.Views
                 if (files.Count >= 1)
                 {
                     vm.CurrentWorkflow.OutputFolderPath = files[0].TryGetLocalPath() ?? "";
+                }
+            }
+        }
+
+        private async void ImportCurrentWorkflowButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = GetTopLevel(this);
+
+                // Start async operation to open the dialog.
+                var storageProvider = topLevel.StorageProvider;
+
+                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = "Import Workflow File",
+                    AllowMultiple = false,
+                    FileTypeFilter = [new("MangaJaNai Workflow File") { Patterns = ["*.mwf"], MimeTypes = ["*/*"] }, FilePickerFileTypes.All],
+                    SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)),
+                });
+
+                if (files.Count >= 1)
+                {
+
+                    var inPath = files[0].TryGetLocalPath();
+
+                    if (inPath != null)
+                    {
+                        var td = new TaskDialog
+                        {
+                            Title = "Confirm Workflow Import",
+                            ShowProgressBar = false,
+                            Content = $"The following workflow file will be imported to the current workflow {vm.CurrentWorkflow?.WorkflowName}. All configuration settings for the current profile {vm.CurrentWorkflow?.WorkflowName} will be overwritten.\n\n" +
+                            inPath,
+                            Buttons =
+                        {
+                            TaskDialogButton.OKButton,
+                            TaskDialogButton.CancelButton
+                        }
+                        };
+
+
+                        td.Closing += async (s, e) =>
+                        {
+                            if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.OK)
+                            {
+                                var deferral = e.GetDeferral();
+
+                                td.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
+                                td.ShowProgressBar = true;
+
+                                await Task.Run(() =>
+                                {
+                                    vm.ReadWorkflowFileToCurrentWorkflow(inPath);
+                                });
+
+                                deferral.Complete();
+                            }
+                        };
+
+                        td.XamlRoot = VisualRoot as Visual;
+                        _ = await td.ShowAsync();
+                    }
+                }
+            }
+        }
+
+        private async void ResetWorkflow(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+               
+                var td = new TaskDialog
+                {
+                    Title = "Confirm Workflow Import",
+                    ShowProgressBar = false,
+                    Content = $"The current workflow's settings will be reset to the default settings.",
+                    Buttons =
+                {
+                    TaskDialogButton.OKButton,
+                    TaskDialogButton.CancelButton
+                }
+                };
+
+
+                td.Closing += async (s, e) =>
+                {
+                    if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.OK)
+                    {
+                        var deferral = e.GetDeferral();
+
+                        td.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
+                        td.ShowProgressBar = true;
+
+                        await Task.Run(() =>
+                        {
+                            vm.ResetCurrentWorkflow();
+                        });
+
+                        deferral.Complete();
+                    }
+                };
+
+                td.XamlRoot = VisualRoot as Visual;
+                _ = await td.ShowAsync();
+                    
+            }
+        }
+
+        private async void ExportCurrentWorkflowButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                // Get top level from the current control. Alternatively, you can use Window reference instead.
+                var topLevel = GetTopLevel(this);
+
+                var storageProvider = topLevel.StorageProvider;
+
+                // Start async operation to open the dialog.
+                var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Export Current Profile Conf File",
+                    DefaultExtension = "conf",
+                    FileTypeChoices =
+                    [
+                    new("MangaJaNai Workflow File (*.mwf)") { Patterns = ["*.mwf"] },
+                    ],
+                    SuggestedStartLocation = await storageProvider.TryGetFolderFromPathAsync(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)),
+                    SuggestedFileName = vm.CurrentWorkflow?.WorkflowName,
+                });
+
+                if (file is not null)
+                {
+                    var outPath = file.TryGetLocalPath();
+
+                    if (outPath != null)
+                    {
+                        vm.WriteCurrentWorkflowToFile(outPath);
+                    }
                 }
             }
         }

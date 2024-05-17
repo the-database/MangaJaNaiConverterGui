@@ -189,10 +189,37 @@
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
           <!-- Main Form -->
           <StackPanel Margin="20">
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
-              <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Workflow Name</TextBlock>
-              <TextBox Width="500" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.WorkflowName}"/>
-            </StackPanel>
+            <Grid>
+              <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}" Grid.Column="0">
+                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Workflow Name</TextBlock>
+                <TextBox Width="500" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.WorkflowName}"/>
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
+                <StackPanel Margin="0,10,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
+
+                  <Button Margin="10,0,10,0" Click="ImportCurrentWorkflowButtonClick">
+                    <StackPanel Orientation="Horizontal">
+                      <materialIcons:MaterialIcon Kind="Import" VerticalAlignment="Center" />
+                      <TextBlock Margin="10,0,10,0" VerticalAlignment="Center">Import Workflow</TextBlock>
+                    </StackPanel>
+                  </Button>
+                  <Button Margin="10,0,10,0" Click="ExportCurrentWorkflowButtonClick">
+                    <StackPanel Orientation="Horizontal">
+                      <materialIcons:MaterialIcon Kind="Export" VerticalAlignment="Center" />
+                      <TextBlock Margin="10,0,10,0" VerticalAlignment="Center">Export Workflow</TextBlock>
+                    </StackPanel>
+                  </Button>
+                  <Button Margin="10,0,0,0" Click="ResetWorkflow">
+                    <StackPanel Orientation="Horizontal">
+                      <materialIcons:MaterialIcon Kind="Refresh" VerticalAlignment="Center" />
+                      <TextBlock Margin="10,0,10,0" VerticalAlignment="Center">Reset Workflow</TextBlock>
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </StackPanel>
+              
+            </Grid>
             <DockPanel>
               <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Input and Output"></TextBlock>
               <CheckBox DockPanel.Dock="Right" IsChecked="{Binding CurrentWorkflow.ShowAdvancedSettings}" Content="Show Advanced Settings" />
@@ -363,7 +390,7 @@
                   <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" />
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                    All images will be upscaled to this width. For reading on tablets, this can be used to set hte image width to the resolution of your tablet's display.
+                    All images will be upscaled to this width. For reading on tablets, this can be used to set the image width to the resolution of your tablet's display.
                   </TextBlock>
                 </StackPanel>
               </StackPanel>
