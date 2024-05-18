@@ -343,9 +343,9 @@ namespace MangaJaNaiConverterGui.Views
                
                 var td = new TaskDialog
                 {
-                    Title = "Confirm Workflow Import",
+                    Title = "Confirm Workflow Reset",
                     ShowProgressBar = false,
-                    Content = $"The current workflow's settings will be reset to the default settings.",
+                    Content = $"The current workflow's settings will be reset to the default settings. Any unsaved settings for the current workflow will be lost.",
                     Buttons =
                 {
                     TaskDialogButton.OKButton,

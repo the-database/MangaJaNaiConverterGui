@@ -1,5 +1,6 @@
 ﻿using Avalonia.Collections;
 using Avalonia.Data;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime;
@@ -33,6 +35,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         public static readonly List<string> ARCHIVE_EXTENSIONS = [".zip", ".cbz", ".rar", ".cbr"];
 
         private readonly DispatcherTimer _timer = new();
+        private static readonly HttpClient client = new();
 
         private readonly UpdateManager _um;
         private UpdateInfo? _update = null;
@@ -167,6 +170,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaiseAndSetIfChanged(ref _deviceList, value);
                 this.RaisePropertyChanged(nameof(SelectedDeviceIndex));
             }
+        }
+
+        private AvaloniaDictionary<string, ReaderDevice> _displayDeviceMap = [];
+        [DataMember]
+        public AvaloniaDictionary<string, ReaderDevice> DisplayDeviceMap
+        {
+            get => _displayDeviceMap;
+            set => this.RaiseAndSetIfChanged(ref _displayDeviceMap, value);
         }
 
         private bool _autoUpdate;
@@ -910,6 +921,34 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private async Task<IEnumerable<object>> PopulateDevicesAsync(string? searchText, CancellationToken cancellationToken)
+        {
+            if (searchText != null)
+            {
+                try
+                {
+                    var requestUrl = $"http://localhost:8082/api/search?q={Uri.EscapeDataString(searchText)}&p=0&s=10";
+                    var response = await client.GetStringAsync(requestUrl, cancellationToken);
+                    var devices = JsonConvert.DeserializeObject<List<ReaderDevice>>(response, NewtonsoftJsonSuspensionDriver.Settings);
+                    if (devices != null)
+                    {
+                        foreach (var device in devices) 
+                        {
+                            DisplayDeviceMap[device.ToString()] = device;
+                            
+                        }
+                        return devices.Select(x => x.ToString());
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+
+            return [];
+        }
+
         public async Task CheckForUpdates()
         {
             try
@@ -1065,7 +1104,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string WorkflowName
         {
             get => _workflowName;
-            set => this.RaiseAndSetIfChanged( ref _workflowName, value );
+            set => this.RaiseAndSetIfChanged(ref _workflowName, value);
         }
 
         private int _workflowIndex;
@@ -1074,7 +1113,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _workflowIndex;
             set => this.RaiseAndSetIfChanged(ref _workflowIndex, value);
-            
+
         }
 
         public string WorkflowIcon => $"Numeric{WorkflowIndex}Circle";
@@ -1085,7 +1124,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 Debug.WriteLine($"ActiveWorkflow {WorkflowIndex} == {Vm?.SelectedWorkflowIndex}; {Vm == null}");
                 return WorkflowIndex == Vm?.SelectedWorkflowIndex && (!Vm?.ShowAppSettings ?? false);
             }
-            
+
         }
 
         public bool IsDefaultWorkflow => WorkflowIndex == 0;
@@ -1284,9 +1323,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public int UpscaleScaleFactor
         {
             get => _upscaleScaleFactor;
-            set 
-            { 
-                this.RaiseAndSetIfChanged(ref _upscaleScaleFactor, value); 
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _upscaleScaleFactor, value);
                 this.RaisePropertyChanged(nameof(Is1x));
                 this.RaisePropertyChanged(nameof(Is2x));
                 this.RaisePropertyChanged(nameof(Is3x));
@@ -1324,6 +1363,75 @@ namespace MangaJaNaiConverterGui.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _modeHeightSelected, value);
+            }
+        }
+
+        private bool _modeFitToDisplaySelected = false;
+        [DataMember]
+        public bool ModeFitToDisplaySelected
+        {
+            get => _modeFitToDisplaySelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _modeFitToDisplaySelected, value);
+            }
+        }
+
+        private string _displayDevice;
+        [DataMember]
+        public string DisplayDevice
+        {
+            get => _displayDevice;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _displayDevice, value);
+                this.RaisePropertyChanged(nameof(DisplayDeviceWidth));
+                this.RaisePropertyChanged(nameof(DisplayDeviceHeight));
+            }
+        }
+
+        public int DisplayDeviceWidth { 
+            get 
+            { 
+                if (Vm != null && DisplayDevice != null)
+                {
+                    Vm.DisplayDeviceMap.TryGetValue(DisplayDevice, out var displayDevice);
+                    if (displayDevice != null)
+                    {
+                        return DisplayPortraitSelected ? displayDevice.Width : displayDevice.Height;
+                    }
+                }
+
+                return 0;
+            } 
+        }
+        public int DisplayDeviceHeight
+        {
+            get
+            {
+                if (Vm != null && DisplayDevice != null)
+                {
+                    Vm.DisplayDeviceMap.TryGetValue(DisplayDevice, out var displayDevice);
+                    if (displayDevice != null)
+                    {
+                        return DisplayPortraitSelected ? displayDevice.Height : displayDevice.Width;
+                    }
+                }
+
+                return 0;
+            }
+        }
+
+        private bool _displayPortraitSelected = true;
+        [DataMember]
+        public bool DisplayPortraitSelected
+        {
+            get => _displayPortraitSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _displayPortraitSelected, value);
+                this.RaisePropertyChanged(nameof(DisplayDeviceWidth));
+                this.RaisePropertyChanged(nameof(DisplayDeviceHeight));
             }
         }
 
@@ -1396,6 +1504,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             ModeScaleSelected = true;
             ModeWidthSelected = false;
             ModeHeightSelected = false;
+            ModeFitToDisplaySelected = false;
         }
 
         public void SetModeWidthSelected()
@@ -1403,6 +1512,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             ModeWidthSelected = true;
             ModeScaleSelected = false;
             ModeHeightSelected = false;
+            ModeFitToDisplaySelected = false;
         }
 
         public void SetModeHeightSelected()
@@ -1410,6 +1520,15 @@ namespace MangaJaNaiConverterGui.ViewModels
             ModeHeightSelected = true;
             ModeScaleSelected = false;
             ModeWidthSelected = false;
+            ModeFitToDisplaySelected = false;
+        }
+
+        public void SetModeFitToDisplaySelected()
+        {
+            ModeFitToDisplaySelected = true;
+            ModeHeightSelected = false;
+            ModeWidthSelected = false;
+            ModeScaleSelected = false;
         }
 
         public void Validate()
@@ -1653,6 +1772,38 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _tileSizes;
             set => this.RaiseAndSetIfChanged(ref _tileSizes, value);
+        }
+    }
+
+    // TODO refactor into separate file
+    public class ReaderDevice
+    {
+        public string Name { get; set; } = default!;
+        public string Brand { get; set; } = default!;
+        public string Year { get; set; } = default!;
+        public int Width { get; set; } = default!;
+        public int Height { get; set; } = default!;
+
+        public override string ToString()
+        {
+            List<string> parts = [];
+
+            if (!string.IsNullOrWhiteSpace(Brand))
+            {
+                parts.Add(Brand);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                parts.Add(Name);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Year))
+            {
+                parts.Add($"({Year})");
+            }
+
+            return string.Join(" ", parts);
         }
     }
 }

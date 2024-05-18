@@ -358,9 +358,11 @@
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeScaleSelected}" Content="Scale" Command="{Binding CurrentWorkflow.SetModeScaleSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeWidthSelected}" Content="Width" Command="{Binding CurrentWorkflow.SetModeWidthSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeHeightSelected}" Content="Height" Command="{Binding CurrentWorkflow.SetModeHeightSelected}" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeFitToDisplaySelected}" Content="Fit to Display" Command="{Binding CurrentWorkflow.SetModeFitToDisplaySelected}" />
                   <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>Scale</Bold>: All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.
 <Bold>Width</Bold>: All images will be upscaled to the specified width, while maintaining aspect ratio of the image. 
 <Bold>Height</Bold>: All images will be upscaled to the specified height, while maintaining aspect ratio of the image. 
+<Bold>Fit to Display</Bold>: All images will be upscaled to fit exactly within the specified display device. 
             </TextBlock>
                 </StackPanel>
 
@@ -374,8 +376,6 @@
                     All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.
                   </TextBlock>
                 </StackPanel>
-
-
 
                 <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeHeightSelected}">
                   <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Height</TextBlock>
@@ -392,6 +392,33 @@
                   <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
                     All images will be upscaled to this width. For reading on tablets, this can be used to set the image width to the resolution of your tablet's display.
                   </TextBlock>
+                </StackPanel>
+
+                <!--Fit to Device Mode-->
+                <StackPanel IsVisible="{Binding CurrentWorkflow.ModeFitToDisplaySelected}">
+                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Tablet Device or Display</TextBlock>
+                    <AutoCompleteBox Margin="0,0,5,0" AsyncPopulator="{Binding PopulateDevicesAsync}" FilterMode="None" Width="400" Text="{Binding CurrentWorkflow.DisplayDevice}" />
+                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
+                      The name of the tablet or display device. 
+                    </TextBlock>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Orientation</TextBlock>
+                    <ToggleButton IsChecked="{Binding CurrentWorkflow.DisplayPortraitSelected}" Content="Portrait"  />
+                    <ToggleButton IsChecked="{Binding !CurrentWorkflow.DisplayPortraitSelected}" Content="Landscape" />
+                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
+                      Whether the display will be used in portrait/vertical mode or landscape/horizontal mode.
+                    </TextBlock>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Width</TextBlock>
+                    <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.DisplayDeviceWidth}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" IsEnabled="False" />
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                    <TextBlock Margin="20,0,5,0" VerticalAlignment="Center">Display Height</TextBlock>
+                    <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.DisplayDeviceHeight}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" IsEnabled="False" />
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                  </StackPanel>
                 </StackPanel>
               </StackPanel>
             </Border>
