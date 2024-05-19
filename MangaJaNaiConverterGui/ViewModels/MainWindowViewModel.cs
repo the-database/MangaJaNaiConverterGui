@@ -1,5 +1,6 @@
 ﻿using Avalonia.Collections;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
@@ -57,6 +58,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             _um = new UpdateManager(new GithubSource("https://github.com/the-database/MangaJaNaiConverterGui", null, false));
 
+            CheckAndDoBackup();
             CheckForUpdates();
         }
 
@@ -892,6 +894,32 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        public void CheckAndDoBackup()
+        {
+            Task.Run(() =>
+            {
+                if (Path.Exists(Program.AppStatePath))
+                {
+                    var files = Directory.EnumerateFiles(Program.AppStateFolder)
+                    .Where(f => Path.GetFileName(f).StartsWith("autobackup_"))
+                    .OrderByDescending(f => f)
+                    .ToList();
+
+                    if (files.Count >= 10)
+                    {
+                        // Delete oldest backup
+                        File.Delete(files.Last());
+                    }
+
+                    File.Copy
+                    (
+                        Program.AppStatePath,
+                        Path.Join(Program.AppStateFolder, $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{Program.AppStateFilename}")
+                    );
+                }
+            });
+        }
+
         public void ResetCurrentWorkflow()
         {
             if (CurrentWorkflow != null) 
@@ -921,29 +949,31 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        private async Task<IEnumerable<object>> PopulateDevicesAsync(string? searchText, CancellationToken cancellationToken)
+        public async Task<IEnumerable<object>> PopulateDevicesAsync(string? searchText, CancellationToken cancellationToken)
         {
-            if (searchText != null)
+            Debug.WriteLine($"PopulateDevicesAsync {searchText}");
+            try
             {
-                try
+                var requestUrl = $"http://localhost:8082/api/search?q={Uri.EscapeDataString(searchText?.Trim() ?? "")}&p=0&s=4";
+                if (string.IsNullOrWhiteSpace(searchText))
                 {
-                    var requestUrl = $"http://localhost:8082/api/search?q={Uri.EscapeDataString(searchText)}&p=0&s=10";
-                    var response = await client.GetStringAsync(requestUrl, cancellationToken);
-                    var devices = JsonConvert.DeserializeObject<List<ReaderDevice>>(response, NewtonsoftJsonSuspensionDriver.Settings);
-                    if (devices != null)
+                    requestUrl = $"http://localhost:8082/api/top";
+                }
+                var response = await client.GetStringAsync(requestUrl, cancellationToken);
+                var devices = JsonConvert.DeserializeObject<List<ReaderDevice>>(response, NewtonsoftJsonSuspensionDriver.Settings);
+                if (devices != null)
+                {
+                    foreach (var device in devices) 
                     {
-                        foreach (var device in devices) 
-                        {
-                            DisplayDeviceMap[device.ToString()] = device;
+                        DisplayDeviceMap[device.ToString()] = device;
                             
-                        }
-                        return devices.Select(x => x.ToString());
                     }
+                    return devices.ToList();
                 }
-                catch(Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex);
             }
 
             return [];
@@ -1057,7 +1087,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                 x => x.OutputFilename,
                 x => x.InputFolderPath,
                 x => x.OutputFolderPath,
-                x => x.SelectedTabIndex
+                x => x.SelectedTabIndex,
+                x => x.DisplayDevice,
+                x => x.DisplayPortraitSelected
             );
 
             var g2 = this.WhenAnyValue
@@ -1071,7 +1103,16 @@ namespace MangaJaNaiConverterGui.ViewModels
                 x => x.AvifSelected
             );
 
-            g1.CombineLatest(g2).Subscribe(x =>
+            var g3 = this.WhenAnyValue
+            (
+                x => x.ModeFitToDisplaySelected,
+                x => x.ModeHeightSelected,
+                x => x.ModeWidthSelected,
+                x => x.ResizeHeightAfterUpscale,
+                x => x.ResizeWidthAfterUpscale
+            );
+
+            g1.CombineLatest(g2).CombineLatest(g3).Subscribe(x =>
             {
                 Validate();
             });
@@ -1574,6 +1615,24 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 valid = false;
                 validationText.Add("Output Folder is required.");
+            }
+
+            if (ModeHeightSelected && ResizeHeightAfterUpscale == 0)
+            {
+                valid = false;
+                validationText.Add("Output Height is invalid. Enter a height larger than 0.");
+            }
+
+            if (ModeWidthSelected && ResizeWidthAfterUpscale == 0)
+            {
+                valid = false;
+                validationText.Add("Output Width is invalid. Enter a width larger than 0.");
+            }
+
+            if (ModeFitToDisplaySelected && (DisplayDeviceWidth == 0 || DisplayDeviceHeight == 0))
+            {
+                valid = false;
+                validationText.Add("Tablet Device or Display is invalid. Please make a selection from the list of options.");
             }
 
             Valid = valid;

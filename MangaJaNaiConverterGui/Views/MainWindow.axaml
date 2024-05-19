@@ -398,12 +398,12 @@
                 <StackPanel IsVisible="{Binding CurrentWorkflow.ModeFitToDisplaySelected}">
                   <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Tablet Device or Display</TextBlock>
-                    <AutoCompleteBox Margin="0,0,5,0" AsyncPopulator="{Binding PopulateDevicesAsync}" FilterMode="None" Width="400" Text="{Binding CurrentWorkflow.DisplayDevice}" />
+                    <AutoCompleteBox Classes="clearButton" Margin="0,0,5,0" AsyncPopulator="{Binding PopulateDevicesAsync}" FilterMode="None" Width="400" Text="{Binding CurrentWorkflow.DisplayDevice}" Tapped="HandleDevicesTapped" GotFocus="HandleDevicesGotFocus" MinimumPrefixLength="0"  />
                     <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                      The name of the tablet or display device. 
+                      The name of the tablet or display device. Start typing to show more options.
                     </TextBlock>
                   </StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
+                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                     <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Orientation</TextBlock>
                     <ToggleButton IsChecked="{Binding CurrentWorkflow.DisplayPortraitSelected}" Content="Portrait"  />
                     <ToggleButton IsChecked="{Binding !CurrentWorkflow.DisplayPortraitSelected}" Content="Landscape" />
@@ -411,13 +411,18 @@
                       Whether the display will be used in portrait/vertical mode or landscape/horizontal mode.
                     </TextBlock>
                   </StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Width</TextBlock>
-                    <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.DisplayDeviceWidth}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" IsEnabled="False" />
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                    <TextBlock Margin="20,0,5,0" VerticalAlignment="Center">Display Height</TextBlock>
-                    <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.DisplayDeviceHeight}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" IsEnabled="False" />
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
+                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Resolution</TextBlock>
+                    <TextBlock Margin="5,5,5,0" FontFamily="Consolas"  VerticalAlignment="Center">
+                      <Run Text="{Binding CurrentWorkflow.DisplayDeviceWidth}"/>
+                      <Run Text="px" />
+                      <Run Text="×" />
+                      <Run Text="{Binding CurrentWorkflow.DisplayDeviceHeight}" />
+                      <Run Text="px" />
+                    </TextBlock>
+                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
+                      Actual resolution of the selected display with the selected orientation, width × height.
+                    </TextBlock>
                   </StackPanel>
                 </StackPanel>
               </StackPanel>

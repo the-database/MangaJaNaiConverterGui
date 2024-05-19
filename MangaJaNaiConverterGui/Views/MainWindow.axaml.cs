@@ -18,6 +18,7 @@ using Avalonia.Media;
 using Material.Icons.Avalonia;
 using Velopack;
 using FluentAvalonia.UI.Controls;
+using System.Threading;
 
 namespace MangaJaNaiConverterGui.Views
 {
@@ -489,6 +490,28 @@ namespace MangaJaNaiConverterGui.Views
             var result = await dialog.ShowDialog<bool?>(this);
 
             return result ?? false;
+        }
+
+        public void HandleDevicesGotFocus(object? sender, GotFocusEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm && sender is AutoCompleteBox cb)
+            {
+                if (vm.CurrentWorkflow != null && e.NavigationMethod != NavigationMethod.Unspecified && e.Source is TextBox)
+                {
+                    cb.IsDropDownOpen = true;
+                }
+            }
+        }
+
+        private void HandleDevicesTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm && sender is AutoCompleteBox cb)
+            {
+                if (vm.CurrentWorkflow != null)
+                {
+                    cb.IsDropDownOpen = true;
+                }
+            }
         }
     }
 }
