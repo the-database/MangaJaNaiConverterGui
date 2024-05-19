@@ -583,6 +583,9 @@ def preprocess_worker_archive_file(upscale_queue, input_archive, output_archive_
                             loaded_models[model_abs_path] = model
                 else:
                     image = normalize(image)
+
+                image = np.ascontiguousarray(image)
+
                 upscale_queue.put((image, decoded_filename, True, is_grayscale, original_width, original_height,
                                    get_tile_size(chain['ModelTileSize']), model))
         except Exception as e:
@@ -671,6 +674,8 @@ def preprocess_worker_folder(upscale_queue, input_folder_path, output_folder_pat
                     else:
                         image = normalize(image)
 
+                    image = np.ascontiguousarray(image)
+
                     upscale_queue.put(
                         (image, output_filename_rel, True, is_grayscale, original_width, original_height,
                          get_tile_size(chain['ModelTileSize']), model))
@@ -752,6 +757,8 @@ def preprocess_worker_image(upscale_queue, input_image_path, output_image_path, 
         else:
             print("No chain!!!!!!!")
             image = normalize(image)
+
+        image = np.ascontiguousarray(image)
 
         upscale_queue.put(
             (image, None, True, is_grayscale, original_width, original_height, get_tile_size(chain['ModelTileSize']),
