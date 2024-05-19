@@ -848,6 +848,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             if (workflow != null && CurrentWorkflow != null)
             {
                 workflow.WorkflowIndex = CurrentWorkflow.WorkflowIndex;
+                workflow.Vm = CurrentWorkflow.Vm;
                 CurrentWorkflow = workflow;
             }
         }
@@ -944,7 +945,6 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public async Task<IEnumerable<object>> PopulateDevicesAsync(string? searchText, CancellationToken cancellationToken)
         {
-            Debug.WriteLine($"PopulateDevicesAsync {searchText}");
             try
             {
                 var requestUrl = $"https://animejan.ai/mangajanai/api/search?q={Uri.EscapeDataString(searchText?.Trim() ?? "")}&p=0&s=4";
@@ -1125,7 +1125,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             this.WhenAnyValue(x => x.InputFilePath).Subscribe(x =>
             {
-                if (string.IsNullOrWhiteSpace(OutputFolderPath))
+                if (string.IsNullOrWhiteSpace(OutputFolderPath) && !string.IsNullOrWhiteSpace(InputFilePath))
                 {
                     try
                     {
@@ -1140,7 +1140,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             this.WhenAnyValue(x => x.InputFolderPath).Subscribe(x =>
             {
-                if (string.IsNullOrWhiteSpace(OutputFolderPath))
+                if (string.IsNullOrWhiteSpace(OutputFolderPath) && !string.IsNullOrWhiteSpace(InputFolderPath))
                 {
                     try
                     {

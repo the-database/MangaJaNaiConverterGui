@@ -35,10 +35,10 @@
     <Style Selector="Button.active">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor }" />
       <Style Selector="^:pointerover">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+        <!--<Style Selector="^ /template/ ui|FABorder#Root">
           <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
           <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
-        </Style>
+        </Style>-->
       </Style>
     </Style>
   </Window.Styles>
