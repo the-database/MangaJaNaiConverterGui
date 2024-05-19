@@ -947,10 +947,10 @@ namespace MangaJaNaiConverterGui.ViewModels
             Debug.WriteLine($"PopulateDevicesAsync {searchText}");
             try
             {
-                var requestUrl = $"http://localhost:8082/api/search?q={Uri.EscapeDataString(searchText?.Trim() ?? "")}&p=0&s=4";
+                var requestUrl = $"https://animejan.ai/mangajanai/api/search?q={Uri.EscapeDataString(searchText?.Trim() ?? "")}&p=0&s=4";
                 if (string.IsNullOrWhiteSpace(searchText))
                 {
-                    requestUrl = $"http://localhost:8082/api/top";
+                    requestUrl = $"https://animejan.ai/mangajanai/api/top";
                 }
                 var response = await client.GetStringAsync(requestUrl, cancellationToken);
                 var devices = JsonConvert.DeserializeObject<List<ReaderDevice>>(response, NewtonsoftJsonSuspensionDriver.Settings);
