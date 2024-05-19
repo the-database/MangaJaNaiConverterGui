@@ -289,7 +289,7 @@
                   <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                       <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
-                      <TextBox x:Name="OutputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.OutputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
+                      <TextBox x:Name="OutputFolderNameTextBox" Classes="clearButton" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.OutputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
                       <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
                       <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
                         Path of the folder to save the upscaled image(s) or archive(s).

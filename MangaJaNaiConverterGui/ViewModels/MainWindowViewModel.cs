@@ -1,9 +1,5 @@
 ﻿using Avalonia.Collections;
-using Avalonia.Data;
-using Avalonia.Input;
-using Avalonia.Styling;
 using Avalonia.Threading;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Progression.Extras;
 using ReactiveUI;
@@ -16,15 +12,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
-using System.Reflection;
-using System.Runtime;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
 using Velopack.Sources;
-using static System.Net.WebRequestMethods;
 using File = System.IO.File;
 
 namespace MangaJaNaiConverterGui.ViewModels
@@ -901,7 +894,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (Path.Exists(Program.AppStatePath))
                 {
                     var files = Directory.EnumerateFiles(Program.AppStateFolder)
-                    .Where(f => Path.GetFileName(f).StartsWith("autobackup_"))
+                    .Where(f => Path.GetFileName(f).StartsWith("autobackup_") && Path.GetFileName(f).EndsWith(Program.AppStateFilename))
                     .OrderByDescending(f => f)
                     .ToList();
 
@@ -1128,6 +1121,36 @@ namespace MangaJaNaiConverterGui.ViewModels
                         this.RaisePropertyChanged(nameof(ActiveWorkflow));
                         Vm?.RaisePropertyChanged("Workflows");
                     });
+            });
+
+            this.WhenAnyValue(x => x.InputFilePath).Subscribe(x =>
+            {
+                if (string.IsNullOrWhiteSpace(OutputFolderPath))
+                {
+                    try
+                    {
+                        OutputFolderPath = Directory.GetParent(InputFilePath)?.ToString() ?? "";
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            });
+
+            this.WhenAnyValue(x => x.InputFolderPath).Subscribe(x =>
+            {
+                if (string.IsNullOrWhiteSpace(OutputFolderPath))
+                {
+                    try
+                    {
+                        OutputFolderPath = $"{InputFolderPath} mangajanai";
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
             });
         }
 
@@ -1431,6 +1454,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        [DataMember]
         public int DisplayDeviceWidth { 
             get 
             { 
@@ -1446,6 +1470,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 return 0;
             } 
         }
+
+        [DataMember]
         public int DisplayDeviceHeight
         {
             get
