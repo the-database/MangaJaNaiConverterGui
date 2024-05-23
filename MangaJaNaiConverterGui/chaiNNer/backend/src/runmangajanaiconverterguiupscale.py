@@ -310,7 +310,7 @@ def get_chain_for_image(image, target_scale, target_width, target_height, chains
             print("Matched Chain:", chain)
             return chain, is_grayscale, original_width, original_height
 
-    return None, None, None
+    return None, None, None, None
 
 
 def should_chain_activate_for_image(original_width, original_height, is_grayscale, target_scale, chain):

@@ -52,6 +52,22 @@
               "IsGrayscale": false,
               "IsColor": true,
               "MinScaleFactor": 0,
+              "MaxScaleFactor": 2,
+              "ModelFilePath": "2x_IllustrationJaNai_V1_ESRGAN_120k.pth",
+              "ModelTileSize": "Auto (Estimate)",
+              "AutoAdjustLevels": false,
+              "ResizeHeightBeforeUpscale": 0,
+              "ResizeWidthBeforeUpscale": 0,
+              "ResizeFactorBeforeUpscale": 100.0
+            },
+            {
+              "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+              "ChainNumber": "2",
+              "MinResolution": "0x0",
+              "MaxResolution": "0x0",
+              "IsGrayscale": false,
+              "IsColor": true,
+              "MinScaleFactor": 2,
               "MaxScaleFactor": 0,
               "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
               "ModelTileSize": "Auto (Estimate)",
@@ -62,7 +78,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "2",
+              "ChainNumber": "3",
               "MinResolution": "0x0",
               "MaxResolution": "0x1250",
               "IsGrayscale": true,
@@ -78,7 +94,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "3",
+              "ChainNumber": "4",
               "MinResolution": "0x0",
               "MaxResolution": "0x1250",
               "IsGrayscale": true,
@@ -94,7 +110,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "4",
+              "ChainNumber": "5",
               "MinResolution": "0x1251",
               "MaxResolution": "0x1350",
               "IsGrayscale": true,
@@ -110,7 +126,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "5",
+              "ChainNumber": "6",
               "MinResolution": "0x1251",
               "MaxResolution": "0x1350",
               "IsGrayscale": true,
@@ -126,7 +142,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "6",
+              "ChainNumber": "7",
               "MinResolution": "0x1351",
               "MaxResolution": "0x1450",
               "IsGrayscale": true,
@@ -142,7 +158,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "7",
+              "ChainNumber": "8",
               "MinResolution": "0x1351",
               "MaxResolution": "0x1450",
               "IsGrayscale": true,
@@ -158,7 +174,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "8",
+              "ChainNumber": "9",
               "MinResolution": "0x1451",
               "MaxResolution": "0x1550",
               "IsGrayscale": true,
@@ -174,7 +190,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "9",
+              "ChainNumber": "10",
               "MinResolution": "0x1451",
               "MaxResolution": "0x1550",
               "IsGrayscale": true,
@@ -190,7 +206,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "10",
+              "ChainNumber": "11",
               "MinResolution": "0x1551",
               "MaxResolution": "0x1760",
               "IsGrayscale": true,
@@ -206,7 +222,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "11",
+              "ChainNumber": "12",
               "MinResolution": "0x1551",
               "MaxResolution": "0x1760",
               "IsGrayscale": true,
@@ -222,7 +238,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "12",
+              "ChainNumber": "13",
               "MinResolution": "0x1761",
               "MaxResolution": "0x1984",
               "IsGrayscale": true,
@@ -238,7 +254,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "13",
+              "ChainNumber": "14",
               "MinResolution": "0x1761",
               "MaxResolution": "0x1984",
               "IsGrayscale": true,
@@ -254,7 +270,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "14",
+              "ChainNumber": "15",
               "MinResolution": "0x1985",
               "MaxResolution": "0x0",
               "IsGrayscale": true,
@@ -270,7 +286,7 @@
             },
             {
               "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
-              "ChainNumber": "15",
+              "ChainNumber": "16",
               "MinResolution": "0x1985",
               "MaxResolution": "0x0",
               "IsGrayscale": true,
