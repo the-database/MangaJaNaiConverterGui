@@ -16,6 +16,8 @@ First, please ensure that you are running the latest NVIDIA drivers. To avoid ma
 
 ![image](https://github.com/the-database/MangaJaNaiConverterGui/assets/25811902/3ad7392e-0de1-4eea-be59-a7b26935f08a)
 
+### For Linux users
+Check out [this README](MangaJaNaiConverterGui/chaiNNer/backend/src/README.md)
 
 
 ## Resources
