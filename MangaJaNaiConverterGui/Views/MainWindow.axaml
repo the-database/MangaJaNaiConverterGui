@@ -677,7 +677,7 @@
     </Grid>
 
     <Grid IsVisible="{Binding IsExtractingBackend}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Performing first time setup. This may take several minutes...</TextBlock>
+      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Setting up Python backend...</TextBlock>
     </Grid>
   </Grid>
 

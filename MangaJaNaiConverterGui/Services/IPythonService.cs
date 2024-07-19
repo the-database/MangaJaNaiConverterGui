@@ -11,5 +11,7 @@ namespace MangaJaNaiConverterGui.Services
         bool IsPythonInstalled();
         Task InstallPython();
         string PythonPath { get; }
+
+        Task<string[]> InstallUpdatePythonDependencies();
     }
 }

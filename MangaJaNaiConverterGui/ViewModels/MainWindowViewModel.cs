@@ -881,8 +881,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
                 else
                 {
-                    IsExtractingBackend = false;
+                    await _pythonService.InstallUpdatePythonDependencies();
                 }
+
+                IsExtractingBackend = false;
             });
 
             DeviceList = await InitializeDeviceList();

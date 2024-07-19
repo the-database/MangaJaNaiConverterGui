@@ -67,7 +67,7 @@ namespace MangaJaNaiConverterGui.Services
             AddPythonPth(Path.GetDirectoryName(PythonPath));
 
             // Install dependencies
-            await InstallPythonDependencies();
+            await InstallUpdatePythonDependencies();
         }
 
         class PythonDownload
@@ -102,13 +102,30 @@ namespace MangaJaNaiConverterGui.Services
                 outputFile.WriteLine(line);            
         }
 
-        private async Task<string[]> InstallPythonDependencies()
+        public async Task<string[]> InstallUpdatePythonDependencies()
         {
+            string[] dependencies = { 
+                "spandrel>=0.3.4",
+                //"spandrel_extra_arches>=0.1.1",
+                //"opencv-python>=4.10.0.84",
+                //"pillow-avif-plugin>=1.4.6",
+                //"rarfile>=4.2",
+                //"multiprocess>=0.70.16",
+                //"chainner_ext>=0.3.10",
+                //"sanic>=24.6.0",
+                //"pynvml>=11.5.3",
+                //"psutil>=6.0.0" 
+            };
+
+            //var cmd = $@"{PythonPath} -m pip install torch>=2.3.1 torchvision>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
+            var cmd = $@"{PythonPath} -m pip install {string.Join(" ", dependencies)}";
+            Debug.WriteLine(cmd);
+
             // Create a new process to run the CMD command
             using (var process = new Process())
             {
                 process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C {PythonPath} -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install spandrel opencv-python pillow-avif-plugin rarfile multiprocess chainner_ext";
+                process.StartInfo.Arguments = @$"/C {cmd}";
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
@@ -126,9 +143,7 @@ namespace MangaJaNaiConverterGui.Services
                     {
                         if (!string.IsNullOrEmpty(e.Data))
                         {
-                            //outputFile.WriteLine(e.Data); // Write the output to the log file
-                            //ConsoleQueueEnqueue(e.Data);
-                            Debug.WriteLine(e.Data);
+                            Debug.WriteLine($"STDERR = {e.Data}");
                         }
                     };
 
@@ -137,7 +152,7 @@ namespace MangaJaNaiConverterGui.Services
                         if (!string.IsNullOrEmpty(e.Data))
                         {
                             result = e.Data;
-                            Debug.WriteLine(e.Data);
+                            Debug.WriteLine($"STDOUT = {e.Data}");
                         }
                     };
 
@@ -148,7 +163,7 @@ namespace MangaJaNaiConverterGui.Services
 
                     if (!string.IsNullOrEmpty(result))
                     {
-                        Debug.WriteLine(result);
+                        Debug.WriteLine($"Result = {result}");
                         //return JsonConvert.DeserializeObject<string[]>(result);
                     }
                 }
