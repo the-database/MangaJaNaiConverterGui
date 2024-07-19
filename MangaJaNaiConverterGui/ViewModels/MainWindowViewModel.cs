@@ -873,15 +873,11 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                     await _pythonService.InstallPython();
 
-                    //using ArchiveFile archiveFile = new(backendArchivePath);
-                    //archiveFile.Extract(".");
-                    //archiveFile.Dispose();
-                    //File.Delete(backendArchivePath);
                     IsExtractingBackend = false;
                 }
                 else
                 {
-                    await _pythonService.InstallUpdatePythonDependencies();
+                    //await _pythonService.InstallUpdatePythonDependencies();
                 }
 
                 IsExtractingBackend = false;

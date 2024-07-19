@@ -38,24 +38,6 @@ namespace MangaJaNaiConverterGui
                 File.Copy(Program.AppStateFilename, Program.AppStatePath);
             }
 
-            //Locator.CurrentMutable.RegisterConstant<IPythonService>(new PythonService());
-            //Locator.CurrentMutable.RegisterConstant<IUpdateManagerService>(new UpdateManagerService());
-
-            //// Create the Autofac container builder
-            //var containerBuilder = new ContainerBuilder();
-
-            //// Register your dependencies
-            //containerBuilder.AddOctane();
-
-            //// Build the container
-            //var engineContainer = containerBuilder.Build();
-
-            //// Register the container with Splat
-            //var autofacResolver = new AutofacDependencyResolver(engineContainer);
-            //Locator.CurrentMutable.InitializeSplat();
-            //Locator.CurrentMutable.InitializeReactiveUI();
-            //Locator.SetLocator(autofacResolver);
-
             // Create a new Autofac container builder.
             var builder = new ContainerBuilder();
             builder.AddOctane();
