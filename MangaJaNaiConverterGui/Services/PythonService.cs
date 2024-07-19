@@ -105,20 +105,19 @@ namespace MangaJaNaiConverterGui.Services
         public async Task<string[]> InstallUpdatePythonDependencies()
         {
             string[] dependencies = { 
-                "spandrel>=0.3.4",
-                //"spandrel_extra_arches>=0.1.1",
-                //"opencv-python>=4.10.0.84",
-                //"pillow-avif-plugin>=1.4.6",
-                //"rarfile>=4.2",
-                //"multiprocess>=0.70.16",
-                //"chainner_ext>=0.3.10",
-                //"sanic>=24.6.0",
-                //"pynvml>=11.5.3",
-                //"psutil>=6.0.0" 
+                "spandrel^>=0.3.4",
+                "spandrel_extra_arches^>=0.1.1",
+                "opencv-python^>=4.10.0.84",
+                "pillow-avif-plugin^>=1.4.6",
+                "rarfile^>=4.2",
+                "multiprocess^>=0.70.16",
+                "chainner_ext^>=0.3.10",
+                "sanic^>=24.6.0",
+                "pynvml^>=11.5.3",
+                "psutil^>=6.0.0"
             };
 
-            //var cmd = $@"{PythonPath} -m pip install torch>=2.3.1 torchvision>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
-            var cmd = $@"{PythonPath} -m pip install {string.Join(" ", dependencies)}";
+            var cmd = $@"{PythonPath} -m pip install torch^>=2.3.1 torchvision^>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
             Debug.WriteLine(cmd);
 
             // Create a new process to run the CMD command
