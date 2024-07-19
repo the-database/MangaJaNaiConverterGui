@@ -464,9 +464,7 @@ def _conv2d_wrapper(
     out_channels, in_channels_per_group, kh, kw = _get_weight_shape(w)
 
     # Flip weight if requested.
-    if (
-        not flip_weight
-    ):  # conv2d() actually performs correlation (flip_weight=True) not convolution (flip_weight=False).
+    if not flip_weight:  # conv2d() actually performs correlation (flip_weight=True) not convolution (flip_weight=False).
         w = w.flip([2, 3])
 
     # Workaround performance pitfall in cuDNN 8.0.5, triggered when using
