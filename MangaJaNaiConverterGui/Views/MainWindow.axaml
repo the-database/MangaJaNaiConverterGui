@@ -35,10 +35,10 @@
     <Style Selector="Button.active">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor }" />
       <Style Selector="^:pointerover">
-        <!--<Style Selector="^ /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
           <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
           <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
-        </Style>-->
+        </Style>
       </Style>
     </Style>
   </Window.Styles>
@@ -605,7 +605,7 @@
                     <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                       <TextBlock Text="Current Version" VerticalAlignment="Center"></TextBlock>
                       <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0"></TextBlock>
-                      <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/AnimeJaNaiConverterGui/releases"/>
+                      <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="10,10,0,10">

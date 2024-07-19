@@ -9,6 +9,13 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Reactive;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using MangaJaNaiConverterGui.Extensions;
+using Splat;
+using MangaJaNaiConverterGui.Services;
+using Autofac;
+using Splat.Autofac;
+using OctaneEngineCore;
 
 namespace MangaJaNaiConverterGui
 {
@@ -31,10 +38,52 @@ namespace MangaJaNaiConverterGui
                 File.Copy(Program.AppStateFilename, Program.AppStatePath);
             }
 
+            //Locator.CurrentMutable.RegisterConstant<IPythonService>(new PythonService());
+            //Locator.CurrentMutable.RegisterConstant<IUpdateManagerService>(new UpdateManagerService());
+
+            //// Create the Autofac container builder
+            //var containerBuilder = new ContainerBuilder();
+
+            //// Register your dependencies
+            //containerBuilder.AddOctane();
+
+            //// Build the container
+            //var engineContainer = containerBuilder.Build();
+
+            //// Register the container with Splat
+            //var autofacResolver = new AutofacDependencyResolver(engineContainer);
+            //Locator.CurrentMutable.InitializeSplat();
+            //Locator.CurrentMutable.InitializeReactiveUI();
+            //Locator.SetLocator(autofacResolver);
+
+            // Create a new Autofac container builder.
+            var builder = new ContainerBuilder();
+            builder.AddOctane();
+            builder.RegisterType<MainWindowViewModel>();//.AsSelf();
+            builder.RegisterType<PythonService>().As<IPythonService>();
+            builder.RegisterType<UpdateManagerService>().As<IUpdateManagerService>();
+            // etc.
+
+            // Register the Adapter to Splat.
+            // Creates and sets the Autofac resolver as the Locator.
+            var autofacResolver = builder.UseAutofacDependencyResolver();
+
+            // Register the resolver in Autofac so it can be later resolved.
+            builder.RegisterInstance(autofacResolver);
+
+            // Initialize ReactiveUI components.
+            autofacResolver.InitializeReactiveUI();
+
+            var container = builder.Build();
+
+            autofacResolver.SetLifetimeScope(container);
+
+            //var vm = container.Resolve<MainWindowViewModel>();
+
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
             RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
             RxApp.SuspensionHost.SetupDefaultSuspendResume(Program.SuspensionDriver);
-            suspension.OnFrameworkInitializationCompleted();            
+            suspension.OnFrameworkInitializationCompleted();
 
             // Load the saved view model state.
             var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();

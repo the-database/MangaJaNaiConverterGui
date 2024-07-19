@@ -6,6 +6,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using ReactiveUI;
+using MangaJaNaiConverterGui.Drivers;
 
 namespace MangaJaNaiConverterGui
 {
