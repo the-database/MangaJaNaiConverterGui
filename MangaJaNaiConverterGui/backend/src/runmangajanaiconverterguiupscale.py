@@ -16,6 +16,10 @@ from typing import Callable
 from multiprocess import Queue, Process
 from chainner_ext import resize, ResizeFilter
 
+sys.path.append(
+    os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
+)
+
 from packages.chaiNNer_pytorch.pytorch.io.load_model import load_model_node
 from api import (
     NodeContext,
