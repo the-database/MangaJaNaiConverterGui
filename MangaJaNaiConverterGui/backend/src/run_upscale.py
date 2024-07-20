@@ -1,8 +1,9 @@
 import sys
 import json
 import os
+import platform
 from pathlib import Path
-from ctypes import windll
+import ctypes
 import io
 import cv2
 import pillow_avif  # noqa: F401
@@ -13,7 +14,7 @@ import zipfile
 import rarfile
 import time
 from typing import Callable
-from multiprocess import Queue, Process
+from multiprocess import Queue, Process, set_start_method
 from chainner_ext import resize, ResizeFilter
 
 sys.path.append(
@@ -140,7 +141,7 @@ def image_resize(image, new_size, is_grayscale):
 
 
 def get_system_codepage():
-    return windll.kernel32.GetConsoleOutputCP()
+    return None if is_linux else ctypes.windll.kernel32.GetConsoleOutputCP()
 
 
 def enhance_contrast(image):
@@ -726,9 +727,7 @@ def preprocess_worker_archive_file(
                     else:
                         image = normalize(image)
 
-                    model_abs_path = os.path.abspath(
-                        os.path.join("./models", chain["ModelFilePath"])
-                    )
+                    model_abs_path = get_model_abs_path(chain['ModelFilePath'])
 
                     if model_abs_path in loaded_models:
                         model = loaded_models[model_abs_path]
@@ -887,9 +886,7 @@ def preprocess_worker_folder(
                         else:
                             image = normalize(image)
 
-                        model_abs_path = os.path.abspath(
-                            os.path.join("./models", chain["ModelFilePath"])
-                        )
+                        model_abs_path = get_model_abs_path(chain['ModelFilePath'])
 
                         if model_abs_path in loaded_models:
                             model = loaded_models[model_abs_path]
@@ -1018,9 +1015,7 @@ def preprocess_worker_image(
             else:
                 image = normalize(image)
 
-            model_abs_path = os.path.abspath(
-                os.path.join("./models", chain["ModelFilePath"])
-            )
+            model_abs_path = get_model_abs_path(chain['ModelFilePath'])
 
             if model_abs_path in loaded_models:
                 model = loaded_models[model_abs_path]
@@ -1469,6 +1464,26 @@ def upscale_folder(
     postprocess_process.join()
 
 
+def get_model_abs_path(chain_model_file_path):
+    relative_path = os.path.join("../../models", chain_model_file_path) if is_linux \
+        else os.path.join("./models", chain_model_file_path)
+
+    return os.path.abspath(relative_path)
+
+def get_gamma_icc_profile():
+    profile_path = '../../ImageMagick/Custom Gray Gamma 1.0.icc' if is_linux else r'.\ImageMagick\Custom Gray Gamma 1.0.icc'
+    return ImageCms.getOpenProfile(profile_path)
+
+def get_dot20_icc_profile():
+    profile_path = '../../ImageMagick/Dot Gain 20%.icc' if is_linux else r'.\ImageMagick\Dot Gain 20%.icc'
+    return ImageCms.getOpenProfile(profile_path)
+
+
+is_linux = platform.system() == "Linux"
+if is_linux:
+    set_start_method('spawn', force=True)
+
+
 sys.stdout.reconfigure(encoding="utf-8")
 parser = argparse.ArgumentParser()
 
@@ -1502,8 +1517,8 @@ settings = SettingsParser(
 
 context = _ExecutorNodeContext(ProgressController(), settings, None)
 
-gamma1icc = ImageCms.getOpenProfile(r".\ImageMagick\Custom Gray Gamma 1.0.icc")
-dotgain20icc = ImageCms.getOpenProfile(r".\ImageMagick\Dot Gain 20%.icc")
+gamma1icc = get_gamma_icc_profile()
+dotgain20icc = get_dot20_icc_profile()
 
 dotgain20togamma1transform = ImageCms.buildTransformFromOpenProfiles(
     dotgain20icc, gamma1icc, "L", "L"
