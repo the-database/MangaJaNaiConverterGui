@@ -40,8 +40,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null)
         {
-            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>();
-            _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>();
+            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
+            _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
 
             var g1 = this.WhenAnyValue
             (
@@ -237,7 +237,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        private string _backendSetupMainStatus;
+        private string _backendSetupMainStatus = string.Empty;
         public string BackendSetupMainStatus
         {
             get => this._backendSetupMainStatus;
@@ -1837,7 +1837,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public UpscaleChain(IPythonService? pythonService = null)
         {
-            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>();
+            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
 
             this.WhenAnyValue(x => x.Vm).Subscribe(x =>
             {

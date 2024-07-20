@@ -31,7 +31,7 @@ namespace MangaJaNaiConverterGui.Drivers
         public IObservable<object> LoadState()
         {
             var lines = File.ReadAllText(_file);
-            var state = JsonConvert.DeserializeObject<object>(lines, Settings);
+            var state = JsonConvert.DeserializeObject<object>(lines, Settings)!;
             return Observable.Return(state);
         }
 
