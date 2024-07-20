@@ -12,6 +12,8 @@ namespace MangaJaNaiConverterGui
 {
     internal class Program
     {
+        public static bool WasFirstRun { get; private set; }
+
         public static readonly string AppStateFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "MangaJaNaiConverterGui"
@@ -41,6 +43,10 @@ namespace MangaJaNaiConverterGui
                     {
                         Directory.Delete(modelsDir, true);
                     }
+                })
+                .WithFirstRun(_ =>
+                {
+                    WasFirstRun = true;
                 })
                 .Run();
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

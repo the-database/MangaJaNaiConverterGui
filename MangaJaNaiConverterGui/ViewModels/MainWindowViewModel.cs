@@ -932,9 +932,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
                 else
                 {
-                    // TODO
-                    //BackendSetupMainStatus = "Checking Python Dependencies...";
-                    //await InstallUpdatePythonDependencies();
+                    if (Program.WasFirstRun)
+                    {
+                        BackendSetupMainStatus = "Checking Python Dependencies...";
+                        await InstallUpdatePythonDependencies();
+                    }
                 }
 
                 if (!_pythonService.AreModelsInstalled())
