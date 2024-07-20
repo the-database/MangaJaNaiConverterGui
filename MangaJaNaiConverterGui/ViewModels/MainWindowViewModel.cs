@@ -99,6 +99,8 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
 
         public bool IsInstalled => _updateManagerService.IsInstalled;
+        [DataMember]
+        public string ModelsDirectory => _pythonService.ModelsDirectory;
 
         private bool _showCheckUpdateButton = true;
         public bool ShowCheckUpdateButton

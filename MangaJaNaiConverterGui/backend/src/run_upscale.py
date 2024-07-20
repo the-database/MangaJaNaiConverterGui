@@ -17,9 +17,7 @@ from typing import Callable
 from multiprocess import Queue, Process, set_start_method
 from chainner_ext import resize, ResizeFilter
 
-sys.path.append(
-    os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
-)
+sys.path.append(os.path.normpath(os.path.dirname(os.path.abspath(__file__))))
 
 from packages.chaiNNer_pytorch.pytorch.io.load_model import load_model_node
 from api import (
@@ -727,7 +725,7 @@ def preprocess_worker_archive_file(
                     else:
                         image = normalize(image)
 
-                    model_abs_path = get_model_abs_path(chain['ModelFilePath'])
+                    model_abs_path = get_model_abs_path(chain["ModelFilePath"])
 
                     if model_abs_path in loaded_models:
                         model = loaded_models[model_abs_path]
@@ -886,7 +884,7 @@ def preprocess_worker_folder(
                         else:
                             image = normalize(image)
 
-                        model_abs_path = get_model_abs_path(chain['ModelFilePath'])
+                        model_abs_path = get_model_abs_path(chain["ModelFilePath"])
 
                         if model_abs_path in loaded_models:
                             model = loaded_models[model_abs_path]
@@ -1015,8 +1013,12 @@ def preprocess_worker_image(
             else:
                 image = normalize(image)
 
-            model_abs_path = get_model_abs_path(chain['ModelFilePath'])
+            model_abs_path = get_model_abs_path(chain["ModelFilePath"])
 
+            if not os.path.exists(model_abs_path):
+                raise FileNotFoundError(model_abs_path)
+
+            print("model_abs_path", model_abs_path, os.path.exists(model_abs_path))
             if model_abs_path in loaded_models:
                 model = loaded_models[model_abs_path]
 
@@ -1464,24 +1466,35 @@ def upscale_folder(
     postprocess_process.join()
 
 
-def get_model_abs_path(chain_model_file_path):
-    relative_path = os.path.join("../../models", chain_model_file_path) if is_linux \
-        else os.path.join("./models", chain_model_file_path)
+current_file_directory = os.path.dirname(os.path.abspath(__file__))
 
+
+def get_model_abs_path(chain_model_file_path):
+    relative_path = os.path.join(
+        current_file_directory, "../models", chain_model_file_path
+    )
     return os.path.abspath(relative_path)
 
+
 def get_gamma_icc_profile():
-    profile_path = '../../ImageMagick/Custom Gray Gamma 1.0.icc' if is_linux else r'.\ImageMagick\Custom Gray Gamma 1.0.icc'
+    profile_path = os.path.join(
+        current_file_directory, "../ImageMagick/Custom Gray Gamma 1.0.icc"
+    )
+    print(profile_path, flush=True)
     return ImageCms.getOpenProfile(profile_path)
 
+
 def get_dot20_icc_profile():
-    profile_path = '../../ImageMagick/Dot Gain 20%.icc' if is_linux else r'.\ImageMagick\Dot Gain 20%.icc'
+    profile_path = os.path.join(
+        current_file_directory, "../ImageMagick/Dot Gain 20%.icc"
+    )
+    print(profile_path, flush=True)
     return ImageCms.getOpenProfile(profile_path)
 
 
 is_linux = platform.system() == "Linux"
 if is_linux:
-    set_start_method('spawn', force=True)
+    set_start_method("spawn", force=True)
 
 
 sys.stdout.reconfigure(encoding="utf-8")
