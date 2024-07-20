@@ -9,9 +9,10 @@ namespace MangaJaNaiConverterGui.Services
     public interface IPythonService
     {
         bool IsPythonInstalled();
-        Task InstallPython();
+        string PythonDirectory { get; }
         string PythonPath { get; }
-
-        Task<string[]> InstallUpdatePythonDependencies();
+        string InstallUpdatePythonDependenciesCommand { get; }
+        void ExtractTgz(string gzArchiveName, string destFolder);
+        void AddPythonPth(string destFolder);
     }
 }

@@ -21,17 +21,17 @@ namespace MangaJaNaiConverterGui.Services
         private readonly IUpdateManagerService _updateManagerService;
         private readonly IEngine _engine;
 
-        private static readonly Dictionary<string, PythonDownload> DOWNLOADS = new ()
+        public static readonly Dictionary<string, PythonDownload> PYTHON_DOWNLOADS = new()
         {
-            { 
-                "win32", 
-                new PythonDownload 
-                { 
-                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20240415/cpython-3.11.9+20240415-x86_64-pc-windows-msvc-shared-install_only.tar.gz", 
-                    Path = "python/python.exe", 
+            {
+                "win32",
+                new PythonDownload
+                {
+                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20240415/cpython-3.11.9+20240415-x86_64-pc-windows-msvc-shared-install_only.tar.gz",
+                    Path = "python/python.exe",
                     Version = "3.11.9",
                     Filename = "Python.tar.gz"
-                } 
+                }
             },
         };
 
@@ -42,7 +42,7 @@ namespace MangaJaNaiConverterGui.Services
         }
 
         public string PythonDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\python") : Path.GetFullPath(@".\backend\python");
-        public string PythonPath => Path.Join(PythonDirectory, DOWNLOADS["win32"].Path);
+        public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
         public bool IsPythonInstalled()
         {
@@ -52,13 +52,13 @@ namespace MangaJaNaiConverterGui.Services
         public async Task InstallPython()
         {
             // Download Python tgz
-            var download = DOWNLOADS["win32"];
+            var download = PYTHON_DOWNLOADS["win32"];
             var targetPath = Path.Join(PythonDirectory, download.Filename);
             Directory.CreateDirectory(PythonDirectory);
             _engine.DownloadFile(download.Url, targetPath, null, null).Wait();
     
             // Extract Python tgz
-            ExtractTGZ(targetPath, PythonDirectory);
+            ExtractTgz(targetPath, PythonDirectory);
 
             // Delete Python tgz
             File.Delete(targetPath);
@@ -67,10 +67,10 @@ namespace MangaJaNaiConverterGui.Services
             AddPythonPth(Path.GetDirectoryName(PythonPath));
 
             // Install dependencies
-            await InstallUpdatePythonDependencies();
+            //await InstallUpdatePythonDependencies(); // TODO
         }
 
-        class PythonDownload
+        public class PythonDownload
         {
             public string Url { get; set; }
             public string Version { get; set; }
@@ -78,7 +78,7 @@ namespace MangaJaNaiConverterGui.Services
             public string Filename { get; set; }
         }
 
-        private static void ExtractTGZ(string gzArchiveName, string destFolder)
+        public void ExtractTgz(string gzArchiveName, string destFolder)
         {
             Stream inStream = File.OpenRead(gzArchiveName);
             Stream gzipStream = new GZipInputStream(inStream);
@@ -91,7 +91,7 @@ namespace MangaJaNaiConverterGui.Services
             inStream.Close();
         }
 
-        private static void AddPythonPth(string destFolder)
+        public void AddPythonPth(string destFolder)
         {
             string[] lines = { "python311.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
             var filename = "python311._pth";
@@ -102,74 +102,25 @@ namespace MangaJaNaiConverterGui.Services
                 outputFile.WriteLine(line);            
         }
 
-        public async Task<string[]> InstallUpdatePythonDependencies()
+        public string InstallUpdatePythonDependenciesCommand 
         {
-            string[] dependencies = { 
-                "spandrel^>=0.3.4",
-                "spandrel_extra_arches^>=0.1.1",
-                "opencv-python^>=4.10.0.84",
-                "pillow-avif-plugin^>=1.4.6",
-                "rarfile^>=4.2",
-                "multiprocess^>=0.70.16",
-                "chainner_ext^>=0.3.10",
-                "sanic^>=24.6.0",
-                "pynvml^>=11.5.3",
-                "psutil^>=6.0.0"
-            };
-
-            var cmd = $@"{PythonPath} -m pip install torch^>=2.3.1 torchvision^>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
-            Debug.WriteLine(cmd);
-
-            // Create a new process to run the CMD command
-            using (var process = new Process())
+            get
             {
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C {cmd}";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+                string[] dependencies = {
+                    "spandrel^>=0.3.4",
+                    "spandrel_extra_arches^>=0.1.1",
+                    "opencv-python^>=4.10.0.84",
+                    "pillow-avif-plugin^>=1.4.6",
+                    "rarfile^>=4.2",
+                    "multiprocess^>=0.70.16",
+                    "chainner_ext^>=0.3.10",
+                    "sanic^>=24.6.0",
+                    "pynvml^>=11.5.3",
+                    "psutil^>=6.0.0"
+                };
 
-                var result = string.Empty;
-
-                // Create a StreamWriter to write the output to a log file
-                try
-                {
-                    //using var outputFile = new StreamWriter("error.log", append: true);
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            Debug.WriteLine($"STDERR = {e.Data}");
-                        }
-                    };
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            result = e.Data;
-                            Debug.WriteLine($"STDOUT = {e.Data}");
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
-                    await process.WaitForExitAsync();
-
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        Debug.WriteLine($"Result = {result}");
-                        //return JsonConvert.DeserializeObject<string[]>(result);
-                    }
-                }
-                catch (IOException) { }
+                return $@"{PythonPath} -m pip install torch^>=2.3.1 torchvision^>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
             }
-
-            return [];
         }
     }
 }

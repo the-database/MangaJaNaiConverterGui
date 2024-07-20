@@ -3,6 +3,8 @@ using Avalonia.Threading;
 using MangaJaNaiConverterGui.Drivers;
 using MangaJaNaiConverterGui.Services;
 using Newtonsoft.Json;
+using OctaneEngine;
+using OctaneEngineCore;
 using ReactiveUI;
 using Splat;
 using System;
@@ -36,11 +38,13 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private readonly IPythonService _pythonService;
         private readonly IUpdateManagerService _updateManagerService;
+        private readonly IEngine _engine;
 
-        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null)
+        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null, IEngine? engine = null)
         {
             _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>();
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>();
+            _engine = engine ?? Locator.Current.GetService<IEngine>();
 
             var g1 = this.WhenAnyValue
             (
@@ -236,6 +240,31 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private string _backendSetupMainStatus;
+        public string BackendSetupMainStatus
+        {
+            get => this._backendSetupMainStatus;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendSetupMainStatus, value);
+            }
+        }
+
+        public string BackendSetupSubStatusText => string.Join("\n", BackendSetupSubStatusQueue);
+
+        private static readonly int BACKEND_SETUP_SUB_STATUS_QUEUE_CAPACITY = 10;
+
+        private ConcurrentQueue<string> _backendSetupSubStatusQueue = new();
+        public ConcurrentQueue<string> BackendSetupSubStatusQueue
+        {
+            get => this._backendSetupSubStatusQueue;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendSetupSubStatusQueue, value);
+                this.RaisePropertyChanged(nameof(BackendSetupSubStatusText));
+            }
+        }
+
         public string ConsoleText => string.Join("\n", ConsoleQueue);
 
         private static readonly int CONSOLE_QUEUE_CAPACITY = 1000;
@@ -269,6 +298,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaisePropertyChanged(nameof(ShowMainForm));
             }
         }
+
+        public string PythonPath => _pythonService.PythonPath;
 
         private bool _isExtractingBackend = true;
         public bool IsExtractingBackend
@@ -840,6 +871,16 @@ namespace MangaJaNaiConverterGui.ViewModels
             this.RaisePropertyChanged(nameof(ConsoleText));
         }
 
+        private void BackendSetupSubStatusQueueEnqueue(string value)
+        {
+            while (BackendSetupSubStatusQueue.Count > BACKEND_SETUP_SUB_STATUS_QUEUE_CAPACITY)
+            {
+                BackendSetupSubStatusQueue.TryDequeue(out var _);
+            }
+            BackendSetupSubStatusQueue.Enqueue(value);
+            this.RaisePropertyChanged(nameof(BackendSetupSubStatusText));
+        }
+
         public void ReadWorkflowFileToCurrentWorkflow(string fullPath)
         {
             if (!File.Exists(fullPath))
@@ -871,7 +912,26 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     IsExtractingBackend = true;
 
-                    await _pythonService.InstallPython();
+                    // Download Python tgz
+                    BackendSetupMainStatus = "Downloading Python...";
+                    var download = PythonService.PYTHON_DOWNLOADS["win32"];
+                    var targetPath = Path.Join(_pythonService.PythonDirectory, download.Filename);
+                    Directory.CreateDirectory(_pythonService.PythonDirectory);
+                    _engine.DownloadFile(download.Url, targetPath, null, null).Wait();
+
+                    // Extract Python tgz
+                    BackendSetupMainStatus = "Extracting Python...";
+                    //await _pythonService.InstallPython();
+                    _pythonService.ExtractTgz(targetPath, _pythonService.PythonDirectory);
+                    File.Delete(targetPath);
+
+                    var pthDirectory = Path.GetDirectoryName(_pythonService.PythonDirectory) ?? throw new ArgumentNullException("pthDirectory");
+
+                    _pythonService.AddPythonPth(pthDirectory);
+
+                    // Install Python Dependencies
+                    BackendSetupMainStatus = "Installing Python Dependencies...";
+                    await InstallUpdatePythonDependencies();
 
                     IsExtractingBackend = false;
                 }
@@ -889,6 +949,59 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 UseCpu = true;
             }
+        }
+
+        public async Task<string[]> InstallUpdatePythonDependencies()
+        {
+            var cmd = _pythonService.InstallUpdatePythonDependenciesCommand;
+            Debug.WriteLine(cmd);
+
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = @$"/C {cmd}";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+
+                var result = string.Empty;
+
+                // Create a StreamWriter to write the output to a log file
+                try
+                {
+                    //using var outputFile = new StreamWriter("error.log", append: true);
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            //Debug.WriteLine($"STDERR = {e.Data}");
+                            BackendSetupSubStatusQueueEnqueue(e.Data);
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            result = e.Data;
+                            //Debug.WriteLine($"STDOUT = {e.Data}");
+                            BackendSetupSubStatusQueueEnqueue(e.Data);
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+                }
+                catch (IOException) { }
+            }
+
+            return [];
         }
 
         public void CheckAndDoBackup()

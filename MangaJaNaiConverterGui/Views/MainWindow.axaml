@@ -663,6 +663,18 @@
               </StackPanel>
             </Border>
 
+            <!-- Python Environment -->
+            <DockPanel Margin="0,10,0,0">
+              <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Python Environment"></TextBlock>
+            </DockPanel>
+            <Border Classes="border">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                  <SelectableTextBlock FontFamily="Consolas" Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding PythonPath}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+
             <Border Classes="border">
               <ToggleButton DockPanel.Dock="Right" Margin="10,10,0,10" IsChecked="{Binding !RequestShowAppSettings}">
                 <StackPanel Orientation="Horizontal">
@@ -677,7 +689,8 @@
     </Grid>
 
     <Grid IsVisible="{Binding IsExtractingBackend}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Setting up Python backend...</TextBlock>
+      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding BackendSetupMainStatus}" />
+      <TextBlock FontFamily="Consolas" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding BackendSetupSubStatusText}" />
     </Grid>
   </Grid>
 
