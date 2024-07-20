@@ -379,9 +379,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        private AvaloniaList<UpscaleWorkflow> _workflows;
+        private AvaloniaList<UpscaleWorkflow>? _workflows;
         [DataMember]
-        public AvaloniaList<UpscaleWorkflow> Workflows
+        public AvaloniaList<UpscaleWorkflow>? Workflows
         {
             get => _workflows;
             set => this.RaiseAndSetIfChanged(ref _workflows, value);
