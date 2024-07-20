@@ -443,8 +443,8 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:UpscaleChain">
                         <StackPanel>
-                          <TextBlock Margin="10,10,0,10" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
-                          <Border Classes="border" Margin="0,0,0,20" Background="#11888888">
+                          <TextBlock Margin="10,10,0,10" FontWeight="Bold" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
+                          <Border Classes="border" Margin="0,0,0,20">
                             <Grid>
                               <StackPanel Grid.Column="0">
                               <TextBlock Margin="10,10,0,5" Text="Activation Condition" />

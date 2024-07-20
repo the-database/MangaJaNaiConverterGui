@@ -1470,17 +1470,13 @@ current_file_directory = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_model_abs_path(chain_model_file_path):
-    relative_path = os.path.join(
-        current_file_directory, "../models", chain_model_file_path
-    )
-    return os.path.abspath(relative_path)
+    return os.path.abspath(os.path.join(models_directory, chain_model_file_path))
 
 
 def get_gamma_icc_profile():
     profile_path = os.path.join(
         current_file_directory, "../ImageMagick/Custom Gray Gamma 1.0.icc"
     )
-    print(profile_path, flush=True)
     return ImageCms.getOpenProfile(profile_path)
 
 
@@ -1488,7 +1484,6 @@ def get_dot20_icc_profile():
     profile_path = os.path.join(
         current_file_directory, "../ImageMagick/Dot Gain 20%.icc"
     )
-    print(profile_path, flush=True)
     return ImageCms.getOpenProfile(profile_path)
 
 
@@ -1508,6 +1503,7 @@ with open(args.settings, mode="r", encoding="utf-8") as f:
     settings = json.load(f)
 
 workflow = settings["Workflows"]["$values"][settings["SelectedWorkflowIndex"]]
+models_directory = settings["ModelsDirectory"]
 
 UPSCALE_SENTINEL = (None, None, None, None, None, None, None, None)
 POSTPROCESS_SENTINEL = (None, None, None, None, None, None)
@@ -1519,7 +1515,7 @@ ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS + RAR_EXTENSIONS
 loaded_models = {}
 system_codepage = get_system_codepage()
 
-settings = SettingsParser(
+settingsParser = SettingsParser(
     {
         "use_cpu": settings["UseCpu"],
         "use_fp16": settings["UseFp16"],
@@ -1528,7 +1524,7 @@ settings = SettingsParser(
     }
 )
 
-context = _ExecutorNodeContext(ProgressController(), settings, None)
+context = _ExecutorNodeContext(ProgressController(), settingsParser, None)
 
 gamma1icc = get_gamma_icc_profile()
 dotgain20icc = get_dot20_icc_profile()
