@@ -3,8 +3,6 @@ using Avalonia.Threading;
 using MangaJaNaiConverterGui.Drivers;
 using MangaJaNaiConverterGui.Services;
 using Newtonsoft.Json;
-using OctaneEngine;
-using OctaneEngineCore;
 using ReactiveUI;
 using Splat;
 using System;
@@ -22,6 +20,7 @@ using System.Threading.Tasks;
 using Velopack;
 using Velopack.Sources;
 using File = System.IO.File;
+using ICSharpCode.SharpZipLib.Core;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
@@ -38,13 +37,11 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private readonly IPythonService _pythonService;
         private readonly IUpdateManagerService _updateManagerService;
-        private readonly IEngine _engine;
 
-        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null, IEngine? engine = null)
+        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null)
         {
             _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>();
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>();
-            _engine = engine ?? Locator.Current.GetService<IEngine>();
 
             var g1 = this.WhenAnyValue
             (
@@ -908,20 +905,22 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             await Task.Run(async() =>
             {
+                IsExtractingBackend = true;
+
                 if (!_pythonService.IsPythonInstalled())
                 {
-                    IsExtractingBackend = true;
-
                     // Download Python tgz
                     BackendSetupMainStatus = "Downloading Python...";
                     var download = PythonService.PYTHON_DOWNLOADS["win32"];
                     var targetPath = Path.Join(_pythonService.PythonDirectory, download.Filename);
                     Directory.CreateDirectory(_pythonService.PythonDirectory);
-                    _engine.DownloadFile(download.Url, targetPath, null, null).Wait();
+                    await Downloader.DownloadFileAsync(download.Url, targetPath, (progress) =>
+                    {
+                        BackendSetupMainStatus = $"Downloading Python ({progress}%)...";
+                    });
 
                     // Extract Python tgz
                     BackendSetupMainStatus = "Extracting Python...";
-                    //await _pythonService.InstallPython();
                     _pythonService.ExtractTgz(targetPath, _pythonService.PythonDirectory);
                     File.Delete(targetPath);
 
@@ -932,13 +931,17 @@ namespace MangaJaNaiConverterGui.ViewModels
                     // Install Python Dependencies
                     BackendSetupMainStatus = "Installing Python Dependencies (this may take several minutes)...";
                     await InstallUpdatePythonDependencies();
-
-                    IsExtractingBackend = false;
                 }
                 else
                 {
-                    BackendSetupMainStatus = "Checking Python Dependencies...";
-                    await InstallUpdatePythonDependencies();
+                    // TODO
+                    //BackendSetupMainStatus = "Checking Python Dependencies...";
+                    //await InstallUpdatePythonDependencies();
+                }
+
+                if (!_pythonService.AreModelsInstalled())
+                {
+                    await DownloadModels();
                 }
 
                 IsExtractingBackend = false;
@@ -951,6 +954,41 @@ namespace MangaJaNaiConverterGui.ViewModels
                 UseCpu = true;
             }
         }
+
+        public async Task DownloadModels()
+        {
+            BackendSetupMainStatus = "Downloading MangaJaNai Models...";
+            var download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/MangaJaNai_V1_ModelsOnly.zip";
+            var targetPath = Path.Join(_pythonService.ModelsDirectory, "mangajanai.zip");
+            Directory.CreateDirectory(_pythonService.ModelsDirectory);
+            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
+            {
+                BackendSetupMainStatus = $"Downloading MangaJaNai Models ({progress}%)...";
+            });
+
+            BackendSetupMainStatus = "Extracting MangaJaNai Models...";
+            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
+            {
+                BackendSetupMainStatus = $"Extracting MangaJaNai Models ({progress}%)...";
+            });
+            File.Delete(targetPath);
+
+            BackendSetupMainStatus = "Downloading IllustrationJaNai Models...";
+            download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/IllustrationJaNai_V1_ModelsOnly.zip";
+            targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
+            await Downloader.DownloadFileAsync(download, targetPath, (progress) => {
+                BackendSetupMainStatus = $"Downloading IllustrationJaNai Models ({progress}%)...";
+            });
+
+            BackendSetupMainStatus = "Extracting IllustrationJaNai Models...";
+            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
+            {
+                BackendSetupMainStatus = $"Extracting IllustrationJaNai Models ({progress}%)...";
+            });
+            File.Delete(targetPath);
+        }
+
+
 
         public async Task<string[]> InstallUpdatePythonDependencies()
         {
@@ -1175,13 +1213,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
 
-#pragma warning disable CA1822 // Mark members as static
         public async void OpenModelsDirectory()
-#pragma warning restore CA1822 // Mark members as static
         {
             await Task.Run(() =>
             {
-                Process.Start("explorer.exe", UpscaleChain.PthPath);
+                Process.Start("explorer.exe", _pythonService.ModelsDirectory);
             });
         }
     }
@@ -1797,8 +1833,12 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class UpscaleChain : ReactiveObject
     {
-        public UpscaleChain()
+        IPythonService _pythonService;
+
+        public UpscaleChain(IPythonService? pythonService = null)
         {
+            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>();
+
             this.WhenAnyValue(x => x.Vm).Subscribe(x =>
             {
                 sub?.Dispose();
@@ -1928,33 +1968,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
-        public static string PthPath => Path.GetFullPath(@".\backend\models");
-
-        public static AvaloniaList<string> AllModels => GetAllModels();
-
-        public static AvaloniaList<string> GetAllModels()
-        {
-            try
-            {
-                var models = new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename =>
-    Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase) ||
-    Path.GetExtension(filename).Equals(".pt", StringComparison.CurrentCultureIgnoreCase) ||
-    Path.GetExtension(filename).Equals(".ckpt", StringComparison.CurrentCultureIgnoreCase) ||
-    Path.GetExtension(filename).Equals(".safetensors", StringComparison.CurrentCultureIgnoreCase)
-)
-    .Select(filename => Path.GetFileName(filename))
-    .Order().ToList());
-
-                Debug.WriteLine($"GetAllModels: {models.Count}");
-
-                return models;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                Debug.WriteLine($"GetAllModels: DirectoryNotFoundException");
-                return [];
-            }
-        }
+        public AvaloniaList<string> AllModels => _pythonService.AllModels;
 
         private string[] _tileSizes = [
     "Auto (Estimate)",

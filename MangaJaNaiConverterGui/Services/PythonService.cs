@@ -5,21 +5,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
-using OctaneEngineCore;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using ICSharpCode.SharpZipLib.Core;
+using static MangaJaNaiConverterGui.Services.Downloader;
+using Avalonia.Collections;
 
 namespace MangaJaNaiConverterGui.Services
 {
+    public delegate void ProgressChanged(double percentage);
+
     // https://github.com/chaiNNer-org/chaiNNer/blob/main/src/main/python/integratedPython.ts
     public class PythonService : IPythonService
     {
         private readonly IUpdateManagerService _updateManagerService;
-        private readonly IEngine _engine;
 
         public static readonly Dictionary<string, PythonDownload> PYTHON_DOWNLOADS = new()
         {
@@ -35,40 +38,18 @@ namespace MangaJaNaiConverterGui.Services
             },
         };
 
-        public PythonService(IUpdateManagerService? updateManagerService = null, IEngine? engine = null)
+        public PythonService(IUpdateManagerService? updateManagerService = null)
         {
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>();
-            _engine = engine ?? Locator.Current.GetService<IEngine>();
         }
+
+        public string ModelsDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\models") : Path.GetFullPath(@".\backend\models");
 
         public string PythonDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\python") : Path.GetFullPath(@".\backend\python");
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
-        public bool IsPythonInstalled()
-        {
-            return File.Exists(PythonPath);
-        }
-
-        public async Task InstallPython()
-        {
-            // Download Python tgz
-            var download = PYTHON_DOWNLOADS["win32"];
-            var targetPath = Path.Join(PythonDirectory, download.Filename);
-            Directory.CreateDirectory(PythonDirectory);
-            _engine.DownloadFile(download.Url, targetPath, null, null).Wait();
-    
-            // Extract Python tgz
-            ExtractTgz(targetPath, PythonDirectory);
-
-            // Delete Python tgz
-            File.Delete(targetPath);
-
-            // Add Python _pth file to Python install
-            AddPythonPth(Path.GetDirectoryName(PythonPath));
-
-            // Install dependencies
-            //await InstallUpdatePythonDependencies(); // TODO
-        }
+        public bool IsPythonInstalled() => File.Exists(PythonPath);
+        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0;
 
         public class PythonDownload
         {
@@ -89,6 +70,55 @@ namespace MangaJaNaiConverterGui.Services
 
             gzipStream.Close();
             inStream.Close();
+        }
+
+        public void ExtractZip(string archivePath, string outFolder, ProgressChanged progressChanged)
+        {
+
+            using (var fsInput = File.OpenRead(archivePath))
+            using (var zf = new ZipFile(fsInput))
+            {
+
+                for (var i = 0; i < zf.Count; i++)
+                {
+                    ZipEntry zipEntry = zf[i];
+
+                    if (!zipEntry.IsFile)
+                    {
+                        // Ignore directories
+                        continue;
+                    }
+                    String entryFileName = zipEntry.Name;
+                    // to remove the folder from the entry:
+                    //entryFileName = Path.GetFileName(entryFileName);
+                    // Optionally match entrynames against a selection list here
+                    // to skip as desired.
+                    // The unpacked length is available in the zipEntry.Size property.
+
+                    // Manipulate the output filename here as desired.
+                    var fullZipToPath = Path.Combine(outFolder, entryFileName);
+                    var directoryName = Path.GetDirectoryName(fullZipToPath);
+                    if (directoryName.Length > 0)
+                    {
+                        Directory.CreateDirectory(directoryName);
+                    }
+
+                    // 4K is optimum
+                    var buffer = new byte[4096];
+
+                    // Unzip file in buffered chunks. This is just as fast as unpacking
+                    // to a buffer the full size of the file, but does not waste memory.
+                    // The "using" will close the stream even if an exception occurs.
+                    using (var zipStream = zf.GetInputStream(zipEntry))
+                    using (Stream fsOutput = File.Create(fullZipToPath))
+                    {
+                        StreamUtils.Copy(zipStream, fsOutput, buffer);
+                    }
+
+                    var percentage = Math.Round((double)i / zf.Count * 100, 0);
+                    progressChanged?.Invoke(percentage);
+                }
+            }
         }
 
         public void AddPythonPth(string destFolder)
@@ -120,6 +150,41 @@ namespace MangaJaNaiConverterGui.Services
                 };
 
                 return $@"{PythonPath} -m pip install torch^>=2.3.1 torchvision^>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
+            }
+        }
+
+        private AvaloniaList<string>? _allModels;
+
+        public AvaloniaList<string> AllModels
+        {
+            get
+            {
+                if (_allModels == null)
+                {
+
+                    try
+                    {
+                        var models = new AvaloniaList<string>(Directory.GetFiles(ModelsDirectory).Where(filename =>
+                            Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase) ||
+                            Path.GetExtension(filename).Equals(".pt", StringComparison.CurrentCultureIgnoreCase) ||
+                            Path.GetExtension(filename).Equals(".ckpt", StringComparison.CurrentCultureIgnoreCase) ||
+                            Path.GetExtension(filename).Equals(".safetensors", StringComparison.CurrentCultureIgnoreCase)
+                        )
+                        .Select(filename => Path.GetFileName(filename))
+                        .Order().ToList());
+
+                        Debug.WriteLine($"GetAllModels: {models.Count}");
+
+                        _allModels = models;
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        Debug.WriteLine($"GetAllModels: DirectoryNotFoundException");
+                        return [];
+                    }
+                }
+
+                return _allModels;
             }
         }
     }

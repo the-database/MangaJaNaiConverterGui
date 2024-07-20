@@ -15,7 +15,6 @@ using Splat;
 using MangaJaNaiConverterGui.Services;
 using Autofac;
 using Splat.Autofac;
-using OctaneEngineCore;
 
 namespace MangaJaNaiConverterGui
 {
@@ -40,10 +39,9 @@ namespace MangaJaNaiConverterGui
 
             // Create a new Autofac container builder.
             var builder = new ContainerBuilder();
-            builder.AddOctane();
-            builder.RegisterType<MainWindowViewModel>();//.AsSelf();
-            builder.RegisterType<PythonService>().As<IPythonService>();
-            builder.RegisterType<UpdateManagerService>().As<IUpdateManagerService>();
+            builder.RegisterType<MainWindowViewModel>().AsSelf();
+            builder.RegisterType<PythonService>().As<IPythonService>().SingleInstance();
+            builder.RegisterType<UpdateManagerService>().As<IUpdateManagerService>().SingleInstance();
             // etc.
 
             // Register the Adapter to Splat.

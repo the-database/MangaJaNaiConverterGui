@@ -27,7 +27,22 @@ namespace MangaJaNaiConverterGui
         [STAThread]
         public static void Main(string[] args)
         {
-            VelopackApp.Build().Run();
+            VelopackApp.Build()
+                .WithBeforeUninstallFastCallback((v) => 
+                {
+                    // On uninstall, remove Python and models from app data
+                    var pythonDir = Path.Combine(AppStateFolder, "python");
+                    var modelsDir = Path.Combine(AppStateFolder, "models");
+                    if (Directory.Exists(pythonDir))
+                    { 
+                        Directory.Delete(pythonDir, true);
+                    }
+                    if (Directory.Exists(modelsDir))
+                    {
+                        Directory.Delete(modelsDir, true);
+                    }
+                })
+                .Run();
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 
