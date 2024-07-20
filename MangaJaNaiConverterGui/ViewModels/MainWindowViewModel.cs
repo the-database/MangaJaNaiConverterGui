@@ -18,9 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
-using Velopack.Sources;
 using File = System.IO.File;
-using ICSharpCode.SharpZipLib.Core;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {

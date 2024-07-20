@@ -12,7 +12,6 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using ICSharpCode.SharpZipLib.Core;
-using static MangaJaNaiConverterGui.Services.Downloader;
 using Avalonia.Collections;
 
 namespace MangaJaNaiConverterGui.Services
@@ -40,7 +39,7 @@ namespace MangaJaNaiConverterGui.Services
 
         public PythonService(IUpdateManagerService? updateManagerService = null)
         {
-            _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>();
+            _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
         }
 
         public string ModelsDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\models") : Path.GetFullPath(@".\backend\models");
