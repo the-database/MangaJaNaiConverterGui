@@ -41,7 +41,7 @@ namespace MangaJaNaiConverterGui.Services
             _engine = engine ?? Locator.Current.GetService<IEngine>();
         }
 
-        public string PythonDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.GetFullPath(@"%APPDATA%\MangaJaNaiConverterGui\python") : Path.GetFullPath(@".\backend\python");
+        public string PythonDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\python") : Path.GetFullPath(@".\backend\python");
         public string PythonPath => Path.Join(PythonDirectory, DOWNLOADS["win32"].Path);
 
         public bool IsPythonInstalled()
