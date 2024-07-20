@@ -252,7 +252,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string BackendSetupSubStatusText => string.Join("\n", BackendSetupSubStatusQueue);
 
-        private static readonly int BACKEND_SETUP_SUB_STATUS_QUEUE_CAPACITY = 10;
+        private static readonly int BACKEND_SETUP_SUB_STATUS_QUEUE_CAPACITY = 50;
 
         private ConcurrentQueue<string> _backendSetupSubStatusQueue = new();
         public ConcurrentQueue<string> BackendSetupSubStatusQueue
@@ -925,19 +925,20 @@ namespace MangaJaNaiConverterGui.ViewModels
                     _pythonService.ExtractTgz(targetPath, _pythonService.PythonDirectory);
                     File.Delete(targetPath);
 
-                    var pthDirectory = Path.GetDirectoryName(_pythonService.PythonDirectory) ?? throw new ArgumentNullException("pthDirectory");
+                    var pthDirectory = Path.GetDirectoryName(_pythonService.PythonPath) ?? throw new ArgumentNullException("pthDirectory");
 
                     _pythonService.AddPythonPth(pthDirectory);
 
                     // Install Python Dependencies
-                    BackendSetupMainStatus = "Installing Python Dependencies...";
+                    BackendSetupMainStatus = "Installing Python Dependencies (this may take several minutes)...";
                     await InstallUpdatePythonDependencies();
 
                     IsExtractingBackend = false;
                 }
                 else
                 {
-                    //await _pythonService.InstallUpdatePythonDependencies();
+                    BackendSetupMainStatus = "Checking Python Dependencies...";
+                    await InstallUpdatePythonDependencies();
                 }
 
                 IsExtractingBackend = false;

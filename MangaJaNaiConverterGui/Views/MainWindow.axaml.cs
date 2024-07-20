@@ -82,10 +82,8 @@ namespace MangaJaNaiConverterGui.Views
 
         private void ConsoleScrollViewer_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property.Name == "Offset")
+            if (e.Property.Name == "Offset" && sender is ScrollViewer consoleScrollViewer)
             {
-                var consoleScrollViewer = this.FindControl<ScrollViewer>("ConsoleScrollViewer");
-
                 if (e.NewValue is Vector newVector)
                 {
                     _autoScrollConsole = newVector.Y == consoleScrollViewer?.ScrollBarMaximum.Y;
@@ -96,14 +94,16 @@ namespace MangaJaNaiConverterGui.Views
 
         private void ConsoleTextBlock_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property.Name == "Text")
+            if (e.Property.Name == "Text" && sender is TextBlock textBlock)
             {
-                var consoleScrollViewer = this.FindControl<ScrollViewer>("ConsoleScrollViewer");
-                if (consoleScrollViewer != null)
+                if (textBlock.Parent is ScrollViewer consoleScrollViewer)
                 {
-                    if (_autoScrollConsole)
+                    if (consoleScrollViewer != null)
                     {
-                        consoleScrollViewer.ScrollToEnd();
+                        if (_autoScrollConsole)
+                        {
+                            consoleScrollViewer.ScrollToEnd();
+                        }
                     }
                 }
             }
