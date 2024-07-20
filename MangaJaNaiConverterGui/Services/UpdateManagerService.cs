@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Velopack;
 using Velopack.Sources;
@@ -22,7 +19,7 @@ namespace MangaJaNaiConverterGui.Services
         public bool IsInstalled { get => _um.IsInstalled; }
 
         public bool IsUpdatePendingRestart { get => _um.IsUpdatePendingRestart; }
-        
+
         public void ApplyUpdatesAndRestart(UpdateInfo update)
         {
             _um.ApplyUpdatesAndRestart(update);

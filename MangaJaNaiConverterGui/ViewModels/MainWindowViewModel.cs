@@ -394,9 +394,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public int SelectedWorkflowIndex
         {
             get => _selectedWorkflowIndex;
-            set 
-            { 
-                this.RaiseAndSetIfChanged(ref _selectedWorkflowIndex, value); 
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedWorkflowIndex, value);
                 this.RaisePropertyChanged(nameof(CurrentWorkflow));
                 this.RaisePropertyChanged(nameof(CurrentWorkflow.ActiveWorkflow));
             }
@@ -405,8 +405,8 @@ namespace MangaJaNaiConverterGui.ViewModels
         public UpscaleWorkflow? CurrentWorkflow
         {
             get => Workflows?[SelectedWorkflowIndex];
-            set 
-            { 
+            set
+            {
                 if (Workflows != null)
                 {
                     Workflows[SelectedWorkflowIndex] = value;
@@ -660,7 +660,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void AddChain()
         {
-            CurrentWorkflow?.Chains.Add(new UpscaleChain { 
+            CurrentWorkflow?.Chains.Add(new UpscaleChain
+            {
                 Vm = this,
             });
             UpdateChainHeaders();
@@ -901,7 +902,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public async void CheckAndExtractBackend()
         {
-            await Task.Run(async() =>
+            await Task.Run(async () =>
             {
                 IsExtractingBackend = true;
 
@@ -976,7 +977,8 @@ namespace MangaJaNaiConverterGui.ViewModels
             BackendSetupMainStatus = "Downloading IllustrationJaNai Models...";
             download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/IllustrationJaNai_V1_ModelsOnly.zip";
             targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
-            await Downloader.DownloadFileAsync(download, targetPath, (progress) => {
+            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
+            {
                 BackendSetupMainStatus = $"Downloading IllustrationJaNai Models ({progress}%)...";
             });
 
@@ -1071,7 +1073,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void ResetCurrentWorkflow()
         {
-            if (CurrentWorkflow != null) 
+            if (CurrentWorkflow != null)
             {
                 var lines = JsonConvert.SerializeObject(Workflows[0], NewtonsoftJsonSuspensionDriver.Settings);
                 var workflow = JsonConvert.DeserializeObject<UpscaleWorkflow>(lines, NewtonsoftJsonSuspensionDriver.Settings);
@@ -1111,15 +1113,15 @@ namespace MangaJaNaiConverterGui.ViewModels
                 var devices = JsonConvert.DeserializeObject<List<ReaderDevice>>(response, NewtonsoftJsonSuspensionDriver.Settings);
                 if (devices != null)
                 {
-                    foreach (var device in devices) 
+                    foreach (var device in devices)
                     {
                         DisplayDeviceMap[device.ToString()] = device;
-                            
+
                     }
                     return devices.ToList();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex);
             }
@@ -1335,7 +1337,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string WorkflowIcon => $"Numeric{WorkflowIndex}Circle";
 
-        public bool ActiveWorkflow {
+        public bool ActiveWorkflow
+        {
             get
             {
                 Debug.WriteLine($"ActiveWorkflow {WorkflowIndex} == {Vm?.SelectedWorkflowIndex}; {Vm == null}");
@@ -1608,9 +1611,10 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         [DataMember]
-        public int DisplayDeviceWidth { 
-            get 
-            { 
+        public int DisplayDeviceWidth
+        {
+            get
+            {
                 if (Vm != null && DisplayDevice != null)
                 {
                     Vm.DisplayDeviceMap.TryGetValue(DisplayDevice, out var displayDevice);
@@ -1621,7 +1625,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
 
                 return 0;
-            } 
+            }
         }
 
         [DataMember]

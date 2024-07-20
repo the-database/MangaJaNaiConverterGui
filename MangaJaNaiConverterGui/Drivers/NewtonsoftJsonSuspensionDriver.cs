@@ -1,12 +1,9 @@
-﻿using MangaJaNaiConverterGui.ViewModels;
-using Avalonia.Controls;
-using Avalonia.Controls.Templates;
+﻿using Newtonsoft.Json;
 using ReactiveUI;
 using System;
-using System.Reactive.Linq;
-using System.Reactive;
-using Newtonsoft.Json;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace MangaJaNaiConverterGui.Drivers
 {

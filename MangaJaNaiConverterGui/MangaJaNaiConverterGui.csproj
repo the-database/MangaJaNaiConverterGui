@@ -16,6 +16,7 @@
     <Version>1.0.0</Version>
     <PackageIcon>logo.png</PackageIcon>
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup>

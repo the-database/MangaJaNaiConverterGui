@@ -1,14 +1,6 @@
-﻿using Avalonia;
-using Avalonia.ReactiveUI;
-using NuGet.Versioning;
-using Velopack;
-using System;
-using Microsoft.Extensions.Logging;
-using System.IO;
-using ReactiveUI;
-using Microsoft.Extensions.DependencyInjection;
+﻿using MangaJaNaiConverterGui.Services;
 using MangaJaNaiConverterGui.ViewModels;
-using MangaJaNaiConverterGui.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MangaJaNaiConverterGui.Extensions
 {

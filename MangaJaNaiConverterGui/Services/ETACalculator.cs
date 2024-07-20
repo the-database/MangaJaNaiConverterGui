@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using ProgressItem = System.Collections.Generic.KeyValuePair<long, float>;
 
 

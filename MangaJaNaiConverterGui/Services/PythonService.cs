@@ -1,18 +1,15 @@
-﻿using Splat;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Net;
+﻿using Avalonia.Collections;
+using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
-using Newtonsoft.Json;
+using Splat;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using ICSharpCode.SharpZipLib.Core;
-using Avalonia.Collections;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace MangaJaNaiConverterGui.Services
 {
@@ -126,12 +123,12 @@ namespace MangaJaNaiConverterGui.Services
             var filename = "python311._pth";
 
             using var outputFile = new StreamWriter(Path.Combine(destFolder, filename));
-            
+
             foreach (string line in lines)
-                outputFile.WriteLine(line);            
+                outputFile.WriteLine(line);
         }
 
-        public string InstallUpdatePythonDependenciesCommand 
+        public string InstallUpdatePythonDependenciesCommand
         {
             get
             {

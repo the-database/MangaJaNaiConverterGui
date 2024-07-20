@@ -1,12 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
-using NuGet.Versioning;
-using Velopack;
-using System;
-using Microsoft.Extensions.Logging;
-using System.IO;
-using ReactiveUI;
 using MangaJaNaiConverterGui.Drivers;
+using ReactiveUI;
+using System;
+using System.IO;
+using Velopack;
 
 namespace MangaJaNaiConverterGui
 {
@@ -30,13 +28,13 @@ namespace MangaJaNaiConverterGui
         public static void Main(string[] args)
         {
             VelopackApp.Build()
-                .WithBeforeUninstallFastCallback((v) => 
+                .WithBeforeUninstallFastCallback((v) =>
                 {
                     // On uninstall, remove Python and models from app data
                     var pythonDir = Path.Combine(AppStateFolder, "python");
                     var modelsDir = Path.Combine(AppStateFolder, "models");
                     if (Directory.Exists(pythonDir))
-                    { 
+                    {
                         Directory.Delete(pythonDir, true);
                     }
                     if (Directory.Exists(modelsDir))

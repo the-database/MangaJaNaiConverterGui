@@ -1,24 +1,19 @@
-using MangaJaNaiConverterGui.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Avalonia.ReactiveUI;
-using ReactiveUI;
+using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Windowing;
+using MangaJaNaiConverterGui.ViewModels;
+using Material.Icons.Avalonia;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAvalonia.UI.Windowing;
-using Avalonia.Layout;
-using Avalonia.Media;
-using Material.Icons.Avalonia;
-using Velopack;
-using FluentAvalonia.UI.Controls;
-using System.Threading;
 
 namespace MangaJaNaiConverterGui.Views
 {
@@ -237,7 +232,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 if (files.Count >= 1)
                 {
-                    vm.CurrentWorkflow.InputFolderPath = files[0].TryGetLocalPath() ?? "";   
+                    vm.CurrentWorkflow.InputFolderPath = files[0].TryGetLocalPath() ?? "";
                 }
             }
         }
@@ -341,7 +336,7 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
-               
+
                 var td = new TaskDialog
                 {
                     Title = "Confirm Workflow Reset",
@@ -375,7 +370,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 td.XamlRoot = VisualRoot as Visual;
                 _ = await td.ShowAsync();
-                    
+
             }
         }
 
