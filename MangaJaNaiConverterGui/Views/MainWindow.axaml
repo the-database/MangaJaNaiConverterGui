@@ -35,10 +35,10 @@
     <Style Selector="Button.active">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor }" />
       <Style Selector="^:pointerover">
-        <!--<Style Selector="^ /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
           <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
           <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
-        </Style>-->
+        </Style>
       </Style>
     </Style>
   </Window.Styles>
@@ -136,8 +136,8 @@
               <Rectangle/>
             </DockPanel>
 
-            <ScrollViewer x:Name="ConsoleScrollViewer" Margin="0,10,0,0" Background="#111111" Height="450" HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
-              <SelectableTextBlock x:Name="ConsoleTextBlock" Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
+            <ScrollViewer Margin="0,10,0,0" Background="#111111" Height="450" HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+              <SelectableTextBlock Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
             </ScrollViewer>
           </StackPanel>
 
@@ -443,8 +443,8 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:UpscaleChain">
                         <StackPanel>
-                          <TextBlock Margin="10,10,0,10" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
-                          <Border Classes="border" Margin="0,0,0,20" Background="#11888888">
+                          <TextBlock Margin="10,10,0,10" FontWeight="Bold" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
+                          <Border Classes="border" Margin="0,0,0,20">
                             <Grid>
                               <StackPanel Grid.Column="0">
                               <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
@@ -605,7 +605,7 @@
                     <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                       <TextBlock Text="Current Version" VerticalAlignment="Center"></TextBlock>
                       <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0"></TextBlock>
-                      <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/AnimeJaNaiConverterGui/releases"/>
+                      <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
@@ -663,6 +663,18 @@
               </StackPanel>
             </Border>
 
+            <!-- Python Environment -->
+            <DockPanel Margin="0,10,0,0">
+              <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Python Environment"></TextBlock>
+            </DockPanel>
+            <Border Classes="border">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+                  <SelectableTextBlock FontFamily="Consolas" Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding PythonPath}" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+
             <Border Classes="border">
               <ToggleButton DockPanel.Dock="Right" Margin="10,10,0,10" IsChecked="{Binding !RequestShowAppSettings}">
                 <StackPanel Orientation="Horizontal">
@@ -677,7 +689,12 @@
     </Grid>
 
     <Grid IsVisible="{Binding IsExtractingBackend}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Performing first time setup. This may take several minutes...</TextBlock>
+      <StackPanel>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding BackendSetupMainStatus}" />
+        <ScrollViewer Margin="0,10,0,0" Background="#111111" Height="450" Width="1200" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+          <SelectableTextBlock Margin="20" Text="{Binding BackendSetupSubStatusText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
+        </ScrollViewer>
+      </StackPanel>
     </Grid>
   </Grid>
 

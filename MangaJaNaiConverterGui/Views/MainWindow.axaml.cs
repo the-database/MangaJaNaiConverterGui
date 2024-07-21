@@ -1,24 +1,19 @@
-using MangaJaNaiConverterGui.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Avalonia.ReactiveUI;
-using ReactiveUI;
+using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Windowing;
+using MangaJaNaiConverterGui.ViewModels;
+using Material.Icons.Avalonia;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAvalonia.UI.Windowing;
-using Avalonia.Layout;
-using Avalonia.Media;
-using Material.Icons.Avalonia;
-using Velopack;
-using FluentAvalonia.UI.Controls;
-using System.Threading;
 
 namespace MangaJaNaiConverterGui.Views
 {
@@ -82,10 +77,8 @@ namespace MangaJaNaiConverterGui.Views
 
         private void ConsoleScrollViewer_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property.Name == "Offset")
+            if (e.Property.Name == "Offset" && sender is ScrollViewer consoleScrollViewer)
             {
-                var consoleScrollViewer = this.FindControl<ScrollViewer>("ConsoleScrollViewer");
-
                 if (e.NewValue is Vector newVector)
                 {
                     _autoScrollConsole = newVector.Y == consoleScrollViewer?.ScrollBarMaximum.Y;
@@ -96,14 +89,16 @@ namespace MangaJaNaiConverterGui.Views
 
         private void ConsoleTextBlock_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property.Name == "Text")
+            if (e.Property.Name == "Text" && sender is TextBlock textBlock)
             {
-                var consoleScrollViewer = this.FindControl<ScrollViewer>("ConsoleScrollViewer");
-                if (consoleScrollViewer != null)
+                if (textBlock.Parent is ScrollViewer consoleScrollViewer)
                 {
-                    if (_autoScrollConsole)
+                    if (consoleScrollViewer != null)
                     {
-                        consoleScrollViewer.ScrollToEnd();
+                        if (_autoScrollConsole)
+                        {
+                            consoleScrollViewer.ScrollToEnd();
+                        }
                     }
                 }
             }
@@ -237,7 +232,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 if (files.Count >= 1)
                 {
-                    vm.CurrentWorkflow.InputFolderPath = files[0].TryGetLocalPath() ?? "";   
+                    vm.CurrentWorkflow.InputFolderPath = files[0].TryGetLocalPath() ?? "";
                 }
             }
         }
@@ -341,7 +336,7 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
-               
+
                 var td = new TaskDialog
                 {
                     Title = "Confirm Workflow Reset",
@@ -375,7 +370,7 @@ namespace MangaJaNaiConverterGui.Views
 
                 td.XamlRoot = VisualRoot as Visual;
                 _ = await td.ShowAsync();
-                    
+
             }
         }
 

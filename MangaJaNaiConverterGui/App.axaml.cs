@@ -1,14 +1,13 @@
+using Autofac;
 using Avalonia;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
+using MangaJaNaiConverterGui.Services;
 using MangaJaNaiConverterGui.ViewModels;
 using MangaJaNaiConverterGui.Views;
 using ReactiveUI;
-using System;
+using Splat.Autofac;
 using System.IO;
-using System.Reactive.Linq;
-using System.Reactive;
-using System.Reflection;
 
 namespace MangaJaNaiConverterGui
 {
@@ -31,10 +30,33 @@ namespace MangaJaNaiConverterGui
                 File.Copy(Program.AppStateFilename, Program.AppStatePath);
             }
 
+            // Create a new Autofac container builder.
+            var builder = new ContainerBuilder();
+            builder.RegisterType<MainWindowViewModel>().AsSelf();
+            builder.RegisterType<PythonService>().As<IPythonService>().SingleInstance();
+            builder.RegisterType<UpdateManagerService>().As<IUpdateManagerService>().SingleInstance();
+            // etc.
+
+            // Register the Adapter to Splat.
+            // Creates and sets the Autofac resolver as the Locator.
+            var autofacResolver = builder.UseAutofacDependencyResolver();
+
+            // Register the resolver in Autofac so it can be later resolved.
+            builder.RegisterInstance(autofacResolver);
+
+            // Initialize ReactiveUI components.
+            autofacResolver.InitializeReactiveUI();
+
+            var container = builder.Build();
+
+            autofacResolver.SetLifetimeScope(container);
+
+            //var vm = container.Resolve<MainWindowViewModel>();
+
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
             RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
             RxApp.SuspensionHost.SetupDefaultSuspendResume(Program.SuspensionDriver);
-            suspension.OnFrameworkInitializationCompleted();            
+            suspension.OnFrameworkInitializationCompleted();
 
             // Load the saved view model state.
             var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();

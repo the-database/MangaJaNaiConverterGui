@@ -1,9 +1,10 @@
 ﻿using Avalonia.Collections;
 using Avalonia.Threading;
+using MangaJaNaiConverterGui.Drivers;
+using MangaJaNaiConverterGui.Services;
 using Newtonsoft.Json;
-using Progression.Extras;
 using ReactiveUI;
-using SevenZipExtractor;
+using Splat;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,7 +18,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
-using Velopack.Sources;
 using File = System.IO.File;
 
 namespace MangaJaNaiConverterGui.ViewModels
@@ -31,11 +31,16 @@ namespace MangaJaNaiConverterGui.ViewModels
         private readonly DispatcherTimer _timer = new();
         private static readonly HttpClient client = new();
 
-        private readonly UpdateManager _um;
         private UpdateInfo? _update = null;
 
-        public MainWindowViewModel()
+        private readonly IPythonService _pythonService;
+        private readonly IUpdateManagerService _updateManagerService;
+
+        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null)
         {
+            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
+            _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
+
             var g1 = this.WhenAnyValue
             (
                 x => x.SelectedWorkflowIndex
@@ -48,8 +53,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             _timer.Tick += _timer_Tick;
 
             ShowDialog = new Interaction<MainWindowViewModel, MainWindowViewModel?>();
-
-            _um = new UpdateManager(new GithubSource("https://github.com/the-database/MangaJaNaiConverterGui", null, false));
 
             CheckAndDoBackup();
             CheckForUpdates();
@@ -95,7 +98,9 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
 
-        public bool IsInstalled => _um?.IsInstalled ?? false;
+        public bool IsInstalled => _updateManagerService.IsInstalled;
+        [DataMember]
+        public string ModelsDirectory => _pythonService.ModelsDirectory;
 
         private bool _showCheckUpdateButton = true;
         public bool ShowCheckUpdateButton
@@ -126,7 +131,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public string AppVersion => _um?.CurrentVersion?.ToString() ?? "";
+        public string AppVersion => _updateManagerService.AppVersion;
 
         private string _updateStatusText = string.Empty;
         public string UpdateStatusText
@@ -232,6 +237,31 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private string _backendSetupMainStatus = string.Empty;
+        public string BackendSetupMainStatus
+        {
+            get => this._backendSetupMainStatus;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendSetupMainStatus, value);
+            }
+        }
+
+        public string BackendSetupSubStatusText => string.Join("\n", BackendSetupSubStatusQueue);
+
+        private static readonly int BACKEND_SETUP_SUB_STATUS_QUEUE_CAPACITY = 50;
+
+        private ConcurrentQueue<string> _backendSetupSubStatusQueue = new();
+        public ConcurrentQueue<string> BackendSetupSubStatusQueue
+        {
+            get => this._backendSetupSubStatusQueue;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendSetupSubStatusQueue, value);
+                this.RaisePropertyChanged(nameof(BackendSetupSubStatusText));
+            }
+        }
+
         public string ConsoleText => string.Join("\n", ConsoleQueue);
 
         private static readonly int CONSOLE_QUEUE_CAPACITY = 1000;
@@ -265,6 +295,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaisePropertyChanged(nameof(ShowMainForm));
             }
         }
+
+        public string PythonPath => _pythonService.PythonPath;
 
         private bool _isExtractingBackend = true;
         public bool IsExtractingBackend
@@ -349,9 +381,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        private AvaloniaList<UpscaleWorkflow> _workflows;
+        private AvaloniaList<UpscaleWorkflow>? _workflows;
         [DataMember]
-        public AvaloniaList<UpscaleWorkflow> Workflows
+        public AvaloniaList<UpscaleWorkflow>? Workflows
         {
             get => _workflows;
             set => this.RaiseAndSetIfChanged(ref _workflows, value);
@@ -364,9 +396,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public int SelectedWorkflowIndex
         {
             get => _selectedWorkflowIndex;
-            set 
-            { 
-                this.RaiseAndSetIfChanged(ref _selectedWorkflowIndex, value); 
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedWorkflowIndex, value);
                 this.RaisePropertyChanged(nameof(CurrentWorkflow));
                 this.RaisePropertyChanged(nameof(CurrentWorkflow.ActiveWorkflow));
             }
@@ -375,8 +407,8 @@ namespace MangaJaNaiConverterGui.ViewModels
         public UpscaleWorkflow? CurrentWorkflow
         {
             get => Workflows?[SelectedWorkflowIndex];
-            set 
-            { 
+            set
+            {
                 if (Workflows != null)
                 {
                     Workflows[SelectedWorkflowIndex] = value;
@@ -419,7 +451,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var cmd = $@".\python\python.exe "".\backend\src\runmangajanaiconverterguiupscale.py"" --settings {Program.AppStatePath}";
+                var cmd = $@"{_pythonService.PythonPath} "".\src\run_upscale.py"" --settings {Program.AppStatePath}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -630,7 +662,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void AddChain()
         {
-            CurrentWorkflow?.Chains.Add(new UpscaleChain { 
+            CurrentWorkflow?.Chains.Add(new UpscaleChain
+            {
                 Vm = this,
             });
             UpdateChainHeaders();
@@ -672,7 +705,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\chaiNNer");
+                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\backend");
                 process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
@@ -737,7 +770,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public async Task<string[]> InitializeDeviceList()
         {
-            if (!File.Exists(@".\chaiNNer\backend\src\device_list.py"))
+            if (!File.Exists(@".\backend\src\device_list.py"))
             {
                 return [];
             }
@@ -747,12 +780,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 _runningProcess = process;
                 process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @"/C .\python\python.exe .\backend\src\device_list.py";
+                process.StartInfo.Arguments = @$"/C {_pythonService.PythonPath} .\src\device_list.py";
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\chaiNNer");
+                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\backend");
                 process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
@@ -836,6 +869,16 @@ namespace MangaJaNaiConverterGui.ViewModels
             this.RaisePropertyChanged(nameof(ConsoleText));
         }
 
+        private void BackendSetupSubStatusQueueEnqueue(string value)
+        {
+            while (BackendSetupSubStatusQueue.Count > BACKEND_SETUP_SUB_STATUS_QUEUE_CAPACITY)
+            {
+                BackendSetupSubStatusQueue.TryDequeue(out var _);
+            }
+            BackendSetupSubStatusQueue.Enqueue(value);
+            this.RaisePropertyChanged(nameof(BackendSetupSubStatusText));
+        }
+
         public void ReadWorkflowFileToCurrentWorkflow(string fullPath)
         {
             if (!File.Exists(fullPath))
@@ -861,23 +904,50 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public async void CheckAndExtractBackend()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                var backendArchivePath = Path.GetFullPath("./chaiNNer.7z");
+                IsExtractingBackend = true;
 
-                if (File.Exists(backendArchivePath))
+                if (!_pythonService.IsPythonInstalled())
                 {
-                    IsExtractingBackend = true;
-                    using ArchiveFile archiveFile = new(backendArchivePath);
-                    archiveFile.Extract(".");
-                    archiveFile.Dispose();
-                    File.Delete(backendArchivePath);
-                    IsExtractingBackend = false;
+                    // Download Python tgz
+                    BackendSetupMainStatus = "Downloading Python...";
+                    var download = PythonService.PYTHON_DOWNLOADS["win32"];
+                    var targetPath = Path.Join(_pythonService.PythonDirectory, download.Filename);
+                    Directory.CreateDirectory(_pythonService.PythonDirectory);
+                    await Downloader.DownloadFileAsync(download.Url, targetPath, (progress) =>
+                    {
+                        BackendSetupMainStatus = $"Downloading Python ({progress}%)...";
+                    });
+
+                    // Extract Python tgz
+                    BackendSetupMainStatus = "Extracting Python...";
+                    _pythonService.ExtractTgz(targetPath, _pythonService.PythonDirectory);
+                    File.Delete(targetPath);
+
+                    var pthDirectory = Path.GetDirectoryName(_pythonService.PythonPath) ?? throw new ArgumentNullException("pthDirectory");
+
+                    _pythonService.AddPythonPth(pthDirectory);
+
+                    // Install Python Dependencies
+                    BackendSetupMainStatus = "Installing Python Dependencies (this may take several minutes)...";
+                    await InstallUpdatePythonDependencies();
                 }
                 else
                 {
-                    IsExtractingBackend = false;
+                    if (Program.WasFirstRun)
+                    {
+                        BackendSetupMainStatus = "Checking Python Dependencies...";
+                        await InstallUpdatePythonDependencies();
+                    }
                 }
+
+                if (!_pythonService.AreModelsInstalled())
+                {
+                    await DownloadModels();
+                }
+
+                IsExtractingBackend = false;
             });
 
             DeviceList = await InitializeDeviceList();
@@ -886,6 +956,95 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 UseCpu = true;
             }
+        }
+
+        public async Task DownloadModels()
+        {
+            BackendSetupMainStatus = "Downloading MangaJaNai Models...";
+            var download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/MangaJaNai_V1_ModelsOnly.zip";
+            var targetPath = Path.Join(_pythonService.ModelsDirectory, "mangajanai.zip");
+            Directory.CreateDirectory(_pythonService.ModelsDirectory);
+            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
+            {
+                BackendSetupMainStatus = $"Downloading MangaJaNai Models ({progress}%)...";
+            });
+
+            BackendSetupMainStatus = "Extracting MangaJaNai Models...";
+            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
+            {
+                BackendSetupMainStatus = $"Extracting MangaJaNai Models ({progress}%)...";
+            });
+            File.Delete(targetPath);
+
+            BackendSetupMainStatus = "Downloading IllustrationJaNai Models...";
+            download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/IllustrationJaNai_V1_ModelsOnly.zip";
+            targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
+            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
+            {
+                BackendSetupMainStatus = $"Downloading IllustrationJaNai Models ({progress}%)...";
+            });
+
+            BackendSetupMainStatus = "Extracting IllustrationJaNai Models...";
+            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
+            {
+                BackendSetupMainStatus = $"Extracting IllustrationJaNai Models ({progress}%)...";
+            });
+            File.Delete(targetPath);
+        }
+
+
+
+        public async Task<string[]> InstallUpdatePythonDependencies()
+        {
+            var cmd = _pythonService.InstallUpdatePythonDependenciesCommand;
+            Debug.WriteLine(cmd);
+
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = @$"/C {cmd}";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+
+                var result = string.Empty;
+
+                // Create a StreamWriter to write the output to a log file
+                try
+                {
+                    //using var outputFile = new StreamWriter("error.log", append: true);
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            //Debug.WriteLine($"STDERR = {e.Data}");
+                            BackendSetupSubStatusQueueEnqueue(e.Data);
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            result = e.Data;
+                            //Debug.WriteLine($"STDOUT = {e.Data}");
+                            BackendSetupSubStatusQueueEnqueue(e.Data);
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+                }
+                catch (IOException) { }
+            }
+
+            return [];
         }
 
         public void CheckAndDoBackup()
@@ -916,7 +1075,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public void ResetCurrentWorkflow()
         {
-            if (CurrentWorkflow != null) 
+            if (CurrentWorkflow != null)
             {
                 var lines = JsonConvert.SerializeObject(Workflows[0], NewtonsoftJsonSuspensionDriver.Settings);
                 var workflow = JsonConvert.DeserializeObject<UpscaleWorkflow>(lines, NewtonsoftJsonSuspensionDriver.Settings);
@@ -956,15 +1115,15 @@ namespace MangaJaNaiConverterGui.ViewModels
                 var devices = JsonConvert.DeserializeObject<List<ReaderDevice>>(response, NewtonsoftJsonSuspensionDriver.Settings);
                 if (devices != null)
                 {
-                    foreach (var device in devices) 
+                    foreach (var device in devices)
                     {
                         DisplayDeviceMap[device.ToString()] = device;
-                            
+
                     }
                     return devices.ToList();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex);
             }
@@ -976,11 +1135,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             try
             {
-                if (IsInstalled)
+                if (_updateManagerService.IsInstalled)
                 {
                     await Task.Run(async () =>
                     {
-                        _update = await _um.CheckForUpdatesAsync().ConfigureAwait(true);
+                        _update = await _updateManagerService.CheckForUpdatesAsync().ConfigureAwait(true);
                     });
 
                     UpdateStatus();
@@ -1004,7 +1163,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (_update != null)
                 {
                     ShowDownloadButton = false;
-                    await _um.DownloadUpdatesAsync(_update, Progress).ConfigureAwait(true);
+                    await _updateManagerService.DownloadUpdatesAsync(_update, Progress).ConfigureAwait(true);
                     UpdateStatus();
                 }
             }
@@ -1019,7 +1178,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             if (_update != null)
             {
                 ShowApplyButton = false;
-                _um.ApplyUpdatesAndRestart(_update);
+                _updateManagerService.ApplyUpdatesAndRestart(_update);
             }
         }
 
@@ -1035,7 +1194,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ShowDownloadButton = true;
                 ShowCheckUpdateButton = false;
 
-                if (_um.IsUpdatePendingRestart)
+                if (_updateManagerService.IsUpdatePendingRestart)
                 {
                     UpdateStatusText = $"Update ready, pending restart to install version: {_update.TargetFullRelease.Version}";
                     ShowDownloadButton = false;
@@ -1058,13 +1217,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
 
-#pragma warning disable CA1822 // Mark members as static
         public async void OpenModelsDirectory()
-#pragma warning restore CA1822 // Mark members as static
         {
             await Task.Run(() =>
             {
-                Process.Start("explorer.exe", UpscaleChain.PthPath);
+                Process.Start("explorer.exe", _pythonService.ModelsDirectory);
             });
         }
     }
@@ -1182,7 +1339,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string WorkflowIcon => $"Numeric{WorkflowIndex}Circle";
 
-        public bool ActiveWorkflow {
+        public bool ActiveWorkflow
+        {
             get
             {
                 Debug.WriteLine($"ActiveWorkflow {WorkflowIndex} == {Vm?.SelectedWorkflowIndex}; {Vm == null}");
@@ -1455,9 +1613,10 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         [DataMember]
-        public int DisplayDeviceWidth { 
-            get 
-            { 
+        public int DisplayDeviceWidth
+        {
+            get
+            {
                 if (Vm != null && DisplayDevice != null)
                 {
                     Vm.DisplayDeviceMap.TryGetValue(DisplayDevice, out var displayDevice);
@@ -1468,7 +1627,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
 
                 return 0;
-            } 
+            }
         }
 
         [DataMember]
@@ -1680,8 +1839,12 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class UpscaleChain : ReactiveObject
     {
-        public UpscaleChain()
+        IPythonService _pythonService;
+
+        public UpscaleChain(IPythonService? pythonService = null)
         {
+            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
+
             this.WhenAnyValue(x => x.Vm).Subscribe(x =>
             {
                 sub?.Dispose();
@@ -1811,33 +1974,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
-        public static string PthPath => Path.GetFullPath(@".\chaiNNer\models");
-
-        public static AvaloniaList<string> AllModels => GetAllModels();
-
-        public static AvaloniaList<string> GetAllModels()
-        {
-            try
-            {
-                var models = new AvaloniaList<string>(Directory.GetFiles(PthPath).Where(filename =>
-    Path.GetExtension(filename).Equals(".pth", StringComparison.CurrentCultureIgnoreCase) ||
-    Path.GetExtension(filename).Equals(".pt", StringComparison.CurrentCultureIgnoreCase) ||
-    Path.GetExtension(filename).Equals(".ckpt", StringComparison.CurrentCultureIgnoreCase) ||
-    Path.GetExtension(filename).Equals(".safetensors", StringComparison.CurrentCultureIgnoreCase)
-)
-    .Select(filename => Path.GetFileName(filename))
-    .Order().ToList());
-
-                Debug.WriteLine($"GetAllModels: {models.Count}");
-
-                return models;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                Debug.WriteLine($"GetAllModels: DirectoryNotFoundException");
-                return [];
-            }
-        }
+        public AvaloniaList<string> AllModels => _pythonService.AllModels;
 
         private string[] _tileSizes = [
     "Auto (Estimate)",

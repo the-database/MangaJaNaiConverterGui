@@ -1,5 +1,4 @@
 ﻿using ReactiveUI;
-using System.Runtime.Serialization;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
