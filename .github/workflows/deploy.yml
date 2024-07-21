@@ -26,4 +26,4 @@ jobs:
           dotnet tool install -g vpk --prerelease
           vpk download github --repoUrl https://github.com/the-database/MangaJaNaiConverterGui
           vpk pack -u MangaJaNaiConverterGui -v ${{ steps.get-version.outputs.version }} -p publish  -i ./MangaJaNaiConverterGui/assets/logo.ico -e MangaJaNaiConverterGui.exe
-          vpk upload github --repoUrl https://github.com/the-database/MangaJaNaiConverterGui --publish --releaseName "${{ steps.get-version.outputs.version }}" --tag ${{ steps.get-version.outputs.version }}
+          vpk upload github --repoUrl https://github.com/the-database/MangaJaNaiConverterGui --publish --releaseName "${{ steps.get-version.outputs.version }}" --tag ${{ steps.get-version.outputs.version }} --token ${{ secrets.GITHUB_TOKEN }}
