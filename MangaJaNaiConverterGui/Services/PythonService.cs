@@ -146,7 +146,9 @@ namespace MangaJaNaiConverterGui.Services
                     "psutil^>=6.0.0"
                 };
 
-                return $@"{PythonPath} -m pip install torch^>=2.3.1 torchvision^>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {PythonPath} -m pip install {string.Join(" ", dependencies)}";
+                var relPythonPath = @".\python\python\python.exe";
+
+                return $@"{relPythonPath} -m pip install torch^>=2.3.1 torchvision^>=0.18.1 --index-url https://download.pytorch.org/whl/cu121 && {relPythonPath} -m pip install {string.Join(" ", dependencies)}";
             }
         }
 

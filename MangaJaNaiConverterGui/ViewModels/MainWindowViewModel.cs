@@ -780,12 +780,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 _runningProcess = process;
                 process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C {_pythonService.PythonPath} .\src\device_list.py";
+                process.StartInfo.Arguments = @$"/C .\python\python\python.exe .\src\device_list.py";
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\backend");
+                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
                 process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
@@ -1010,6 +1010,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
 
                 var result = string.Empty;
 
