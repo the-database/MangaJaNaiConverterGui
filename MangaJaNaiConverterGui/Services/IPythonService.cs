@@ -6,6 +6,7 @@ namespace MangaJaNaiConverterGui.Services
     {
         bool IsPythonInstalled();
         bool AreModelsInstalled();
+        string BackendDirectory { get; }
         string PythonDirectory { get; }
         string ModelsDirectory { get; }
         string PythonPath { get; }

@@ -451,7 +451,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var cmd = $@"{_pythonService.PythonPath} "".\src\run_upscale.py"" --settings {Program.AppStatePath}";
+                var cmd = $@".\python\python\python.exe "".\src\run_upscale.py"" --settings {Program.AppStatePath}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -705,7 +705,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = Path.GetFullPath(@".\backend");
+                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
                 process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
