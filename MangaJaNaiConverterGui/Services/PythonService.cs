@@ -39,9 +39,10 @@ namespace MangaJaNaiConverterGui.Services
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
         }
 
-        public string ModelsDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\models") : Path.GetFullPath(@".\backend\models");
+        public string BackendDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui") : Path.GetFullPath(@".\backend");
 
-        public string PythonDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui\python") : Path.GetFullPath(@".\backend\python");
+        public string ModelsDirectory => Path.Combine(BackendDirectory, "models");
+        public string PythonDirectory => Path.Combine(BackendDirectory, "python");
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
         public bool IsPythonInstalled() => File.Exists(PythonPath);
