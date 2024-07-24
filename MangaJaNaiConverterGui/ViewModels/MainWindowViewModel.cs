@@ -451,7 +451,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var cmd = $@".\python\python\python.exe "".\src\run_upscale.py"" --settings {Program.AppStatePath}";
+                var cmd = $@".\python\python\python.exe ""{Path.GetFullPath(@".\backend\src\run_upscale.py")}"" --settings {Program.AppStatePath}";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -780,7 +780,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 _runningProcess = process;
                 process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C .\python\python\python.exe .\src\device_list.py";
+                process.StartInfo.Arguments = @$"/C .\python\python\python.exe {Path.GetFullPath(@".\backend\src\device_list.py")}";
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
