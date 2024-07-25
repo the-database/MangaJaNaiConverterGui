@@ -908,6 +908,11 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 IsExtractingBackend = true;
 
+                if (!_pythonService.AreModelsInstalled())
+                {
+                    await DownloadModels();
+                }
+
                 if (!_pythonService.IsPythonInstalled())
                 {
                     // Download Python tgz
@@ -940,11 +945,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                         BackendSetupMainStatus = "Checking Python Dependencies...";
                         await InstallUpdatePythonDependencies();
                     }
-                }
-
-                if (!_pythonService.AreModelsInstalled())
-                {
-                    await DownloadModels();
                 }
 
                 IsExtractingBackend = false;
