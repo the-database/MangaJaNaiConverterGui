@@ -172,6 +172,13 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        private string _pythonPipList = string.Empty;
+        public string PythonPipList
+        {
+            get => _pythonPipList;
+            set => this.RaiseAndSetIfChanged(ref _pythonPipList, value);
+        }
+
         private AvaloniaDictionary<string, ReaderDevice> _displayDeviceMap = [];
         [DataMember]
         public AvaloniaDictionary<string, ReaderDevice> DisplayDeviceMap
@@ -830,6 +837,56 @@ namespace MangaJaNaiConverterGui.ViewModels
             return [];
         }
 
+        public async Task<string> RunPythonPipList()
+        {
+            List<string> result = [];
+
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                _runningProcess = process;
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = @$"/C .\python\python\python.exe -m pip list";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+
+                // Create a StreamWriter to write the output to a log file
+                try
+                {
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            //outputFile.WriteLine(e.Data); // Write the output to the log file
+                            //ConsoleQueueEnqueue(e.Data);
+                            Debug.WriteLine(e.Data);
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            result.Add(e.Data);
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+                }
+                catch (IOException) { }
+            }
+
+            return string.Join("\n", result);
+        }
+
         public async void ShowSettingsDialog()
         {
             var result = await ShowDialog.Handle(this);
@@ -902,7 +959,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             File.WriteAllText(fullPath, lines);
         }
 
-        public async void CheckAndExtractBackend()
+        public async Task CheckAndExtractBackend()
         {
             await Task.Run(async () =>
             {
@@ -956,6 +1013,23 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 UseCpu = true;
             }
+
+            PythonPipList = await RunPythonPipList();
+        }
+
+        public async Task ReinstallBackend()
+        {
+            if (Directory.Exists(_pythonService.ModelsDirectory))
+            {
+                Directory.Delete(_pythonService.ModelsDirectory, true);
+            }
+
+            if (Directory.Exists(_pythonService.PythonDirectory))
+            {
+                Directory.Delete(_pythonService.PythonDirectory, true);
+            }
+
+            await CheckAndExtractBackend();
         }
 
         public async Task DownloadModels()
