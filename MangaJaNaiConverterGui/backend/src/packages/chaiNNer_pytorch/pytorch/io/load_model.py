@@ -3,14 +3,14 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from nodes.properties.inputs import PthFileInput
+from nodes.properties.outputs import DirectoryOutput, FileNameOutput, ModelOutput
+from nodes.utils.utils import split_file_path
 from sanic.log import logger
 from spandrel import MAIN_REGISTRY, ModelDescriptor, ModelLoader
 from spandrel_extra_arches import EXTRA_REGISTRY
 
 from api import NodeContext
-from nodes.properties.inputs import PthFileInput
-from nodes.properties.outputs import DirectoryOutput, FileNameOutput, ModelOutput
-from nodes.utils.utils import split_file_path
 
 from ...settings import get_settings
 from .. import io_group
@@ -65,6 +65,7 @@ def parse_ckpt_state_dict(checkpoint: dict):
     see_also=[
         "chainner:pytorch:load_models",
     ],
+    side_effects=True,
 )
 def load_model_node(
     context: NodeContext, path: Path

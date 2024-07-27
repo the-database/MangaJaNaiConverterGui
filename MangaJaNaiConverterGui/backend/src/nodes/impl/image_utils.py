@@ -327,7 +327,7 @@ def calculate_ssim(
     return float(np.mean(ssim_map))
 
 
-def cv_save_image(path: Path | str, img: np.ndarray, params: list[int]):
+def cv_save_image(path: Path | str, img: np.ndarray, params: list[int]) -> None:
     """
     A light wrapper around `cv2.imwrite` to support non-ASCII paths.
     """
@@ -349,7 +349,6 @@ def cartesian_product(arrays: list[np.ndarray]) -> np.ndarray:
     This is cartesian_product_transpose_pp from this following SO post by Paul Panzer:
     https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points/49445693#49445693
     """
-    #
     la = len(arrays)
     dtype = np.result_type(*arrays)
     arr = np.empty((la, *map(len, arrays)), dtype=dtype)

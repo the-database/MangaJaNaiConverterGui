@@ -49,7 +49,7 @@ def conv_bn(in_planes, out_planes, kernel_size=3, stride=1, padding=1, dilation=
 
 
 class Head(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.cnn0 = nn.Conv2d(3, 32, 3, 2, 1)
         self.cnn1 = nn.Conv2d(32, 32, 3, 1, 1)
@@ -71,7 +71,7 @@ class Head(nn.Module):
 
 
 class ResConv(nn.Module):
-    def __init__(self, c, dilation=1):  # noqa: ANN001
+    def __init__(self, c, dilation=1) -> None:  # noqa: ANN001
         super().__init__()
         self.conv = nn.Conv2d(c, c, 3, 1, dilation, dilation=dilation, groups=1)
         self.beta = nn.Parameter(torch.ones((1, c, 1, 1)), requires_grad=True)
@@ -82,7 +82,7 @@ class ResConv(nn.Module):
 
 
 class IFBlock(nn.Module):
-    def __init__(self, in_planes, c=64):  # noqa: ANN001
+    def __init__(self, in_planes, c=64) -> None:  # noqa: ANN001
         super().__init__()
         self.conv0 = nn.Sequential(
             conv(in_planes, c // 2, 3, 2, 1),
@@ -127,7 +127,7 @@ class IFBlock(nn.Module):
 
 
 class IFNet(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.block0 = IFBlock(7 + 16, c=192)
         self.block1 = IFBlock(8 + 4 + 16, c=128)

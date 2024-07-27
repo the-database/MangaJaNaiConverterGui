@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal, Union
 
 import navi
+
 from api import BaseInput
 
 # pylint: disable=relative-beyond-top-level
@@ -33,7 +34,7 @@ class FileInput(BaseInput):
         filetypes: list[str],
         has_handle: bool = False,
         primary_input: bool = False,
-    ):
+    ) -> None:
         super().__init__(
             navi.named("File", {"kind": navi.literal(file_kind)}),
             label,
@@ -123,7 +124,7 @@ class DirectoryInput(BaseInput[Path]):
         has_handle: bool = True,
         must_exist: bool = True,
         label_style: LabelStyle = "default",
-    ):
+    ) -> None:
         super().__init__("Directory", label, kind="directory", has_handle=has_handle)
 
         self.input_adapt = """
@@ -201,7 +202,7 @@ class RelativePathInput(TextInput):
         allow_numbers: bool = True,
         default: str | None = None,
         label_style: LabelStyle = "default",
-    ):
+    ) -> None:
         super().__init__(
             label,
             has_handle=has_handle,

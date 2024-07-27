@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import Enum
-from typing import Iterable, Literal, TypedDict, Union
+from typing import Literal, TypedDict, Union
 
 import navi
+
 from api import InputId
 
 InputValue = Union[int, str]
@@ -76,15 +78,15 @@ class Condition:
 
         v: list[str | int] = []
 
-        def convert(value: int | str | Enum):
-            if isinstance(value, (int, str)):
+        def convert(value: int | str | Enum) -> None:
+            if isinstance(value, int | str):
                 v.append(value)
             else:
                 enum_value = value.value
-                assert isinstance(enum_value, (int, str))
+                assert isinstance(enum_value, int | str)
                 v.append(enum_value)
 
-        if isinstance(values, (int, str, Enum)):
+        if isinstance(values, int | str | Enum):
             convert(values)
         else:
             for value in values:

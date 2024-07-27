@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, TypedDict, Union
+from typing import TypedDict, Union
 
 from sanic.log import logger
 
-SettingsJson = Dict[str, object]
-JsonExecutionOptions = Dict[str, SettingsJson]
+SettingsJson = dict[str, object]
+JsonExecutionOptions = dict[str, SettingsJson]
 
 
 class ExecutionOptions:

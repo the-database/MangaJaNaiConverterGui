@@ -3,9 +3,9 @@ from __future__ import annotations
 import base64
 
 import cv2
+import navi
 import numpy as np
 
-import navi
 from api import BaseOutput, BroadcastData, InputId, OutputKind
 
 from ...impl.image_utils import normalize, to_uint8
@@ -23,7 +23,7 @@ class NumPyOutput(BaseOutput[np.ndarray]):
         label: str,
         kind: OutputKind = "generic",
         has_handle: bool = True,
-    ):
+    ) -> None:
         super().__init__(
             output_type,
             label,
@@ -46,13 +46,15 @@ class ImageOutput(NumPyOutput):
     def __init__(
         self,
         label: str = "Image",
+        *,
         image_type: navi.ExpressionJson = "Image",
-        kind: OutputKind = "image",
+        kind: OutputKind = "generic",
         has_handle: bool = True,
         channels: int | None = None,
         shape_as: int | InputId | None = None,
+        size_as: int | InputId | None = None,
         assume_normalized: bool = False,
-    ):
+    ) -> None:
         # narrow down type
         if channels is not None:
             image_type = navi.intersect_with_error(
@@ -60,6 +62,10 @@ class ImageOutput(NumPyOutput):
             )
         if shape_as is not None:
             image_type = navi.intersect_with_error(image_type, f"Input{shape_as}")
+        if size_as is not None:
+            image_type = navi.intersect_with_error(
+                image_type, navi.Image(size_as=f"Input{size_as}")
+            )
 
         super().__init__(image_type, label, kind=kind, has_handle=has_handle)
 
@@ -156,10 +162,10 @@ class LargeImageOutput(ImageOutput):
         kind: OutputKind = "large-image",
         has_handle: bool = True,
         assume_normalized: bool = False,
-    ):
+    ) -> None:
         super().__init__(
             label,
-            image_type,
+            image_type=image_type,
             kind=kind,
             has_handle=has_handle,
             assume_normalized=assume_normalized,

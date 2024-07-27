@@ -5,8 +5,9 @@ import inspect
 import os
 import pathlib
 from collections import OrderedDict
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, NewType, Tuple, Union, cast, get_args
+from typing import Any, NewType, Union, cast, get_args
 
 from .node_context import NodeContext
 from .node_data import NodeData
@@ -94,7 +95,7 @@ def eval_type(t: str | _Ty, __globals: dict[str, Any], /):
     # `compile_type_string` adds `Union`, so we need it in scope
     local_scope = {
         "Union": Union,
-        "Tuple": Tuple,
+        "Tuple": tuple,
     }
 
     try:
@@ -154,7 +155,7 @@ def get_type_annotations(fn: Callable) -> dict[str, _Ty | FailedToParse]:
     return type_annotations
 
 
-def validate_return_type(return_type: _Ty, node: NodeData):
+def validate_return_type(return_type: _Ty, node: NodeData) -> None:
     outputs = node.outputs
 
     if len(outputs) == 0:
@@ -182,7 +183,7 @@ def validate_return_type(return_type: _Ty, node: NodeData):
                 f"Return type '{return_type}' must have the same number of arguments as there are outputs"
             )
 
-        for o, return_arg in zip(outputs, return_args):
+        for o, return_arg in zip(outputs, return_args, strict=False):
             if o.associated_type is not None and not is_subset_of(
                 return_arg, o.associated_type
             ):
@@ -194,7 +195,7 @@ def validate_return_type(return_type: _Ty, node: NodeData):
 def check_schema_types(
     wrapped_func: Callable,
     node: NodeData,
-):
+) -> None:
     """
     Runtime validation for the number of inputs/outputs compared to the type args
     """
@@ -268,7 +269,7 @@ def check_schema_types(
         raise CheckFailedError(
             f"Number of inputs and arguments don't match: {len(ann)=} != {len(inputs)=}"
         )
-    for (a_name, a_type), i in zip(ann.items(), inputs):
+    for (a_name, a_type), i in zip(ann.items(), inputs, strict=False):
         associated_type = i.associated_type
         if (
             associated_type is not None
@@ -284,7 +285,7 @@ def check_naming_conventions(
     wrapped_func: Callable,
     name: str,
     fix: bool,
-):
+) -> None:
     expected_name = (
         name.lower()
         .replace(" ", "_")

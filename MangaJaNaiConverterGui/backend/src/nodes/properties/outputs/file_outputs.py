@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import navi
+
 from api import BaseOutput
 
 
@@ -14,7 +15,7 @@ class DirectoryOutput(BaseOutput[Path]):
         label: str = "Directory",
         of_input: int | None = None,
         output_type: str = "Directory",
-    ):
+    ) -> None:
         directory_type = (
             "Directory"
             if of_input is None

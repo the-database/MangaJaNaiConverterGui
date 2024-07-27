@@ -4,13 +4,12 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal, TypedDict, TypeVar
-
-import numpy as np
-from sanic.log import logger
-from typing_extensions import NotRequired
+from typing import Any, Literal, Never, NotRequired, TypedDict, TypeVar
 
 import navi
+import numpy as np
+from sanic.log import logger
+
 from api import BaseInput, InputConversion, group
 
 from ...condition import Condition, ConditionJson
@@ -44,7 +43,7 @@ class DropDownOption(TypedDict):
     condition: NotRequired[ConditionJson | None]
 
 
-DropDownStyle = Literal["dropdown", "checkbox", "tabs", "icons"]
+DropDownStyle = Literal["dropdown", "checkbox", "tabs", "icons", "anchor"]
 """
 This specified the preferred style in which the frontend may display the dropdown.
 
@@ -53,6 +52,7 @@ This specified the preferred style in which the frontend may display the dropdow
   The first option will be interpreted as the yes/true option while the second option will be interpreted as the no/false option.
 - `tabs`: The options are displayed as tab list. The label of the input itself will *not* be displayed.
 - `icons`: The options are displayed as a list of icons. This is only available if all options have icons. Labels are still required for all options.
+- `anchor`: The options are displayed as a 3x3 grid where the user is allowed to select one of 9 anchor positions. This only works for dropdowns with 9 options.
 """
 
 
@@ -88,7 +88,7 @@ class DropDownInput(BaseInput[T]):
         label_style: LabelStyle = "default",
         groups: list[DropDownGroup] | None = None,
         associated_type: Any = None,
-    ):
+    ) -> None:
         super().__init__(input_type, label, kind="dropdown", has_handle=False)
         self.options = options
         self.accepted_values = {o["value"] for o in self.options}
@@ -119,7 +119,7 @@ class DropDownInput(BaseInput[T]):
             "groups": [c.to_dict() for c in self.groups],
         }
 
-    def make_optional(self):
+    def make_optional(self) -> Never:
         raise ValueError("DropDownInput cannot be made optional")
 
     def enforce(self, value: object) -> T:
@@ -148,7 +148,9 @@ class DropDownInput(BaseInput[T]):
 
 
 class _BoolEnumInput(DropDownInput[bool]):
-    def __init__(self, label: str, *, default: bool = True, icon: str | None = None):
+    def __init__(
+        self, label: str, *, default: bool = True, icon: str | None = None
+    ) -> None:
         super().__init__(
             input_type="bool",
             label=label,
@@ -176,7 +178,7 @@ class _BoolEnumInput(DropDownInput[bool]):
 
 
 class _BoolGenericInput(BaseInput[bool]):
-    def __init__(self, label: str):
+    def __init__(self, label: str) -> None:
         super().__init__(input_type="bool", label=label)
         self.associated_type = bool
 
@@ -241,7 +243,7 @@ class EnumInput(DropDownInput[E]):
         categories: list[DropDownGroup] | None = None,
         conditions: dict[E, Condition] | None = None,
         icons: dict[E, str] | None = None,
-    ):
+    ) -> None:
         if type_name is None:
             type_name = enum.__name__
         if label is None:
@@ -257,14 +259,12 @@ class EnumInput(DropDownInput[E]):
         variant_types: list[str] = []
         for variant in enum:
             value = variant.value
-            assert isinstance(value, (int, str))
-            assert (
-                re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", variant.name) is not None
-            ), f"Expected the name of {enum.__name__}.{variant.name} to be snake case."
+            assert isinstance(value, int | str)
 
-            name = split_snake_case(variant.name)
-            variant_type = f"{type_name}::{join_pascal_case(name)}"
-            option_label = option_labels.get(variant, join_space_case(name))
+            variant_type = EnumInput.get_variant_type(variant, type_name)
+            option_label = option_labels.get(
+                variant, join_space_case(split_snake_case(variant.name))
+            )
             condition = conditions.get(variant)
             if condition is not None:
                 condition = condition.to_json()
@@ -301,6 +301,22 @@ class EnumInput(DropDownInput[E]):
 
         self.associated_type = enum
 
+    @staticmethod
+    def get_variant_type(variant: Enum, type_name: str | None = None) -> str:
+        """
+        Returns the full type name of a variant of an enum.
+        """
+
+        enum = variant.__class__
+        if type_name is None:
+            type_name = enum.__name__
+
+        assert (
+            re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", variant.name) is not None
+        ), f"Expected the name of {enum.__name__}.{variant.name} to be snake case."
+
+        return f"{type_name}::{join_pascal_case(split_snake_case(variant.name))}"
+
     def enforce(self, value: object) -> E:
         value = super().enforce(value)
         return self.enum(value)
@@ -323,7 +339,7 @@ class TextInput(BaseInput[str]):
         label_style: LabelStyle = "default",
         allow_empty_string: bool = False,
         invalid_pattern: str | None = None,
-    ):
+    ) -> None:
         super().__init__(
             input_type="string" if min_length == 0 else 'invStrSet("")',
             label=label,
@@ -384,7 +400,7 @@ class TextInput(BaseInput[str]):
 class ClipboardInput(BaseInput):
     """Input for pasting from clipboard"""
 
-    def __init__(self, label: str = "Clipboard input"):
+    def __init__(self, label: str = "Clipboard input") -> None:
         super().__init__(["Image", "string", "number"], label, kind="text")
         self.input_conversions = [InputConversion("Image", '"<Image>"')]
 
@@ -408,7 +424,7 @@ class ClipboardInput(BaseInput):
 
 
 class AnyInput(BaseInput[object]):
-    def __init__(self, label: str):
+    def __init__(self, label: str) -> None:
         super().__init__(input_type="any", label=label)
         self.associated_type = object
 
@@ -418,7 +434,7 @@ class AnyInput(BaseInput[object]):
 
 
 class SeedInput(NumberInput):
-    def __init__(self, label: str = "Seed", *, has_handle: bool = True):
+    def __init__(self, label: str = "Seed", *, has_handle: bool = True) -> None:
         super().__init__(
             label=label,
             min=None,
@@ -443,11 +459,11 @@ class SeedInput(NumberInput):
     def enforce(self, value: object) -> Seed:  # type: ignore
         if isinstance(value, Seed):
             return value
-        if isinstance(value, (int, float, str)):
+        if isinstance(value, int | float | str):
             return Seed(int(value))
         raise ValueError(f"Cannot convert {value} to Seed")
 
-    def make_optional(self):
+    def make_optional(self) -> Never:
         raise ValueError("SeedInput cannot be made optional")
 
 
@@ -458,7 +474,7 @@ class ColorInput(BaseInput[Color]):
         *,
         default: Color | None = None,
         channels: int | list[int] | None = None,
-    ):
+    ) -> None:
         super().__init__(
             input_type=navi.Color(channels=channels),
             label=label,
@@ -523,7 +539,7 @@ class ColorInput(BaseInput[Color]):
             "channels": self.channels,
         }
 
-    def make_optional(self):
+    def make_optional(self) -> Never:
         raise ValueError("ColorInput cannot be made optional")
 
 
@@ -584,7 +600,7 @@ def TileSizeDropdown(
 
 
 class AudioStreamInput(BaseInput):
-    def __init__(self, label: str = "Audio Stream"):
+    def __init__(self, label: str = "Audio Stream") -> None:
         super().__init__("AudioStream", label, kind="generic")
 
 
@@ -598,4 +614,48 @@ def RowOrderDropdown() -> DropDownInput:
         OrderEnum,
         label="Order",
         default=OrderEnum.ROW_MAJOR,
+    )
+
+
+class Anchor(Enum):
+    TOP_LEFT = "top_left"
+    TOP = "top_centered"
+    TOP_RIGHT = "top_right"
+    LEFT = "centered_left"
+    CENTER = "centered"
+    RIGHT = "centered_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM = "bottom_centered"
+    BOTTOM_RIGHT = "bottom_right"
+
+
+def AnchorInput(label: str = "Anchor", icon: str = "BsFillImageFill") -> DropDownInput:
+    return EnumInput(
+        Anchor,
+        label=label,
+        label_style="inline",
+        option_labels={
+            Anchor.TOP_LEFT: "Top Left",
+            Anchor.TOP: "Top",
+            Anchor.TOP_RIGHT: "Top Right",
+            Anchor.LEFT: "Left",
+            Anchor.CENTER: "Center",
+            Anchor.RIGHT: "Right",
+            Anchor.BOTTOM_LEFT: "Bottom Left",
+            Anchor.BOTTOM: "Bottom",
+            Anchor.BOTTOM_RIGHT: "Bottom Right",
+        },
+        icons={
+            Anchor.TOP_LEFT: icon,
+            Anchor.TOP: icon,
+            Anchor.TOP_RIGHT: icon,
+            Anchor.LEFT: icon,
+            Anchor.CENTER: icon,
+            Anchor.RIGHT: icon,
+            Anchor.BOTTOM_LEFT: icon,
+            Anchor.BOTTOM: icon,
+            Anchor.BOTTOM_RIGHT: icon,
+        },
+        preferred_style="anchor",
+        default=Anchor.CENTER,
     )

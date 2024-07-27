@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Union
 
+import navi
 import numpy as np
 
-import navi
 from api import BaseInput, ErrorValue
 
 from ...impl.color.color import Color
@@ -16,7 +16,7 @@ from ...utils.utils import get_h_w_c
 class AudioInput(BaseInput):
     """Input a 1D Audio NumPy array"""
 
-    def __init__(self, label: str = "Audio"):
+    def __init__(self, label: str = "Audio") -> None:
         super().__init__("Audio", label)
 
 
@@ -30,7 +30,7 @@ class ImageInput(BaseInput):
         image_type: navi.ExpressionJson = "Image | Color",
         channels: int | list[int] | None = None,
         allow_colors: bool = False,
-    ):
+    ) -> None:
         base_type = [navi.Image(channels=channels)]
         if allow_colors:
             base_type.append(navi.Color(channels=channels))
@@ -108,5 +108,5 @@ class ImageInput(BaseInput):
 class VideoInput(BaseInput):
     """Input a 3D Video NumPy array"""
 
-    def __init__(self, label: str = "Video"):
+    def __init__(self, label: str = "Video") -> None:
         super().__init__("Video", label)

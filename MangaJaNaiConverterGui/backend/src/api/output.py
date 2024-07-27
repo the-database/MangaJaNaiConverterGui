@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Literal, Mapping, TypeVar
+from collections.abc import Mapping
+from typing import Any, Generic, Literal, TypeVar
 
 import navi
 
 from .types import InputId, OutputId
 
-OutputKind = Literal["image", "large-image", "tagged", "generic"]
+OutputKind = Literal["large-image", "tagged", "generic"]
 BroadcastData = Mapping[str, object]
 
 T = TypeVar("T")
@@ -20,7 +21,7 @@ class BaseOutput(Generic[T]):
         kind: OutputKind = "generic",
         has_handle: bool = True,
         associated_type: Any = None,
-    ):
+    ) -> None:
         self.output_type: navi.ExpressionJson = output_type
         self.label: str = label
         self.id: OutputId = OutputId(-1)

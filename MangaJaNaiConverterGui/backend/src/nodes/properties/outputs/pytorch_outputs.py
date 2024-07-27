@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import navi
 from spandrel import ModelDescriptor, ModelTiling
 
-import navi
 from api import BaseOutput, OutputKind
 
 from ...utils.format import format_channel_numbers
@@ -14,7 +14,7 @@ class ModelOutput(BaseOutput):
         model_type: navi.ExpressionJson = "PyTorchModel",
         label: str = "Model",
         kind: OutputKind = "generic",
-    ):
+    ) -> None:
         super().__init__(model_type, label, kind=kind, associated_type=ModelDescriptor)
 
     def get_broadcast_data(self, value: ModelDescriptor) -> dict[str, list[str]]:

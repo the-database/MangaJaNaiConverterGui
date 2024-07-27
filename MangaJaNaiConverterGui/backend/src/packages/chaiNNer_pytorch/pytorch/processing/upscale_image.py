@@ -5,10 +5,6 @@ import weakref
 import numpy as np
 import psutil
 import torch
-from sanic.log import logger
-from spandrel import ImageModelDescriptor, ModelTiling
-
-from api import KeyInfo, NodeContext, Progress
 from nodes.groups import Condition, if_enum_group, if_group
 from nodes.impl.pytorch.auto_split import pytorch_auto_split
 from nodes.impl.pytorch.utils import safe_cuda_cache_empty
@@ -20,8 +16,7 @@ from nodes.impl.upscale.auto_split_tiles import (
     estimate_tile_size,
     parse_tile_size_input,
 )
-from nodes.impl.upscale.convenient_upscale import convenient_upscale
-from nodes.impl.upscale.custom_scale import custom_scale_upscale
+from nodes.impl.upscale.basic_upscale import PaddingType, UpscaleInfo, basic_upscale
 from nodes.impl.upscale.tiler import MaxTileSize
 from nodes.properties.inputs import (
     BoolInput,
@@ -31,7 +26,10 @@ from nodes.properties.inputs import (
     TileSizeDropdown,
 )
 from nodes.properties.outputs import ImageOutput
-from nodes.utils.utils import get_h_w_c
+from sanic.log import logger
+from spandrel import ImageModelDescriptor, ModelTiling
+
+from api import KeyInfo, NodeContext, Progress
 
 from ...settings import PyTorchSettings, get_settings
 from .. import processing_group
@@ -68,10 +66,13 @@ def upscale(
                 if options.use_fp16:
                     model_bytes = model_bytes // 2
                 mem_info: tuple[int, int] = torch.cuda.mem_get_info(device)  # type: ignore
-                free, _total = mem_info
+                _free, total = mem_info
+                # only use 75% of the total memory
+                total = int(total * 0.75)
                 if options.budget_limit > 0:
-                    free = min(options.budget_limit * 1024**3, free)
-                budget = int(free * 0.8)
+                    total = min(options.budget_limit * 1024**3, total)
+                # Estimate using 80% of the value to be more conservative
+                budget = int(total * 0.8)
 
                 return MaxTileSize(
                     estimate_tile_size(
@@ -176,15 +177,15 @@ def upscale(
                 " faster than what the automatic mode picks.",
                 hint=True,
             ),
-        ),
-        if_enum_group(2, CUSTOM)(
-            NumberInput(
-                "Custom Tile Size",
-                min=1,
-                max=None,
-                default=TILE_SIZE_256,
-                unit="px",
-            ).with_id(6),
+            if_enum_group(2, CUSTOM)(
+                NumberInput(
+                    "Custom Tile Size",
+                    min=1,
+                    max=None,
+                    default=TILE_SIZE_256,
+                    unit="px",
+                ).with_id(6),
+            ),
         ),
         if_group(
             Condition.type(1, "Image { channels: 4 } ")
@@ -265,36 +266,28 @@ def upscale_image_node(
 ) -> np.ndarray:
     exec_options = get_settings(context)
 
-    context.add_cleanup(safe_cuda_cache_empty)
+    context.add_cleanup(
+        safe_cuda_cache_empty,
+        after="node" if exec_options.force_cache_wipe else "chain",
+    )
 
-    in_nc = model.input_channels
-    out_nc = model.output_channels
-    scale = model.scale
+    info = UpscaleInfo(
+        in_nc=model.input_channels, out_nc=model.output_channels, scale=model.scale
+    )
+    if not use_custom_scale or not info.supports_custom_scale:
+        custom_scale = model.scale
 
-    def inner_upscale(img: np.ndarray) -> np.ndarray:
-        h, w, c = get_h_w_c(img)
-        logger.debug(
-            f"Upscaling a {h}x{w}x{c} image with a {scale}x model (in_nc: {in_nc}, out_nc:"
-            f" {out_nc})"
-        )
-
-        return convenient_upscale(
-            img,
-            in_nc,
-            out_nc,
-            lambda i: upscale(
-                i,
-                model,
-                TileSize(custom_tile_size) if tile_size == CUSTOM else tile_size,
-                exec_options,
-                context,
-            ),
-            separate_alpha,
-            clip=False,  # pytorch_auto_split already does clipping internally
-        )
-
-    if not use_custom_scale or scale == 1 or in_nc != out_nc:
-        # no custom scale
-        custom_scale = scale
-
-    return custom_scale_upscale(img, inner_upscale, scale, custom_scale, separate_alpha)
+    return basic_upscale(
+        img,
+        lambda i: upscale(
+            i,
+            model,
+            TileSize(custom_tile_size) if tile_size == CUSTOM else tile_size,
+            exec_options,
+            context,
+        ),
+        upscale_info=info,
+        scale=custom_scale,
+        separate_alpha=separate_alpha,
+        clip=False,  # pytorch_auto_split already does clipping internally
+    )

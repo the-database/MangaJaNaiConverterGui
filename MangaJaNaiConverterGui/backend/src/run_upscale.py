@@ -1,40 +1,54 @@
-import sys
+import argparse
+import ctypes
+import io
 import json
 import os
 import platform
-from pathlib import Path
-import ctypes
-import io
-import cv2
-import pillow_avif  # noqa: F401
-from PIL import Image, ImageFilter, ImageCms
-import numpy as np
-import argparse
-import zipfile
-import rarfile
+import sys
 import time
-from typing import Callable
-from multiprocess import Queue, Process, set_start_method
-from chainner_ext import resize, ResizeFilter
+import typing
+from collections.abc import Callable
+from io import BytesIO
+from pathlib import Path
+from typing import Any, Literal
+from zipfile import ZipFile
+
+import cv2
+import numpy as np
+import pillow_avif  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import rarfile
+from chainner_ext import ResizeFilter, resize
+from cv2.typing import MatLike
+
+if typing.TYPE_CHECKING:
+    from multiprocessing import Process, Queue, set_start_method
+else:
+    from multiprocess import Process, Queue, set_start_method
+from PIL import Image, ImageCms, ImageFilter
+from PIL.Image import Image as ImageType
+from PIL.ImageCms import ImageCmsProfile
+from rarfile import RarFile
+from spandrel import ImageModelDescriptor, ModelDescriptor
 
 sys.path.append(os.path.normpath(os.path.dirname(os.path.abspath(__file__))))
 
-from packages.chaiNNer_pytorch.pytorch.io.load_model import load_model_node
-from api import (
-    NodeContext,
-    SettingsParser,
+from nodes.impl.image_utils import cv_save_image, normalize, to_uint8, to_uint16
+from nodes.impl.upscale.auto_split_tiles import (
+    ESTIMATE,
+    MAX_TILE_SIZE,
+    NO_TILING,
+    TileSize,
 )
-from progress_controller import ProgressController, ProgressToken
 from nodes.utils.utils import get_h_w_c
-from nodes.impl.image_utils import cv_save_image, to_uint8, to_uint16, normalize
+from packages.chaiNNer_pytorch.pytorch.io.load_model import load_model_node
 from packages.chaiNNer_pytorch.pytorch.processing.upscale_image import (
     upscale_image_node,
 )
-from nodes.impl.upscale.auto_split_tiles import (
-    ESTIMATE,
-    NO_TILING,
-    MAX_TILE_SIZE,
-    TileSize,
+from progress_controller import ProgressController, ProgressToken
+
+from api import (
+    NodeContext,
+    SettingsParser,
 )
 
 
@@ -48,7 +62,8 @@ class _ExecutorNodeContext(NodeContext):
         self.__settings = settings
         self._storage_dir = storage_dir
 
-        self.cleanup_fns: set[Callable[[], None]] = set()
+        self.chain_cleanup_fns: set[Callable[[], None]] = set()
+        self.node_cleanup_fns: set[Callable[[], None]] = set()
 
     @property
     def aborted(self) -> bool:
@@ -75,11 +90,18 @@ class _ExecutorNodeContext(NodeContext):
     def storage_dir(self) -> Path:
         return self._storage_dir
 
-    def add_cleanup(self, fn: Callable[[], None]) -> None:
-        self.cleanup_fns.add(fn)
+    def add_cleanup(
+        self, fn: Callable[[], None], after: Literal["node", "chain"] = "chain"
+    ) -> None:
+        if after == "chain":
+            self.chain_cleanup_fns.add(fn)
+        elif after == "node":
+            self.node_cleanup_fns.add(fn)
+        else:
+            raise ValueError(f"Unknown cleanup type: {after}")
 
 
-def get_tile_size(tile_size_str):
+def get_tile_size(tile_size_str: str) -> TileSize:
     if tile_size_str == "Auto (Estimate)":
         return ESTIMATE
     elif tile_size_str == "Maximum":
@@ -94,12 +116,12 @@ def get_tile_size(tile_size_str):
 
 """
 lanczos downscale without color conversion, for pre-upscale
-downscale and final color downscale 
+downscale and final color downscale
 """
 
 
-def standard_resize(image, new_size):
-    new_image = np.float32(image) / 255.0
+def standard_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
+    new_image = image.astype(np.float32) / 255.0
     new_image = resize(new_image, new_size, ResizeFilter.Lanczos, False)
     return (new_image * 255).round().astype(np.uint8)
 
@@ -109,8 +131,8 @@ final downscale for grayscale images only
 """
 
 
-def dotgain20_resize(image, new_size):
-    h, w = image.shape[:2]
+def dotgain20_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
+    h, _ = image.shape[:2]
     size_ratio = h / new_size[1]
     blur_size = (1 / size_ratio - 1) / 3.5
     if blur_size >= 0.1:
@@ -122,7 +144,7 @@ def dotgain20_resize(image, new_size):
     pil_image = ImageCms.applyTransform(pil_image, dotgain20togamma1transform, False)
 
     new_image = np.array(pil_image)
-    new_image = np.float32(new_image) / 255.0
+    new_image = new_image.astype(np.float32) / 255.0
     new_image = resize(new_image, new_size, ResizeFilter.CubicCatrom, False)
     new_image = (new_image * 255).round().astype(np.uint8)
 
@@ -131,18 +153,20 @@ def dotgain20_resize(image, new_size):
     return np.array(pil_image)
 
 
-def image_resize(image, new_size, is_grayscale):
+def image_resize(
+    image: np.ndarray, new_size: tuple[int, int], is_grayscale: bool
+) -> np.ndarray:
     if is_grayscale:
         return dotgain20_resize(image, new_size)
 
     return standard_resize(image, new_size)
 
 
-def get_system_codepage():
+def get_system_codepage() -> Any:
     return None if is_linux else ctypes.windll.kernel32.GetConsoleOutputCP()
 
 
-def enhance_contrast(image):
+def enhance_contrast(image: np.ndarray) -> MatLike:
     # print('1', image[199][501], np.min(image), np.max(image))
     image_p = Image.fromarray(image).convert("L")
 
@@ -211,13 +235,13 @@ def enhance_contrast(image):
     return cv2.cvtColor(image_array, cv2.COLOR_GRAY2BGR)
 
 
-def _read_cv(img_stream):
+def _read_cv(img_stream: BytesIO) -> MatLike:
     return cv2.imdecode(
         np.frombuffer(img_stream.read(), dtype=np.uint8), cv2.IMREAD_COLOR
     )
 
 
-def _read_cv_from_path(path):
+def _read_cv_from_path(path: str) -> MatLike:
     img = None
     try:
         img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
@@ -240,14 +264,14 @@ def _read_cv_from_path(path):
     return img
 
 
-def _read_image(img_stream, filename):
+def _read_image(img_stream: BytesIO, filename: str) -> np.ndarray:
     for extension in CV2_IMAGE_EXTENSIONS:
         if filename.lower().endswith(extension):
             return _read_cv(img_stream)
     return _read_pil(img_stream)
 
 
-def _read_image_from_path(path):
+def _read_image_from_path(path: str) -> np.ndarray:
     for extension in CV2_IMAGE_EXTENSIONS:
         if path.lower().endswith(extension):
             return _read_cv_from_path(path)
@@ -255,17 +279,17 @@ def _read_image_from_path(path):
     return _read_pil_from_path(path)
 
 
-def _read_pil(img_stream):
+def _read_pil(img_stream: BytesIO) -> np.ndarray:
     im = Image.open(img_stream, formats=["AVIF"])
     return _pil_to_cv2(im)
 
 
-def _read_pil_from_path(path):
+def _read_pil_from_path(path: str) -> np.ndarray:
     im = Image.open(path)
     return _pil_to_cv2(im)
 
 
-def _pil_to_cv2(im):
+def _pil_to_cv2(im: ImageType) -> np.ndarray:
     img = np.array(im)
     _, _, c = get_h_w_c(img)
     if c == 3:
@@ -275,7 +299,7 @@ def _pil_to_cv2(im):
     return img
 
 
-def cv_image_is_grayscale(image):
+def cv_image_is_grayscale(image: np.ndarray) -> bool:
     _, _, c = get_h_w_c(image)
 
     if c == 1:
@@ -286,9 +310,9 @@ def cv_image_is_grayscale(image):
     ignore_threshold = 12
 
     # getting differences between (b,g), (r,g), (b,r) channel pixels
-    r_g = cv2.subtract(cv2.absdiff(r, g), ignore_threshold)
-    r_b = cv2.subtract(cv2.absdiff(r, b), ignore_threshold)
-    g_b = cv2.subtract(cv2.absdiff(g, b), ignore_threshold)
+    r_g = cv2.subtract(cv2.absdiff(r, g), ignore_threshold)  # type: ignore
+    r_b = cv2.subtract(cv2.absdiff(r, b), ignore_threshold)  # type: ignore
+    g_b = cv2.subtract(cv2.absdiff(g, b), ignore_threshold)  # type: ignore
 
     # create masks to identify pure black and pure white pixels
     pure_black_mask = np.logical_and.reduce((r == 0, g == 0, b == 0))
@@ -311,7 +335,13 @@ def cv_image_is_grayscale(image):
     return ratio < 1
 
 
-def get_chain_for_image(image, target_scale, target_width, target_height, chains):
+def get_chain_for_image(
+    image: np.ndarray,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+) -> tuple[dict[str, Any], bool, int, int] | tuple[None, None, None, None]:
     original_height, original_width, _ = get_h_w_c(image)
 
     if target_width != 0 and target_height != 0:
@@ -322,6 +352,8 @@ def get_chain_for_image(image, target_scale, target_width, target_height, chains
         target_scale = target_height / original_height
     elif target_width != 0:
         target_scale = target_width / original_width
+
+    assert target_scale is not None
 
     is_grayscale = cv_image_is_grayscale(image)
 
@@ -336,10 +368,14 @@ def get_chain_for_image(image, target_scale, target_width, target_height, chains
 
 
 def should_chain_activate_for_image(
-    original_width, original_height, is_grayscale, target_scale, chain
-):
-    min_width, min_height = [int(x) for x in chain["MinResolution"].split("x")]
-    max_width, max_height = [int(x) for x in chain["MaxResolution"].split("x")]
+    original_width: int,
+    original_height: int,
+    is_grayscale: bool,
+    target_scale: float,
+    chain: dict[str, Any],
+) -> bool:
+    min_width, min_height = (int(x) for x in chain["MinResolution"].split("x"))
+    max_width, max_height = (int(x) for x in chain["MaxResolution"].split("x"))
 
     # resolution tests
     if min_width != 0 and min_width > original_width:
@@ -366,29 +402,37 @@ def should_chain_activate_for_image(
     return True
 
 
-def ai_upscale_image(image, model_tile_size, model):
-    global context
+def ai_upscale_image(
+    image: np.ndarray, model_tile_size: TileSize, model: ImageModelDescriptor | None
+) -> np.ndarray:
     if model is not None:
         return upscale_image_node(
-            context, image, model, False, 0, model_tile_size, None, False
+            context,
+            image,
+            model,
+            False,
+            0,
+            model_tile_size,
+            256,
+            False,
         )
     return image
 
 
-def postprocess_image(image):
+def postprocess_image(image: np.ndarray) -> np.ndarray:
     # print(f"postprocess_image")
     return to_uint8(image, normalized=True)
 
 
 def final_target_resize(
-    image,
-    target_scale,
-    target_width,
-    target_height,
-    original_width,
-    original_height,
-    is_grayscale,
-):
+    image: np.ndarray,
+    target_scale: float,
+    target_width: int,
+    target_height: int,
+    original_width: int,
+    original_height: int,
+    is_grayscale: bool,
+) -> np.ndarray:
     # fit to dimensions
     if target_height != 0 and target_width != 0:
         h, w = image.shape[:2]
@@ -414,7 +458,7 @@ def final_target_resize(
             )
     else:
         h, w = image.shape[:2]
-        new_target_height = original_height * target_scale
+        new_target_height = round(original_height * target_scale)
         if h != new_target_height:
             return image_resize(
                 image,
@@ -426,19 +470,19 @@ def final_target_resize(
 
 
 def save_image_zip(
-    image,
-    file_name,
-    output_zip,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    original_width,
-    original_height,
-    target_scale,
-    target_width,
-    target_height,
-    is_grayscale,
-):
+    image: np.ndarray,
+    file_name: str,
+    output_zip: ZipFile,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    original_width: int,
+    original_height: int,
+    target_scale: float,
+    target_width: int,
+    target_height: int,
+    is_grayscale: bool,
+) -> None:
     print(f"save image to zip: {file_name}", flush=True)
 
     if image_format == "avif":
@@ -505,7 +549,7 @@ def save_image_zip(
 
         # Convert the resized image back to bytes
         _, buf_img = cv2.imencode(f".{image_format}", image, params)
-        output_buffer = io.BytesIO(buf_img)
+        output_buffer = io.BytesIO(buf_img)  # type: ignore
 
     upscaled_image_data = output_buffer.getvalue()
 
@@ -514,18 +558,18 @@ def save_image_zip(
 
 
 def save_image(
-    image,
-    output_file_path,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    original_width,
-    original_height,
-    target_scale,
-    target_width,
-    target_height,
-    is_grayscale,
-):
+    image: np.ndarray,
+    output_file_path: str,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    original_width: int,
+    original_height: int,
+    target_scale: float,
+    target_width: int,
+    target_height: int,
+    is_grayscale: bool,
+) -> None:
     print(f"save image: {output_file_path}", flush=True)
 
     # save with pillow
@@ -595,21 +639,21 @@ def save_image(
 
 
 def preprocess_worker_archive(
-    upscale_queue,
-    input_archive_path,
-    output_archive_path,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    upscale_queue: Queue,
+    input_archive_path: str,
+    output_archive_path: str,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     """
     given a zip or rar path, read images out of the archive, apply auto levels, add the image to upscale queue
     """
 
     if input_archive_path.endswith(ZIP_EXTENSIONS):
-        with zipfile.ZipFile(input_archive_path, "r") as input_zip:
+        with ZipFile(input_archive_path, "r") as input_zip:
             preprocess_worker_archive_file(
                 upscale_queue,
                 input_zip,
@@ -635,15 +679,15 @@ def preprocess_worker_archive(
 
 
 def preprocess_worker_archive_file(
-    upscale_queue,
-    input_archive,
-    output_archive_path,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    upscale_queue: Queue,
+    input_archive: RarFile | ZipFile,
+    output_archive_path: str,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     """
     given an input zip or rar archive, read images out of the archive, apply auto levels, add the image to upscale queue
     """
@@ -652,6 +696,7 @@ def preprocess_worker_archive_file(
     print(f"TOTALZIP={len(namelist)}", flush=True)
     for filename in namelist:
         decoded_filename = filename
+        image_data = None
         try:
             decoded_filename = decoded_filename.encode("cp437").decode(
                 f"cp{system_codepage}"
@@ -675,6 +720,7 @@ def preprocess_worker_archive_file(
                     )
                 )
                 model = None
+                tile_size_str = ""
                 if chain is not None:
                     resize_width_before_upscale = chain["ResizeWidthBeforeUpscale"]
                     resize_height_before_upscale = chain["ResizeHeightBeforeUpscale"]
@@ -731,15 +777,14 @@ def preprocess_worker_archive_file(
                         model = loaded_models[model_abs_path]
 
                     elif os.path.exists(model_abs_path):
-                        model, dirname, basename = load_model_node(
-                            context, Path(model_abs_path)
-                        )
-                        if model is not None:
-                            loaded_models[model_abs_path] = model
+                        model, _, _ = load_model_node(context, Path(model_abs_path))
+                        loaded_models[model_abs_path] = model
+
+                    tile_size_str = chain["ModelTileSize"]
                 else:
                     image = normalize(image)
 
-                image = np.ascontiguousarray(image)
+                # image = np.ascontiguousarray(image)
 
                 upscale_queue.put(
                     (
@@ -749,7 +794,7 @@ def preprocess_worker_archive_file(
                         is_grayscale,
                         original_width,
                         original_height,
-                        get_tile_size(chain["ModelTileSize"]),
+                        get_tile_size(tile_size_str),
                         model,
                     )
                 )
@@ -768,22 +813,22 @@ def preprocess_worker_archive_file(
 
 
 def preprocess_worker_folder(
-    upscale_queue,
-    input_folder_path,
-    output_folder_path,
-    output_filename,
-    upscale_images,
-    upscale_archives,
-    overwrite_existing_files,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    upscale_queue: Queue,
+    input_folder_path: str,
+    output_folder_path: str,
+    output_filename: str,
+    upscale_images: bool,
+    upscale_archives: bool,
+    overwrite_existing_files: bool,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     """
     given a folder path, recursively iterate the folder
     """
@@ -791,7 +836,7 @@ def preprocess_worker_folder(
         f"preprocess_worker_folder entering {input_folder_path} {output_folder_path} {output_filename}",
         flush=True,
     )
-    for root, dirs, files in os.walk(input_folder_path):
+    for root, _dirs, files in os.walk(input_folder_path):
         for filename in files:
             # for output file, create dirs if necessary, or skip if file exists and overwrite not enabled
             input_file_base = Path(filename).stem
@@ -827,6 +872,7 @@ def preprocess_worker_folder(
                         )
                     )
                     model = None
+                    tile_size_str = ""
                     if chain is not None:
                         resize_width_before_upscale = chain["ResizeWidthBeforeUpscale"]
                         resize_height_before_upscale = chain[
@@ -890,15 +936,13 @@ def preprocess_worker_folder(
                             model = loaded_models[model_abs_path]
 
                         elif os.path.exists(model_abs_path):
-                            model, dirname, basename = load_model_node(
-                                context, Path(model_abs_path)
-                            )
-                            if model is not None:
-                                loaded_models[model_abs_path] = model
+                            model, _, _ = load_model_node(context, Path(model_abs_path))
+                            loaded_models[model_abs_path] = model
+                        tile_size_str = chain["ModelTileSize"]
                     else:
                         image = normalize(image)
 
-                    image = np.ascontiguousarray(image)
+                    # image = np.ascontiguousarray(image)
 
                     upscale_queue.put(
                         (
@@ -908,7 +952,7 @@ def preprocess_worker_folder(
                             is_grayscale,
                             original_width,
                             original_height,
-                            get_tile_size(chain["ModelTileSize"]),
+                            get_tile_size(tile_size_str),
                             model,
                         )
                     )
@@ -939,21 +983,19 @@ def preprocess_worker_folder(
 
 
 def preprocess_worker_image(
-    upscale_queue,
-    input_image_path,
-    output_image_path,
-    overwrite_existing_files,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    upscale_queue: Queue,
+    input_image_path: str,
+    output_image_path: str,
+    overwrite_existing_files: bool,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     """
     given an image path, apply auto levels and add to upscale queue
     """
-    global context
-
     if input_image_path.lower().endswith(IMAGE_EXTENSIONS):
         if not overwrite_existing_files and os.path.isfile(output_image_path):
             print(f"file exists, skip: {output_image_path}", flush=True)
@@ -967,6 +1009,7 @@ def preprocess_worker_image(
             image, target_scale, target_width, target_height, chains
         )
         model = None
+        tile_size_str = ""
         if chain is not None:
             resize_width_before_upscale = chain["ResizeWidthBeforeUpscale"]
             resize_height_before_upscale = chain["ResizeHeightBeforeUpscale"]
@@ -1023,16 +1066,14 @@ def preprocess_worker_image(
                 model = loaded_models[model_abs_path]
 
             elif os.path.exists(model_abs_path):
-                model, dirname, basename = load_model_node(
-                    context, Path(model_abs_path)
-                )
-                if model is not None:
-                    loaded_models[model_abs_path] = model
+                model, _, _ = load_model_node(context, Path(model_abs_path))
+                loaded_models[model_abs_path] = model
+            tile_size_str = chain["ModelTileSize"]
         else:
             print("No chain!!!!!!!")
             image = normalize(image)
 
-        image = np.ascontiguousarray(image)
+        # image = np.ascontiguousarray(image)
 
         upscale_queue.put(
             (
@@ -1042,14 +1083,14 @@ def preprocess_worker_image(
                 is_grayscale,
                 original_width,
                 original_height,
-                get_tile_size(chain["ModelTileSize"]),
+                get_tile_size(tile_size_str),
                 model,
             )
         )
     upscale_queue.put(UPSCALE_SENTINEL)
 
 
-def upscale_worker(upscale_queue, postprocess_queue):
+def upscale_worker(upscale_queue: Queue, postprocess_queue: Queue) -> None:
     """
     wait for upscale queue, for each queue entry, upscale image and add result to postprocess queue
     """
@@ -1078,20 +1119,20 @@ def upscale_worker(upscale_queue, postprocess_queue):
 
 
 def postprocess_worker_zip(
-    postprocess_queue,
-    output_zip_path,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-):
+    postprocess_queue: Queue,
+    output_zip_path: str,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float,
+    target_width: int,
+    target_height: int,
+) -> None:
     """
     wait for postprocess queue, for each queue entry, save the image to the zip file
     """
     # print("postprocess_worker_zip entering")
-    with zipfile.ZipFile(output_zip_path, "w") as output_zip:
+    with ZipFile(output_zip_path, "w") as output_zip:
         while True:
             (
                 image,
@@ -1126,15 +1167,15 @@ def postprocess_worker_zip(
 
 
 def postprocess_worker_folder(
-    postprocess_queue,
-    output_folder_path,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-):
+    postprocess_queue: Queue,
+    output_folder_path: str,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float,
+    target_width: int,
+    target_height: int,
+) -> None:
     """
     wait for postprocess queue, for each queue entry, save the image to the output folder
     """
@@ -1165,15 +1206,15 @@ def postprocess_worker_folder(
 
 
 def postprocess_worker_image(
-    postprocess_queue,
-    output_file_path,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-):
+    postprocess_queue: Queue,
+    output_file_path: str,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float,
+    target_width: int,
+    target_height: int,
+) -> None:
     """
     wait for postprocess queue, for each queue entry, save the image to the output file path
     """
@@ -1202,17 +1243,17 @@ def postprocess_worker_image(
 
 
 def upscale_archive_file(
-    input_zip_path,
-    output_zip_path,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    input_zip_path: str,
+    output_zip_path: str,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     # TODO accept multiple paths to reuse simple queues?
 
     upscale_queue = Queue(maxsize=1)
@@ -1263,18 +1304,18 @@ def upscale_archive_file(
 
 
 def upscale_image_file(
-    input_image_path,
-    output_image_path,
-    overwrite_existing_files,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    input_image_path: str,
+    output_image_path: str,
+    overwrite_existing_files: bool,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     upscale_queue = Queue(maxsize=1)
     postprocess_queue = Queue(maxsize=1)
 
@@ -1324,19 +1365,19 @@ def upscale_image_file(
 
 
 def upscale_file(
-    input_file_path,
-    output_folder_path,
-    output_filename,
-    overwrite_existing_files,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    input_file_path: str,
+    output_folder_path: str,
+    output_filename: str,
+    overwrite_existing_files: bool,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     input_file_base = Path(input_file_path).stem
 
     if input_file_path.lower().endswith(ARCHIVE_EXTENSIONS):
@@ -1394,21 +1435,21 @@ def upscale_file(
 
 
 def upscale_folder(
-    input_folder_path,
-    output_folder_path,
-    output_filename,
-    upscale_images,
-    upscale_archives,
-    overwrite_existing_files,
-    image_format,
-    lossy_compression_quality,
-    use_lossless_compression,
-    target_scale,
-    target_width,
-    target_height,
-    chains,
-    loaded_models,
-):
+    input_folder_path: str,
+    output_folder_path: str,
+    output_filename: str,
+    upscale_images: bool,
+    upscale_archives: bool,
+    overwrite_existing_files: bool,
+    image_format: str,
+    lossy_compression_quality: int,
+    use_lossless_compression: bool,
+    target_scale: float | None,
+    target_width: int,
+    target_height: int,
+    chains: list[dict[str, Any]],
+    loaded_models: dict[str, ModelDescriptor],
+) -> None:
     # print("upscale_folder: entering")
 
     # preprocess_queue = Queue(maxsize=1)
@@ -1469,18 +1510,18 @@ def upscale_folder(
 current_file_directory = os.path.dirname(os.path.abspath(__file__))
 
 
-def get_model_abs_path(chain_model_file_path):
+def get_model_abs_path(chain_model_file_path: str) -> str:
     return os.path.abspath(os.path.join(models_directory, chain_model_file_path))
 
 
-def get_gamma_icc_profile():
+def get_gamma_icc_profile() -> ImageCmsProfile:
     profile_path = os.path.join(
         current_file_directory, "../ImageMagick/Custom Gray Gamma 1.0.icc"
     )
     return ImageCms.getOpenProfile(profile_path)
 
 
-def get_dot20_icc_profile():
+def get_dot20_icc_profile() -> ImageCmsProfile:
     profile_path = os.path.join(
         current_file_directory, "../ImageMagick/Dot Gain 20%.icc"
     )
@@ -1492,14 +1533,14 @@ if is_linux:
     set_start_method("spawn", force=True)
 
 
-sys.stdout.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--settings", required=True)
 
 args = parser.parse_args()
 
-with open(args.settings, mode="r", encoding="utf-8") as f:
+with open(args.settings, encoding="utf-8") as f:
     settings = json.load(f)
 
 workflow = settings["Workflows"]["$values"][settings["SelectedWorkflowIndex"]]
@@ -1515,7 +1556,7 @@ ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS + RAR_EXTENSIONS
 loaded_models = {}
 system_codepage = get_system_codepage()
 
-settingsParser = SettingsParser(
+settings_parser = SettingsParser(
     {
         "use_cpu": settings["UseCpu"],
         "use_fp16": settings["UseFp16"],
@@ -1524,7 +1565,7 @@ settingsParser = SettingsParser(
     }
 )
 
-context = _ExecutorNodeContext(ProgressController(), settingsParser, None)
+context = _ExecutorNodeContext(ProgressController(), settings_parser, Path())
 
 gamma1icc = get_gamma_icc_profile()
 dotgain20icc = get_dot20_icc_profile()
@@ -1551,7 +1592,7 @@ if __name__ == "__main__":
     else:
         image_format = "jpeg"
 
-    target_scale = None
+    target_scale: float | None = None
     target_width = 0
     target_height = 0
 

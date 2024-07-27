@@ -70,7 +70,7 @@ def blend_mode_normalized(blend_mode: BlendMode) -> bool:
 class ImageBlender:
     """Class for compositing images using different blending modes."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.modes = {
             BlendMode.NORMAL: self.__normal,
             BlendMode.MULTIPLY: self.__multiply,
@@ -202,7 +202,7 @@ def blend_images(overlay: np.ndarray, base: np.ndarray, blend_mode: BlendMode):
         o_shape[:2] == b_shape[:2]
     ), "The overlay and the base image must have the same size"
 
-    def assert_sane(c: int, name: str):
+    def assert_sane(c: int, name: str) -> None:
         sane = c in (1, 3, 4)
         assert sane, f"The {name} has to be a grayscale, RGB, or RGBA image"
 

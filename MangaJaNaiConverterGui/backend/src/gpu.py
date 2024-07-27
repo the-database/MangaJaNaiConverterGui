@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Callable, Sequence
 
 import pynvml as nv
 from sanic.log import logger
@@ -68,7 +68,9 @@ class NvDevice:
 
 
 class NvInfo:
-    def __init__(self, devices: Sequence[NvDevice], clean_up: Callable[[], None]):
+    def __init__(
+        self, devices: Sequence[NvDevice], clean_up: Callable[[], None]
+    ) -> None:
         self.__devices: Sequence[NvDevice] = devices
         self.__clean_up = clean_up
 
@@ -76,7 +78,7 @@ class NvInfo:
     def unavailable():
         return NvInfo([], lambda: None)
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.__clean_up()
 
     @property
@@ -92,7 +94,7 @@ class NvInfo:
         return all(gpu.supports_fp16 for gpu in self.devices)
 
 
-def _try_nvml_init():
+def _try_nvml_init() -> bool | None:
     try:
         nv.nvmlInit()
         return True
@@ -106,7 +108,7 @@ def _try_nvml_init():
         return False
 
 
-def _try_nvml_shutdown():
+def _try_nvml_shutdown() -> None:
     try:
         nv.nvmlShutdown()
     except Exception:

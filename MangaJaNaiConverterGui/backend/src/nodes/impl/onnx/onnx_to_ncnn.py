@@ -56,7 +56,7 @@ ROT = ReductionOpTypes
 
 
 class Onnx2NcnnConverter:
-    def __init__(self, onnx_model: ModelProto):
+    def __init__(self, onnx_model: ModelProto) -> None:
         self.onnx_graph: GraphProto = onnx_model.graph
         self.mutable_graph_nodes: list[NodeProto] = list(self.onnx_graph.node)
         self.node_count: int = len(self.onnx_graph.node)
