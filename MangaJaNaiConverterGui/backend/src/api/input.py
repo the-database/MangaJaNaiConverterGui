@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Generic, Literal, Mapping, Optional, TypedDict, TypeVar, Union
+from typing import Any, Generic, Literal, Optional, TypedDict, TypeVar, Union
 
 import navi
 
@@ -91,7 +92,7 @@ class BaseInput(Generic[T]):
         kind: InputKind = "generic",
         has_handle: bool = True,
         associated_type: Any = None,
-    ):
+    ) -> None:
         self.input_type: navi.ExpressionJson = input_type
         self.input_conversions: list[InputConversion] = []
         self.input_adapt: navi.ExpressionJson | None = None
@@ -135,7 +136,7 @@ class BaseInput(Generic[T]):
             # bools need to be 0 or 1
             return {"type": "literal", "value": int(value)}
 
-        if isinstance(value, (int, float, str)) or value is None:
+        if isinstance(value, int | float | str) or value is None:
             return {"type": "literal", "value": value}
 
         if isinstance(value, Path):

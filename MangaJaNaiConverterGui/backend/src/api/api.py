@@ -2,13 +2,10 @@ from __future__ import annotations
 
 import importlib
 import os
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from typing import (
     Any,
-    Awaitable,
-    Callable,
-    Generic,
-    Iterable,
     TypeVar,
 )
 
@@ -24,7 +21,13 @@ from .node_check import (
     check_naming_conventions,
     check_schema_types,
 )
-from .node_data import IteratorInputInfo, IteratorOutputInfo, KeyInfo, NodeData
+from .node_data import (
+    IteratorInputInfo,
+    IteratorOutputInfo,
+    KeyInfo,
+    NodeData,
+    SpecialSuggestion,
+)
 from .output import BaseOutput
 from .settings import Setting
 from .types import FeatureId, InputId, NodeId, NodeKind, OutputId, RunFn
@@ -83,7 +86,7 @@ class NodeGroup:
     order: list[str | NodeId] = field(default_factory=list)
     nodes: list[NodeData] = field(default_factory=list)
 
-    def add_node(self, node: NodeData):
+    def add_node(self, node: NodeData) -> None:
         logger.debug(f"Added {node.schema_id}")
         self.nodes.append(node)
 
@@ -98,6 +101,7 @@ class NodeGroup:
     def register(
         self,
         schema_id: str,
+        *,
         name: str,
         description: str | list[str],
         inputs: list[BaseInput | NestedGroup],
@@ -114,6 +118,7 @@ class NodeGroup:
         iterator_outputs: list[IteratorOutputInfo] | IteratorOutputInfo | None = None,
         node_context: bool = False,
         key_info: KeyInfo | None = None,
+        suggestions: list[SpecialSuggestion] | None = None,
     ):
         if not isinstance(description, str):
             description = "\n\n".join(description)
@@ -141,14 +146,14 @@ class NodeGroup:
         iterator_inputs = to_list(iterator_inputs)
         iterator_outputs = to_list(iterator_outputs)
 
-        if kind == "collector":
-            assert len(iterator_inputs) == 1 and len(iterator_outputs) == 0
-        elif kind == "newIterator":
+        if kind == "generator":  # Generator
             assert len(iterator_inputs) == 0 and len(iterator_outputs) == 1
+        elif kind == "collector":
+            assert len(iterator_inputs) == 1 and len(iterator_outputs) == 0
         else:
             assert len(iterator_inputs) == 0 and len(iterator_outputs) == 0
 
-        def run_check(level: CheckLevel, run: Callable[[bool], None]):
+        def run_check(level: CheckLevel, run: Callable[[bool], None]) -> None:
             if level == CheckLevel.NONE:
                 return
 
@@ -180,9 +185,10 @@ class NodeGroup:
                 inputs=p_inputs,
                 group_layout=group_layout,
                 outputs=p_outputs,
-                iterator_inputs=iterator_inputs,
-                iterator_outputs=iterator_outputs,
+                iterable_inputs=iterator_inputs,
+                iterable_outputs=iterator_outputs,
                 key_info=key_info,
+                suggestions=suggestions or [],
                 side_effects=side_effects,
                 deprecated=deprecated,
                 node_context=node_context,
@@ -352,10 +358,10 @@ class Package:
         self.categories.append(result)
         return result
 
-    def add_dependency(self, dependency: Dependency):
+    def add_dependency(self, dependency: Dependency) -> None:
         self.dependencies.append(dependency)
 
-    def add_setting(self, setting: Setting):
+    def add_setting(self, setting: Setting) -> None:
         self.settings.append(setting)
 
     def add_feature(
@@ -457,7 +463,7 @@ class PackageRegistry:
 
         return load_error
 
-    def _refresh_nodes(self):
+    def _refresh_nodes(self) -> None:
         self.nodes = {}
         self.categories = []
 
@@ -495,69 +501,3 @@ def add_package(
             dependencies=dependencies or [],
         )
     )
-
-
-I = TypeVar("I")
-L = TypeVar("L")
-
-
-@dataclass
-class Iterator(Generic[I]):
-    iter_supplier: Callable[[], Iterable[I | Exception]]
-    expected_length: int
-    fail_fast: bool = True
-
-    @staticmethod
-    def from_iter(
-        iter_supplier: Callable[[], Iterable[I | Exception]],
-        expected_length: int,
-        fail_fast: bool = True,
-    ) -> Iterator[I]:
-        return Iterator(iter_supplier, expected_length, fail_fast=fail_fast)
-
-    @staticmethod
-    def from_list(
-        l: list[L], map_fn: Callable[[L, int], I], fail_fast: bool = True
-    ) -> Iterator[I]:
-        """
-        Creates a new iterator from a list that is mapped using the given
-        function. The iterable will be equivalent to `map(map_fn, l)`.
-        """
-
-        def supplier():
-            for i, x in enumerate(l):
-                try:
-                    yield map_fn(x, i)
-                except Exception as e:
-                    yield e
-
-        return Iterator(supplier, len(l), fail_fast=fail_fast)
-
-    @staticmethod
-    def from_range(
-        count: int, map_fn: Callable[[int], I], fail_fast: bool = True
-    ) -> Iterator[I]:
-        """
-        Creates a new iterator the given number of items where each item is
-        lazily evaluated. The iterable will be equivalent to `map(map_fn, range(count))`.
-        """
-        assert count >= 0
-
-        def supplier():
-            for i in range(count):
-                try:
-                    yield map_fn(i)
-                except Exception as e:
-                    yield e
-
-        return Iterator(supplier, count, fail_fast=fail_fast)
-
-
-N = TypeVar("N")
-R = TypeVar("R")
-
-
-@dataclass
-class Collector(Generic[N, R]):
-    on_iterate: Callable[[N], None]
-    on_complete: Callable[[], R]

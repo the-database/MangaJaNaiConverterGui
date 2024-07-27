@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 import numpy as np
 
@@ -9,7 +9,7 @@ from ...utils.utils import get_h_w_c
 
 
 class ColorSpace:
-    def __init__(self, id_: int, name: str, channels: int):
+    def __init__(self, id_: int, name: str, channels: int) -> None:
         assert 0 <= id_ and id_ < 256
         self.id = id_
         self.name = name
@@ -40,7 +40,9 @@ class ColorSpaceDetector:
         )
 
 
-def assert_input_channels(img: np.ndarray, input_: ColorSpace, output: ColorSpace):
+def assert_input_channels(
+    img: np.ndarray, input_: ColorSpace, output: ColorSpace
+) -> None:
     c = get_h_w_c(img)[2]
     if c != input_.channels:
         raise ValueError(
@@ -50,7 +52,9 @@ def assert_input_channels(img: np.ndarray, input_: ColorSpace, output: ColorSpac
         )
 
 
-def assert_output_channels(result: np.ndarray, input_: ColorSpace, output: ColorSpace):
+def assert_output_channels(
+    result: np.ndarray, input_: ColorSpace, output: ColorSpace
+) -> None:
     c = get_h_w_c(result)[2]
     if c != output.channels:
         raise ValueError(
@@ -71,7 +75,7 @@ class Conversion:
         direction: tuple[ColorSpace, ColorSpace],
         convert: ConvertFn,
         cost: int = 1,
-    ):
+    ) -> None:
         input_, output = direction
         assert input_ != output
         self.input: ColorSpace = input_

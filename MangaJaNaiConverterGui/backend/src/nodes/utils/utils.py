@@ -6,12 +6,11 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 from sanic.log import logger
 
-Size = Tuple[int, int]
+Size = tuple[int, int]
 """
 The width and height (in that order) of an image.
 """
@@ -94,7 +93,7 @@ def split_file_path(path: Path | str) -> tuple[Path, str, str]:
     return Path(dirname), basename, ext
 
 
-def walk_error_handler(exception_instance: Exception):
+def walk_error_handler(exception_instance: Exception) -> None:
     logger.warning(
         f"Exception occurred during walk: {exception_instance} Continuing..."
     )
@@ -230,7 +229,7 @@ class Region:
             ...,
         ]
 
-    def write_into(self, lhs: np.ndarray, rhs: np.ndarray):
+    def write_into(self, lhs: np.ndarray, rhs: np.ndarray) -> None:
         h, w, c = get_h_w_c(rhs)
         assert (w, h) == self.size
         assert c == get_h_w_c(lhs)[2]

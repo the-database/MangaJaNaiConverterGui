@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Callable, Union
+from collections.abc import Callable
 
 import numpy as np
 from sanic.log import logger
@@ -16,7 +16,7 @@ class Split:
     pass
 
 
-SplitImageOp = Callable[[np.ndarray, Region], Union[np.ndarray, Split]]
+SplitImageOp = Callable[[np.ndarray, Region], np.ndarray | Split]
 
 
 def auto_split(

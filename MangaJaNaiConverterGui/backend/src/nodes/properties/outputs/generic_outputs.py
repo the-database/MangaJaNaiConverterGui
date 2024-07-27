@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Union
 
 import navi
+
 from api import BaseOutput
 
 from ...impl.color.color import Color
@@ -15,7 +16,7 @@ class NumberOutput(BaseOutput[Union[int, float]]):
         self,
         label: str,
         output_type: navi.ExpressionJson = "number",
-    ):
+    ) -> None:
         super().__init__(
             navi.intersect_with_error("number", output_type),
             label,
@@ -26,7 +27,7 @@ class NumberOutput(BaseOutput[Union[int, float]]):
         return navi.literal(value)
 
     def enforce(self, value: object) -> int | float:
-        assert isinstance(value, (int, float))
+        assert isinstance(value, int | float)
         return value
 
 
@@ -35,7 +36,7 @@ class TextOutput(BaseOutput):
         self,
         label: str,
         output_type: navi.ExpressionJson = "string",
-    ):
+    ) -> None:
         super().__init__(navi.intersect_with_error("string", output_type), label)
 
     def get_broadcast_type(self, value: str):
@@ -57,7 +58,7 @@ def FileNameOutput(label: str = "Name", of_input: int | None = None):
 
 
 class SeedOutput(BaseOutput):
-    def __init__(self, label: str = "Seed"):
+    def __init__(self, label: str = "Seed") -> None:
         super().__init__(output_type="Seed", label=label, kind="generic")
 
     def enforce(self, value: object) -> Seed:
@@ -71,7 +72,7 @@ class ColorOutput(BaseOutput):
         label: str = "Color",
         color_type: navi.ExpressionJson = "Color",
         channels: int | None = None,
-    ):
+    ) -> None:
         super().__init__(
             output_type=navi.intersect_with_error(
                 color_type, navi.Color(channels=channels)
@@ -103,7 +104,7 @@ class BoolOutput(BaseOutput):
         label: str = "Logical",
         *,
         output_type: navi.ExpressionJson = "bool",
-    ):
+    ) -> None:
         super().__init__(
             output_type=navi.intersect_with_error("bool", output_type),
             label=label,
@@ -112,7 +113,7 @@ class BoolOutput(BaseOutput):
 
 
 class AudioStreamOutput(BaseOutput):
-    def __init__(self, label: str = "Audio Stream"):
+    def __init__(self, label: str = "Audio Stream") -> None:
         super().__init__(
             output_type="AudioStream",
             label=label,
@@ -121,7 +122,9 @@ class AudioStreamOutput(BaseOutput):
 
 
 class AnyOutput(BaseOutput):
-    def __init__(self, label: str = "Any", output_type: navi.ExpressionJson = "Any"):
+    def __init__(
+        self, label: str = "Any", output_type: navi.ExpressionJson = "Any"
+    ) -> None:
         super().__init__(
             output_type=output_type,
             label=label,

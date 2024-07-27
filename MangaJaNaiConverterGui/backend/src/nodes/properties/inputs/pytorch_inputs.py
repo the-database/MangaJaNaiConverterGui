@@ -7,6 +7,7 @@ except Exception:
     spandrel = None
 
 import navi
+
 from api import BaseInput
 
 
@@ -22,7 +23,7 @@ class ModelInput(BaseInput):
         self,
         label: str = "Model",
         input_type: navi.ExpressionJson = "PyTorchModel",
-    ):
+    ) -> None:
         super().__init__(input_type, label)
         if spandrel is not None:
             self.associated_type = spandrel.ModelDescriptor
@@ -31,7 +32,7 @@ class ModelInput(BaseInput):
         if spandrel is not None:
             assert isinstance(
                 value,
-                (spandrel.ImageModelDescriptor, spandrel.MaskedImageModelDescriptor),
+                spandrel.ImageModelDescriptor | spandrel.MaskedImageModelDescriptor,
             ), "Expected a supported PyTorch model."
         return value
 
@@ -41,7 +42,7 @@ class SrModelInput(ModelInput):
         self,
         label: str = "Model",
         input_type: navi.ExpressionJson = "PyTorchModel",
-    ):
+    ) -> None:
         self.purpose: set[Purpose] = {"SR", "Restoration"}
 
         super().__init__(
@@ -65,7 +66,7 @@ class SrModelInput(ModelInput):
 class FaceModelInput(ModelInput):
     def __init__(
         self, label: str = "Model", input_type: navi.ExpressionJson = "PyTorchModel"
-    ):
+    ) -> None:
         self.purpose: set[Purpose] = {"FaceSR"}
 
         super().__init__(
@@ -89,7 +90,7 @@ class FaceModelInput(ModelInput):
 class InpaintModelInput(ModelInput):
     def __init__(
         self, label: str = "Model", input_type: navi.ExpressionJson = "PyTorchModel"
-    ):
+    ) -> None:
         self.purpose: set[Purpose] = {"Inpainting"}
 
         super().__init__(
@@ -111,5 +112,5 @@ class InpaintModelInput(ModelInput):
 class TorchScriptInput(BaseInput):
     """Input a JIT traced model"""
 
-    def __init__(self, label: str = "Traced Model"):
+    def __init__(self, label: str = "Traced Model") -> None:
         super().__init__("PyTorchScript", label)

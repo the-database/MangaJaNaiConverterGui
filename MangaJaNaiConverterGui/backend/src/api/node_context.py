@@ -1,7 +1,8 @@
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 from .settings import SettingsParser
 
@@ -96,7 +97,7 @@ class _NoopProgress(Progress):
 
 
 class _SubProgress(Progress):
-    def __init__(self, parent: Progress, offset: float, length: float):
+    def __init__(self, parent: Progress, offset: float, length: float) -> None:
         self._parent = parent
         self._offset = offset
         self._length = length
@@ -148,9 +149,11 @@ class NodeContext(Progress, ABC):
         """
 
     @abstractmethod
-    def add_cleanup(self, fn: Callable[[], None]) -> None:
+    def add_cleanup(
+        self, fn: Callable[[], None], after: Literal["node", "chain"] = "chain"
+    ) -> None:
         """
-        Registers a function that will be called when the chain execution is finished.
+        Registers a function that will be called when the chain execution is finished (if set to chain mode) or after node execution is finished (node mode).
 
         Registering the same function (object) twice will only result in the function being called once.
         """

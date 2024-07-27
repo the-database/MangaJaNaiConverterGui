@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 from sanic.log import logger
@@ -54,7 +54,7 @@ def _exact_split_into_segments(length: int, exact: int, overlap: int) -> list[_S
 
     result: list[_Segment] = []
 
-    def add(s: _Segment):
+    def add(s: _Segment) -> None:
         assert s.padded_length == exact
         result.append(s)
 

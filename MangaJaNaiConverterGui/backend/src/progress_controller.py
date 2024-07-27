@@ -27,7 +27,7 @@ class ProgressToken(ABC):
 
 
 class ProgressController(ProgressToken):
-    def __init__(self):
+    def __init__(self) -> None:
         self.__paused: bool = False
         self.__aborted: bool = False
 
@@ -46,13 +46,13 @@ class ProgressController(ProgressToken):
     def aborted(self) -> bool:
         return self.__aborted
 
-    def pause(self):
+    def pause(self) -> None:
         self.__paused = True
 
-    def resume(self):
+    def resume(self) -> None:
         self.__paused = False
 
-    def abort(self):
+    def abort(self) -> None:
         self.__aborted = True
 
     async def suspend(self) -> None:

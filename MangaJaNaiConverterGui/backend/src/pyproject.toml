@@ -1,0 +1,116 @@
+[project]
+name = "mangajanaiconvertergui"
+requires-python = ">=3.11"
+dynamic = ["version"]
+dependencies = [
+  "chainner_ext==0.3.10",
+  "multiprocess==0.70.16",
+  "opencv-python==4.10.0.84",
+  "pillow-avif-plugin==1.4.6",
+  "psutil==6.0.0",
+  "pynvml==11.5.3",
+  "rarfile==4.2",
+  "sanic==24.6.0",
+  "spandrel_extra_arches==0.1.1",
+  "spandrel==0.3.4",
+  "torch==2.3.1",
+  "torchvision==0.18.1"
+]
+authors = [{name = "the-database"}]
+description = "Upscaling manga images and archives with PyTorch models."
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+keywords = []
+
+[project.optional-dependencies]
+dev = ["ruff", "pyright", "pytest"]
+
+[project.urls]
+Repository = "https://github.com/the-database/MangaJaNaiConverterGui.git"
+
+[tool.setuptools.packages.find]
+where = ["."]  # list of folders that contain the packages (["."] by default)
+include = ["*"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.ruff]
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+src = ["*"]
+
+unsafe-fixes = true
+
+[tool.ruff.lint]
+# Add the `line-too-long` rule to the enforced rule set.
+extend-select = [
+    "UP", # pyupgrade
+    "E",  # pycodestyle
+    "W",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
+    "N",  # pep8-naming
+    # "ANN", # flake8-annotations
+    "ANN001",
+    "ANN002",
+    "ANN201",
+    "ANN202",
+    "ANN204",
+    "ANN205",
+    "ANN206",
+    # "ASYNC", # flake8-async
+    "PL",  # pylint
+    "RUF", # ruff
+    "B",   # flake8-bugbear
+    # "A",   # flake8-builtins
+    # "COM", # flake8-commas
+    "C4",  # flake8-comprehensions
+    "FA",  # flake8-future-annotations
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "G",   # flake8-logging-format
+    # "INP", # flake8-implicit-namespaces
+    "PIE", # flake8-pie
+    # "PYI", # flake8-pyi
+    "Q", # flake8-quotes
+    # "RET", # flake8-return
+    "SLF", # flake8-self
+    # "SIM", # flake8-simplify
+    # "TCH", # flake8-tidy-imports
+    "NPY", # NumPy-specific rules
+    "NPY201", # numpy2-deprecation
+]
+ignore = [
+    "E501",    # Line too long
+    "PLR2004", # Magic value
+    "PLR0911", # Too many return statements
+    "PLR0912", # Too many branches
+    "PLR0913", # Too many arguments
+    "PLR0915", # Too many statements,
+    "E741",    # Ambiguous variable name,
+    "E712",    # true-false-comparison, has false positives because of numpy's operator overloading
+    "F821",    # Undefined name -- this one is weird, it seems like it has false positives on closures and other context changes
+    "F403",    # 'from module import *' used; unable to detect undefined names
+    "PLW0603", # Using the global statement
+    "N999",    # Invalid module name (which triggers for chaiNNer)
+    "N818",    # Exception name should end in Error
+    "ISC001",  # Implicit string concatenation, conflicts with formatter
+]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.uv.pip]
+extra-index-url = ["https://download.pytorch.org/whl/cu121"]

@@ -5,8 +5,9 @@ import hashlib
 import os
 import tempfile
 import time
+from collections.abc import Iterable
 from enum import Enum
-from typing import Iterable, NewType
+from typing import NewType
 
 import numpy as np
 from sanic.log import logger
@@ -18,7 +19,7 @@ CACHE_REGISTRY: list[NodeOutputCache] = []
 
 
 class CachedNumpyArray:
-    def __init__(self, arr: np.ndarray):
+    def __init__(self, arr: np.ndarray) -> None:
         self.file = tempfile.TemporaryFile()
         self.file.write(arr.tobytes())
 
@@ -34,7 +35,7 @@ CacheKey = NewType("CacheKey", tuple)
 
 
 class NodeOutputCache:
-    def __init__(self):
+    def __init__(self) -> None:
         self._data: dict[CacheKey, list] = {}
         self._bytes: dict[CacheKey, int] = {}
         self._access_time: dict[CacheKey, float] = {}
@@ -45,7 +46,7 @@ class NodeOutputCache:
     def _args_to_key(args: Iterable[object]) -> CacheKey:
         key = []
         for arg in args:
-            if isinstance(arg, (int, float, bool, str, bytes)):
+            if isinstance(arg, int | float | bool | str | bytes):
                 key.append(arg)
             elif arg is None:
                 key.append(None)
@@ -84,7 +85,7 @@ class NodeOutputCache:
         return sum(self._bytes.values())
 
     @staticmethod
-    def _enforce_limits():
+    def _enforce_limits() -> None:
         while True:
             total_bytes = sum([cache.size() for cache in CACHE_REGISTRY])
             logger.debug(
@@ -139,14 +140,14 @@ class NodeOutputCache:
         logger.debug("Cache miss")
         return None
 
-    def put(self, args: Iterable[object], output: object):
+    def put(self, args: Iterable[object], output: object) -> None:
         key = self._args_to_key(args)
         self._data[key] = self._write_arrays_to_disk(self._output_to_list(output))
         self._bytes[key] = self._estimate_bytes(self._output_to_list(output))
         self._access_time[key] = time.time()
         self._enforce_limits()
 
-    def drop(self, key: CacheKey):
+    def drop(self, key: CacheKey) -> None:
         del self._data[key]
         del self._bytes[key]
         del self._access_time[key]

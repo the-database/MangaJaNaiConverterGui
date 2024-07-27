@@ -1,7 +1,6 @@
 import math
 
 import numpy as np
-
 from nodes.impl.image_op import ImageOp
 from nodes.impl.resize import ResizeFilter, resize
 from nodes.utils.utils import get_h_w_c

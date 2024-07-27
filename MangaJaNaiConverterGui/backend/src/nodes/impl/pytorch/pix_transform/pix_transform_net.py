@@ -9,7 +9,7 @@ class PixTransformNet(nn.Module):
         channels_in: int = 5,
         kernel_size: int = 1,
         weights_regularizer: tuple[float, float, float] | None = None,
-    ):
+    ) -> None:
         super().__init__()
 
         self.channels_in = channels_in

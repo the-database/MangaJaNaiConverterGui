@@ -1,1 +1,1 @@
-vpk pack -u MangaJaNaiConverterGui -v 1.1.1 -p ".\MangaJaNaiConverterGui\bin\Release\net8.0\publish\win-x64" -i ./MangaJaNaiConverterGui/assets/logo.ico -e MangaJaNaiConverterGui.exe
+vpk pack -u MangaJaNaiConverterGui -v 1.1.3 -p ".\MangaJaNaiConverterGui\bin\Release\net8.0\publish\win-x64" -i ./MangaJaNaiConverterGui/assets/logo.ico -e MangaJaNaiConverterGui.exe

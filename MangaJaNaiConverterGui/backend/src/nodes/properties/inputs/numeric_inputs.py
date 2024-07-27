@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import math
-from typing import Literal, Union
+from typing import Literal, Never, Union
 
 import navi
+
 from api import BaseInput, InputConversion, InputKind
 
 from ...utils.utils import round_half_up
@@ -74,7 +75,7 @@ class NumberInput(BaseInput):
         hide_trailing_zeros: bool = True,
         label_style: LabelStyle | None = None,
         has_handle: bool = True,
-    ):
+    ) -> None:
         super().__init__("number", label, kind=kind, has_handle=has_handle)
         self.precision: int | Literal["unlimited"] = precision
         # controls_step is for increment/decrement arrows.
@@ -108,11 +109,11 @@ class NumberInput(BaseInput):
             "hasHandle": self.has_handle,
         }
 
-    def make_optional(self):
+    def make_optional(self) -> Never:
         raise ValueError("NumberInput and SliderInput cannot be made optional")
 
     def enforce(self, value: object):
-        assert isinstance(value, (int, float))
+        assert isinstance(value, int | float)
 
         if math.isnan(value):
             raise ValueError("NaN is not a valid number")
@@ -140,7 +141,7 @@ class SliderInput(NumberInput):
         gradient: list[str] | None = None,
         scale: Literal["linear", "log", "log-offset", "sqrt"] = "linear",
         has_handle: bool = True,
-    ):
+    ) -> None:
         super().__init__(
             label,
             precision=precision,

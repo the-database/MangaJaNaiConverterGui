@@ -146,7 +146,7 @@ def tensor2np(
     return img_np.astype(imtype)
 
 
-def safe_cuda_cache_empty():
+def safe_cuda_cache_empty() -> None:
     """
     Empties the CUDA cache if CUDA is available. Hopefully without causing any errors.
     """
