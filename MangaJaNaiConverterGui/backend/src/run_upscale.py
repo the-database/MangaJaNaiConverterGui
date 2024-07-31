@@ -508,7 +508,11 @@ def save_image_zip(
 
         with Image.fromarray(image) as pil_im:
             output_buffer = io.BytesIO()
-            pil_im.save(output_buffer, format=image_format)
+            pil_im.save(
+                output_buffer,
+                format=image_format,
+                subsampling="4:0:0" if is_grayscale else "4:2:0",
+            )
     else:
         if image_format == "jpg":
             params = [
@@ -595,7 +599,11 @@ def save_image(
         )
 
         with Image.fromarray(image) as pil_im:
-            pil_im.save(output_file_path, quality=lossy_compression_quality)
+            pil_im.save(
+                output_file_path,
+                quality=lossy_compression_quality,
+                subsampling="4:0:0" if is_grayscale else "4:2:0",
+            )
     else:
         # save with cv2
         if image_format == "jpg":
@@ -1133,6 +1141,15 @@ def upscale_worker(upscale_queue: Queue, postprocess_queue: Queue) -> None:
 
         if is_image:
             image = ai_upscale_image(image, model_tile_size, model)
+
+            # convert back to grayscale
+            if is_grayscale:
+                channels = get_h_w_c(image)[2]
+                if channels == 3:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                elif channels == 4:
+                    image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+
         postprocess_queue.put(
             (image, file_name, is_image, is_grayscale, original_width, original_height)
         )
