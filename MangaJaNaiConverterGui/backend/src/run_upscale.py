@@ -982,9 +982,9 @@ def preprocess_worker_folder(
                             model,
                         )
                     )
-            elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
+            elif filename.lower().endswith(ZIP_EXTENSIONS):
                 if upscale_archives:
-                    output_file_path = str(output_file_path.with_suffix(".cbz"))
+                    output_file_path = f"{output_file_path}.cbz"
                     if not overwrite_existing_files and os.path.isfile(
                         output_file_path
                     ):
@@ -1432,12 +1432,10 @@ def upscale_file(
     if input_file_path.lower().endswith(ARCHIVE_EXTENSIONS):
         output_file_path = str(
             Path(
-                os.path.join(
-                    output_folder_path,
-                    output_filename.replace("%filename%", input_file_base),
-                )
-            ).with_suffix(".cbz")
+                f"{os.path.join(output_folder_path,output_filename.replace('%filename%', input_file_base))}.cbz"
+            )
         )
+        print("output_file_path", output_file_path, flush=True)
         if not overwrite_existing_files and os.path.isfile(output_file_path):
             print(f"file exists, skip: {output_file_path}", flush=True)
             return
@@ -1459,11 +1457,8 @@ def upscale_file(
     elif input_file_path.lower().endswith(IMAGE_EXTENSIONS):
         output_file_path = str(
             Path(
-                os.path.join(
-                    output_folder_path,
-                    output_filename.replace("%filename%", input_file_base),
-                )
-            ).with_suffix(f".{image_format}")
+                f"{os.path.join(output_folder_path,output_filename.replace('%filename%', input_file_base))}.{image_format}"
+            )
         )
         if not overwrite_existing_files and os.path.isfile(output_file_path):
             print(f"file exists, skip: {output_file_path}", flush=True)

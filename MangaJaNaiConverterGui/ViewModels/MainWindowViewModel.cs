@@ -816,11 +816,9 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                     if (IMAGE_EXTENSIONS.Any(x => CurrentWorkflow.InputFilePath.ToLower().EndsWith(x)))
                     {
-                        var outputFilePath = Path.ChangeExtension(
-                                                Path.Join(
+                        var outputFilePath = Path.Join(
                                                     Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
-                                                    CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(CurrentWorkflow.InputFilePath))),
-                                                CurrentWorkflow.ImageFormat);
+                                                    CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(CurrentWorkflow.InputFilePath))) + $".{CurrentWorkflow.ImageFormat}";
                         if (File.Exists(outputFilePath))
                         {
                             status.Append($" (1 image already exists and will be {overwriteText})");
@@ -832,11 +830,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                     }
                     else if (ARCHIVE_EXTENSIONS.Any(x => CurrentWorkflow.InputFilePath.ToLower().EndsWith(x)))
                     {
-                        var outputFilePath = Path.ChangeExtension(
-                                                Path.Join(
-                                                    Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
-                                                    CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(CurrentWorkflow.InputFilePath))),
-                                                "cbz");
+                        var outputFilePath = Path.Join(Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
+                            CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(CurrentWorkflow.InputFilePath))) + ".cbz";
+
                         if (File.Exists(outputFilePath))
                         {
                             status.Append($" (1 archive already exists and will be {overwriteText})");
@@ -887,11 +883,9 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                         foreach (var inputImagePath in images)
                         {
-                            var outputImagePath = Path.ChangeExtension(
-                                                    Path.Join(
+                            var outputImagePath = Path.Join(
                                                         Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
-                                                        CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))),
-                                                    CurrentWorkflow.ImageFormat);
+                                                        CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))) + $"{CurrentWorkflow.ImageFormat}";
                             // if out file exists, exist count ++
                             // if overwrite image OR out file doesn't exist, count image++
                             var fileExists = File.Exists(outputImagePath);
@@ -921,11 +915,9 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                         foreach (var inputArchivePath in archives)
                         {
-                            var outputArchivePath = Path.ChangeExtension(
-                                                        Path.Join(
+                            var outputArchivePath = Path.Join(
                                                             Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
-                                                            CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))),
-                                                        "cbz");
+                                                            CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))) + ".cbz";
                             var fileExists = File.Exists(outputArchivePath);
 
                             if (fileExists)
