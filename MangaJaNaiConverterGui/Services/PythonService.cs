@@ -172,6 +172,8 @@ namespace MangaJaNaiConverterGui.Services
                         .Select(filename => Path.GetFileName(filename))
                         .Order().ToList());
 
+                        models.Add("No Model");
+
                         Debug.WriteLine($"GetAllModels: {models.Count}");
 
                         _allModels = models;

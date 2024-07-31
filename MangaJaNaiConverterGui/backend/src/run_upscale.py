@@ -1086,19 +1086,21 @@ def preprocess_worker_image(
             else:
                 image = normalize(image)
 
-            model_abs_path = get_model_abs_path(chain["ModelFilePath"])
+            if chain["ModelFilePath"] == "No Model":
+                pass
+            else:
+                model_abs_path = get_model_abs_path(chain["ModelFilePath"])
 
-            if not os.path.exists(model_abs_path):
-                raise FileNotFoundError(model_abs_path)
+                if not os.path.exists(model_abs_path):
+                    raise FileNotFoundError(model_abs_path)
 
-            print("model_abs_path", model_abs_path, os.path.exists(model_abs_path))
-            if model_abs_path in loaded_models:
-                model = loaded_models[model_abs_path]
+                if model_abs_path in loaded_models:
+                    model = loaded_models[model_abs_path]
 
-            elif os.path.exists(model_abs_path):
-                model, _, _ = load_model_node(context, Path(model_abs_path))
-                loaded_models[model_abs_path] = model
-            tile_size_str = chain["ModelTileSize"]
+                elif os.path.exists(model_abs_path):
+                    model, _, _ = load_model_node(context, Path(model_abs_path))
+                    loaded_models[model_abs_path] = model
+                tile_size_str = chain["ModelTileSize"]
         else:
             print("No chain!!!!!!!")
             image = normalize(image)
