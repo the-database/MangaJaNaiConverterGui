@@ -94,7 +94,12 @@ def pytorch_auto_split(
         try:
             # convert to tensor
             input_tensor = _into_tensor(img, device, dtype)
-            input_tensor = _rgb_to_bgr(input_tensor)
+            # expand grayscale tensor to match model input channels
+            input_ndim = input_tensor.ndim
+            if input_ndim == 2 and model.input_channels > 1:
+                input_tensor = input_tensor.unsqueeze(-1).repeat(1, 1, model.input_channels)
+            else:
+                input_tensor = _rgb_to_bgr(input_tensor)
             input_tensor = _into_batched_form(input_tensor)
 
             # inference
@@ -102,7 +107,10 @@ def pytorch_auto_split(
 
             # convert back to numpy
             output_tensor = _into_standard_image_form(output_tensor)
-            output_tensor = _rgb_to_bgr(output_tensor)
+            if input_ndim == 2:
+                output_tensor = output_tensor[..., 0]
+            else:
+                output_tensor = _rgb_to_bgr(output_tensor)
             result = output_tensor.detach().cpu().detach().float().numpy()
 
             return result

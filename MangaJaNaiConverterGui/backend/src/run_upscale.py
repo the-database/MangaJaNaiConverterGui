@@ -232,10 +232,7 @@ def enhance_contrast(image: np.ndarray) -> MatLike:
     image_array = np.maximum(image_array - new_black_level, 0) / (
         new_white_level - new_black_level
     )
-    image_array = np.clip(image_array, 0, 1)
-
-    # gray_image =
-    return cv2.cvtColor(image_array, cv2.COLOR_GRAY2BGR)
+    return np.clip(image_array, 0, 1)
 
 
 def _read_cv(img_stream: BytesIO) -> MatLike:
@@ -336,6 +333,16 @@ def cv_image_is_grayscale(image: np.ndarray, user_threshold: float) -> bool:
     ratio = diff_sum / size_without_black_and_white
 
     return ratio <= user_threshold / 12
+
+
+def convert_image_to_grayscale(image: np.ndarray) -> np.ndarray:
+    channels = get_h_w_c(image)[2]
+    if channels == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    elif channels == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+
+    return image
 
 
 def get_chain_for_image(
@@ -740,6 +747,10 @@ def preprocess_worker_archive_file(
                         grayscale_detection_threshold,
                     )
                 )
+
+                if is_grayscale:
+                    image = convert_image_to_grayscale(image)
+
                 model = None
                 tile_size_str = ""
                 if chain is not None:
@@ -897,6 +908,10 @@ def preprocess_worker_folder(
                             grayscale_detection_threshold,
                         )
                     )
+
+                    if is_grayscale:
+                        image = convert_image_to_grayscale(image)
+
                     model = None
                     tile_size_str = ""
                     if chain is not None:
@@ -1041,6 +1056,10 @@ def preprocess_worker_image(
             chains,
             grayscale_detection_threshold,
         )
+
+        if is_grayscale:
+            image = convert_image_to_grayscale(image)
+
         model = None
         tile_size_str = ""
         if chain is not None:
@@ -1149,11 +1168,7 @@ def upscale_worker(upscale_queue: Queue, postprocess_queue: Queue) -> None:
 
             # convert back to grayscale
             if is_grayscale:
-                channels = get_h_w_c(image)[2]
-                if channels == 3:
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                elif channels == 4:
-                    image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+                image = convert_image_to_grayscale(image)
 
         postprocess_queue.put(
             (image, file_name, is_image, is_grayscale, original_width, original_height)
