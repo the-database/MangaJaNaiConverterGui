@@ -132,14 +132,17 @@ final downscale for grayscale images only
 
 
 def dotgain20_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
-    h, _ = image.shape[:2]
+    h, _, c = get_h_w_c(image)
     size_ratio = h / new_size[1]
     blur_size = (1 / size_ratio - 1) / 3.5
     if blur_size >= 0.1:
         if blur_size > 250:
             blur_size = 250
 
-    pil_image = Image.fromarray(image[:, :, 0], mode="L")
+    if c == 1:
+        pil_image = Image.fromarray(image, mode="L")
+    else:
+        pil_image = Image.fromarray(image[:, :, 0], mode="L")
     pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=blur_size))
     pil_image = ImageCms.applyTransform(pil_image, dotgain20togamma1transform, False)
 
@@ -436,7 +439,7 @@ def final_target_resize(
 ) -> np.ndarray:
     # fit to dimensions
     if target_height != 0 and target_width != 0:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         # determine whether to fit to height or width
         if target_height / original_height < target_width / original_width:
             target_width = 0
@@ -445,20 +448,20 @@ def final_target_resize(
 
     # resize height, keep proportional width
     if target_height != 0:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         if h != target_height:
             return image_resize(
                 image, (round(w * target_height / h), target_height), is_grayscale
             )
     # resize width, keep proportional height
     elif target_width != 0:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         if w != target_width:
             return image_resize(
                 image, (target_width, round(h * target_width / w)), is_grayscale
             )
     else:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         new_target_height = round(original_height * target_scale)
         if h != new_target_height:
             return image_resize(
@@ -749,14 +752,14 @@ def preprocess_worker_archive_file(
                         resize_height_before_upscale != 0
                         and resize_width_before_upscale != 0
                     ):
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (resize_width_before_upscale, resize_height_before_upscale),
                         )
                     # resize height, keep proportional width
                     elif resize_height_before_upscale != 0:
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (
@@ -766,7 +769,7 @@ def preprocess_worker_archive_file(
                         )
                     # resize width, keep proportional height
                     elif resize_width_before_upscale != 0:
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (
@@ -775,7 +778,7 @@ def preprocess_worker_archive_file(
                             ),
                         )
                     elif resize_factor_before_upscale != 100:
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (
@@ -910,7 +913,7 @@ def preprocess_worker_folder(
                             resize_height_before_upscale != 0
                             and resize_width_before_upscale != 0
                         ):
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -920,7 +923,7 @@ def preprocess_worker_folder(
                             )
                         # resize height, keep proportional width
                         elif resize_height_before_upscale != 0:
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -930,7 +933,7 @@ def preprocess_worker_folder(
                             )
                         # resize width, keep proportional height
                         elif resize_width_before_upscale != 0:
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -939,7 +942,7 @@ def preprocess_worker_folder(
                                 ),
                             )
                         elif resize_factor_before_upscale != 100:
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -1047,13 +1050,13 @@ def preprocess_worker_image(
 
             # resize width and height, distorting image
             if resize_height_before_upscale != 0 and resize_width_before_upscale != 0:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image, (resize_width_before_upscale, resize_height_before_upscale)
                 )
             # resize height, keep proportional width
             elif resize_height_before_upscale != 0:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image,
                     (
@@ -1063,7 +1066,7 @@ def preprocess_worker_image(
                 )
             # resize width, keep proportional height
             elif resize_width_before_upscale != 0:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image,
                     (
@@ -1072,7 +1075,7 @@ def preprocess_worker_image(
                     ),
                 )
             elif resize_factor_before_upscale != 100:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image,
                     (
