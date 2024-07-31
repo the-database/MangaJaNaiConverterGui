@@ -73,6 +73,303 @@ namespace MangaJaNaiConverterGui.ViewModels
 "0x1984",
 "0x1985",];
 
+        private static readonly string DEFAULT_WORKFLOW = """
+{
+  "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleWorkflow, MangaJaNaiConverterGui",
+  "WorkflowName": "Upscale Manga (Default)",
+  "WorkflowIndex": 0,
+  "SelectedTabIndex": 0,
+  "InputFilePath": "",
+  "InputFolderPath": "",
+  "OutputFilename": "%filename%-mangajanai",
+  "OutputFolderPath": "",
+  "OverwriteExistingFiles": false,
+  "UpscaleImages": true,
+  "UpscaleArchives": true,
+  "ResizeHeightAfterUpscale": 2160,
+  "ResizeWidthAfterUpscale": 3840,
+  "WebpSelected": true,
+  "AvifSelected": false,
+  "PngSelected": false,
+  "JpegSelected": false,
+  "UseLosslessCompression": false,
+  "LossyCompressionQuality": 80,
+  "ShowLossySettings": true,
+  "ModeScaleSelected": true,
+  "UpscaleScaleFactor": 4,
+  "ModeWidthSelected": false,
+  "ModeHeightSelected": false,
+  "ModeFitToDisplaySelected": false,
+  "DisplayDevice": "Kobo Elipsa 2E (2023)",
+  "DisplayDeviceWidth": 1404,
+  "DisplayDeviceHeight": 1872,
+  "DisplayPortraitSelected": true,
+  "ShowAdvancedSettings": false,
+  "GrayscaleDetectionThreshold": 12,
+  "Chains": {
+    "$type": "Avalonia.Collections.AvaloniaList`1[[MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui]], Avalonia.Base",
+    "$values": [
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "1",
+        "MinResolution": "0x0",
+        "MaxResolution": "0x0",
+        "IsGrayscale": false,
+        "IsColor": true,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_IllustrationJaNai_V1_ESRGAN_120k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": false,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "2",
+        "MinResolution": "0x0",
+        "MaxResolution": "0x0",
+        "IsGrayscale": false,
+        "IsColor": true,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": false,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "3",
+        "MinResolution": "0x0",
+        "MaxResolution": "0x1250",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "4",
+        "MinResolution": "0x0",
+        "MaxResolution": "0x1250",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "5",
+        "MinResolution": "0x1251",
+        "MaxResolution": "0x1350",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "6",
+        "MinResolution": "0x1251",
+        "MaxResolution": "0x1350",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "7",
+        "MinResolution": "0x1351",
+        "MaxResolution": "0x1450",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "8",
+        "MinResolution": "0x1351",
+        "MaxResolution": "0x1450",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "9",
+        "MinResolution": "0x1451",
+        "MaxResolution": "0x1550",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "10",
+        "MinResolution": "0x1451",
+        "MaxResolution": "0x1550",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "11",
+        "MinResolution": "0x1551",
+        "MaxResolution": "0x1760",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "12",
+        "MinResolution": "0x1551",
+        "MaxResolution": "0x1760",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "13",
+        "MinResolution": "0x1761",
+        "MaxResolution": "0x1984",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "14",
+        "MinResolution": "0x1761",
+        "MaxResolution": "0x1984",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "15",
+        "MinResolution": "0x1985",
+        "MaxResolution": "0x0",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 0,
+        "MaxScaleFactor": 2,
+        "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      },
+      {
+        "$type": "MangaJaNaiConverterGui.ViewModels.UpscaleChain, MangaJaNaiConverterGui",
+        "ChainNumber": "16",
+        "MinResolution": "0x1985",
+        "MaxResolution": "0x0",
+        "IsGrayscale": true,
+        "IsColor": false,
+        "MinScaleFactor": 2,
+        "MaxScaleFactor": 0,
+        "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
+        "ModelTileSize": "Auto (Estimate)",
+        "AutoAdjustLevels": true,
+        "ResizeHeightBeforeUpscale": 0,
+        "ResizeWidthBeforeUpscale": 0,
+        "ResizeFactorBeforeUpscale": 100.0
+      }
+    ]
+  }
+}
+""";
+
         public string[] CommonResolutions
         {
             get => _commonResolutions;
@@ -1152,8 +1449,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             if (CurrentWorkflow != null)
             {
-                var lines = JsonConvert.SerializeObject(Workflows[0], NewtonsoftJsonSuspensionDriver.Settings);
-                var workflow = JsonConvert.DeserializeObject<UpscaleWorkflow>(lines, NewtonsoftJsonSuspensionDriver.Settings);
+                var workflow = JsonConvert.DeserializeObject<UpscaleWorkflow>(DEFAULT_WORKFLOW, NewtonsoftJsonSuspensionDriver.Settings);
                 var workflowIndex = CurrentWorkflow.WorkflowIndex;
                 var workflowName = $"Custom Workflow {workflowIndex}";
 
@@ -1742,6 +2038,14 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _showAdvancedSettings;
             set => this.RaiseAndSetIfChanged(ref _showAdvancedSettings, value);
+        }
+
+        private int _grayscaleDetectionThreshold = 12;
+        [DataMember]
+        public int GrayscaleDetectionThreshold
+        {
+            get => _grayscaleDetectionThreshold;
+            set => this.RaiseAndSetIfChanged(ref _grayscaleDetectionThreshold, value);
         }
 
         private AvaloniaList<UpscaleChain> _chains;
