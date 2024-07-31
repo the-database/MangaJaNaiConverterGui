@@ -123,7 +123,14 @@ downscale and final color downscale
 def standard_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
     new_image = image.astype(np.float32) / 255.0
     new_image = resize(new_image, new_size, ResizeFilter.Lanczos, False)
-    return (new_image * 255).round().astype(np.uint8)
+    new_image = (new_image * 255).round().astype(np.uint8)
+
+    _, _, c = get_h_w_c(image)
+
+    if c == 1 and new_image.ndim == 3:
+        new_image = np.squeeze(new_image, axis=-1)
+
+    return new_image
 
 
 """
@@ -139,10 +146,7 @@ def dotgain20_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray
         if blur_size > 250:
             blur_size = 250
 
-    if c == 1:
-        pil_image = Image.fromarray(image, mode="L")
-    else:
-        pil_image = Image.fromarray(image[:, :, 0], mode="L")
+    pil_image = Image.fromarray(image, mode="L")
     pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=blur_size))
     pil_image = ImageCms.applyTransform(pil_image, dotgain20togamma1transform, False)
 
@@ -170,7 +174,6 @@ def get_system_codepage() -> Any:
 
 
 def enhance_contrast(image: np.ndarray) -> MatLike:
-    # print('1', image[199][501], np.min(image), np.max(image))
     image_p = Image.fromarray(image).convert("L")
 
     # Calculate the histogram
@@ -417,7 +420,7 @@ def ai_upscale_image(
     image: np.ndarray, model_tile_size: TileSize, model: ImageModelDescriptor | None
 ) -> np.ndarray:
     if model is not None:
-        return upscale_image_node(
+        result = upscale_image_node(
             context,
             image,
             model,
@@ -427,6 +430,14 @@ def ai_upscale_image(
             256,
             False,
         )
+
+        _, _, c = get_h_w_c(image)
+
+        if c == 1 and result.ndim == 3:
+            result = np.squeeze(result, axis=-1)
+
+        return result
+
     return image
 
 
