@@ -190,12 +190,12 @@
           <!-- Main Form -->
           <StackPanel Margin="20">
             <Grid>
-              <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}" Grid.Column="0">
+              <StackPanel Orientation="Horizontal" Margin="0,10,0,10" Grid.Column="0">
                 <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Workflow Name</TextBlock>
                 <TextBox Width="500" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.WorkflowName}"/>
               </StackPanel>
 
-              <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
+              <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <StackPanel Margin="0,10,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
 
                   <Button Margin="10,0,10,0" Click="ImportCurrentWorkflowButtonClick">
@@ -433,11 +433,20 @@
                 <TextBlock Margin="0,0,5,0" FontWeight="Bold" Text="Advanced Settings"/>
                 <materialIcons:MaterialIcon Kind="QuestionMarkCircle" Opacity="0.5" VerticalAlignment="Center" />
               </StackPanel>
-              <TextBlock FontSize="12" Foreground="Gray" Margin="0,10,0,10" IsVisible="{Binding CurrentWorkflow.IsDefaultWorkflow}">
-                Advanced settings are locked for the default workflow, and are displayed below for reference only. Select any custom workflow to modify the advanced settings for that workflow.
-              </TextBlock>
 
-              <Border Classes="border" IsEnabled="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
+              <Border Classes="border">
+                <StackPanel>
+                  <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                    <TextBlock Margin="0,0,5,0" Text="Grayscale Detection Threshold" VerticalAlignment="Center" />
+                    <Slider VerticalAlignment="Center" Value="{Binding CurrentWorkflow.GrayscaleDetectionThreshold}" Minimum="0" Maximum="24" Width="500" TickFrequency="1" IsSnapToTickEnabled="True" />
+                    <TextBlock VerticalAlignment="Center" Width="40" Margin="10,10,0,10" Text="{Binding CurrentWorkflow.GrayscaleDetectionThreshold}" HorizontalAlignment="Center"/>
+                    <TextBlock Width="650" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The threshold for which an image is considered grayscale. The default value of 12 considers images with slight color as grayscale, because some grayscale images have slight color due to artifacts. Set the threshold to 0 to consider only strictly grayscale images as grayscale, and increase the threshold to consider images with more color as grayscale.</TextBlock>
+                  </StackPanel>
+
+                </StackPanel>
+              </Border>
+
+              <Border Classes="border">
                 <StackPanel>
                   <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
                     <ItemsControl.ItemTemplate>

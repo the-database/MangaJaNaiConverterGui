@@ -299,7 +299,7 @@ def _pil_to_cv2(im: ImageType) -> np.ndarray:
     return img
 
 
-def cv_image_is_grayscale(image: np.ndarray) -> bool:
+def cv_image_is_grayscale(image: np.ndarray, user_threshold: float) -> bool:
     _, _, c = get_h_w_c(image)
 
     if c == 1:
@@ -307,7 +307,7 @@ def cv_image_is_grayscale(image: np.ndarray) -> bool:
 
     b, g, r = cv2.split(image[:, :, :3])
 
-    ignore_threshold = 12
+    ignore_threshold = user_threshold
 
     # getting differences between (b,g), (r,g), (b,r) channel pixels
     r_g = cv2.subtract(cv2.absdiff(r, g), ignore_threshold)  # type: ignore
@@ -332,7 +332,7 @@ def cv_image_is_grayscale(image: np.ndarray) -> bool:
     # finding ratio of diff_sum with respect to size of image without pure black and pure white pixels
     ratio = diff_sum / size_without_black_and_white
 
-    return ratio < 1
+    return ratio <= user_threshold / 12
 
 
 def get_chain_for_image(
@@ -341,7 +341,8 @@ def get_chain_for_image(
     target_width: int,
     target_height: int,
     chains: list[dict[str, Any]],
-) -> tuple[dict[str, Any], bool, int, int] | tuple[None, None, None, None]:
+    grayscale_detection_threshold: int,
+) -> tuple[dict[str, Any], bool, int, int] | tuple[None, None, int, int]:
     original_height, original_width, _ = get_h_w_c(image)
 
     if target_width != 0 and target_height != 0:
@@ -355,16 +356,16 @@ def get_chain_for_image(
 
     assert target_scale is not None
 
-    is_grayscale = cv_image_is_grayscale(image)
+    is_grayscale = cv_image_is_grayscale(image, grayscale_detection_threshold)
 
     for chain in chains:
         if should_chain_activate_for_image(
             original_width, original_height, is_grayscale, target_scale, chain
         ):
-            print("Matched Chain:", chain)
+            print("Matched Chain:", chain, flush=True)
             return chain, is_grayscale, original_width, original_height
 
-    return None, None, None, None
+    return None, None, original_width, original_height
 
 
 def should_chain_activate_for_image(
@@ -647,6 +648,7 @@ def preprocess_worker_archive(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     """
     given a zip or rar path, read images out of the archive, apply auto levels, add the image to upscale queue
@@ -663,6 +665,7 @@ def preprocess_worker_archive(
                 target_height,
                 chains,
                 loaded_models,
+                grayscale_detection_threshold,
             )
     elif input_archive_path.endswith(RAR_EXTENSIONS):
         with rarfile.RarFile(input_archive_path, "r") as input_rar:
@@ -675,6 +678,7 @@ def preprocess_worker_archive(
                 target_height,
                 chains,
                 loaded_models,
+                grayscale_detection_threshold,
             )
 
 
@@ -687,6 +691,7 @@ def preprocess_worker_archive_file(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     """
     given an input zip or rar archive, read images out of the archive, apply auto levels, add the image to upscale queue
@@ -716,7 +721,12 @@ def preprocess_worker_archive_file(
 
                 chain, is_grayscale, original_width, original_height = (
                     get_chain_for_image(
-                        image, target_scale, target_width, target_height, chains
+                        image,
+                        target_scale,
+                        target_width,
+                        target_height,
+                        chains,
+                        grayscale_detection_threshold,
                     )
                 )
                 model = None
@@ -785,7 +795,6 @@ def preprocess_worker_archive_file(
                     image = normalize(image)
 
                 # image = np.ascontiguousarray(image)
-
                 upscale_queue.put(
                     (
                         image,
@@ -828,6 +837,7 @@ def preprocess_worker_folder(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     """
     given a folder path, recursively iterate the folder
@@ -868,7 +878,12 @@ def preprocess_worker_folder(
 
                     chain, is_grayscale, original_width, original_height = (
                         get_chain_for_image(
-                            image, target_scale, target_width, target_height, chains
+                            image,
+                            target_scale,
+                            target_width,
+                            target_height,
+                            chains,
+                            grayscale_detection_threshold,
                         )
                     )
                     model = None
@@ -977,6 +992,7 @@ def preprocess_worker_folder(
                         target_height,
                         chains,
                         loaded_models,
+                        grayscale_detection_threshold,
                     )  # TODO custom output extension
     upscale_queue.put(UPSCALE_SENTINEL)
     # print("preprocess_worker_folder exiting")
@@ -992,6 +1008,7 @@ def preprocess_worker_image(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     """
     given an image path, apply auto levels and add to upscale queue
@@ -1006,7 +1023,12 @@ def preprocess_worker_image(
         image = _read_image_from_path(input_image_path)
 
         chain, is_grayscale, original_width, original_height = get_chain_for_image(
-            image, target_scale, target_width, target_height, chains
+            image,
+            target_scale,
+            target_width,
+            target_height,
+            chains,
+            grayscale_detection_threshold,
         )
         model = None
         tile_size_str = ""
@@ -1253,6 +1275,7 @@ def upscale_archive_file(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     # TODO accept multiple paths to reuse simple queues?
 
@@ -1271,6 +1294,7 @@ def upscale_archive_file(
             target_height,
             chains,
             loaded_models,
+            grayscale_detection_threshold,
         ),
     )
     preprocess_process.start()
@@ -1315,6 +1339,7 @@ def upscale_image_file(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     upscale_queue = Queue(maxsize=1)
     postprocess_queue = Queue(maxsize=1)
@@ -1332,6 +1357,7 @@ def upscale_image_file(
             target_height,
             chains,
             loaded_models,
+            grayscale_detection_threshold,
         ),
     )
     preprocess_process.start()
@@ -1377,6 +1403,7 @@ def upscale_file(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     input_file_base = Path(input_file_path).stem
 
@@ -1404,6 +1431,7 @@ def upscale_file(
             target_height,
             chains,
             loaded_models,
+            grayscale_detection_threshold,
         )
 
     elif input_file_path.lower().endswith(IMAGE_EXTENSIONS):
@@ -1431,6 +1459,7 @@ def upscale_file(
             target_height,
             chains,
             loaded_models,
+            grayscale_detection_threshold,
         )
 
 
@@ -1449,6 +1478,7 @@ def upscale_folder(
     target_height: int,
     chains: list[dict[str, Any]],
     loaded_models: dict[str, ModelDescriptor],
+    grayscale_detection_threshold: int,
 ) -> None:
     # print("upscale_folder: entering")
 
@@ -1475,6 +1505,7 @@ def upscale_folder(
             target_height,
             chains,
             loaded_models,
+            grayscale_detection_threshold,
         ),
     )
     preprocess_process.start()
@@ -1596,6 +1627,8 @@ if __name__ == "__main__":
     target_width = 0
     target_height = 0
 
+    grayscale_detection_threshold = workflow["GrayscaleDetectionThreshold"]
+
     if workflow["ModeScaleSelected"]:
         target_scale = workflow["UpscaleScaleFactor"]
     elif workflow["ModeWidthSelected"]:
@@ -1622,6 +1655,7 @@ if __name__ == "__main__":
             target_height,
             workflow["Chains"]["$values"],
             loaded_models,
+            grayscale_detection_threshold,
         )
     elif workflow["SelectedTabIndex"] == 0:
         upscale_file(
@@ -1637,6 +1671,7 @@ if __name__ == "__main__":
             target_height,
             workflow["Chains"]["$values"],
             loaded_models,
+            grayscale_detection_threshold,
         )
 
     # # Record the end time
