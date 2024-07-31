@@ -92,6 +92,11 @@ def convenient_upscale(
 
             return np.dstack((black_up, alpha))
 
+    # skip all conversions for grayscale to improve performance by reducing the amount of data that needs to be copied
+    # instead we do the color conversions on the tensors after they're already on the gpu
+    if in_img_c == 1:
+        return upscale(img)
+
     return as_target_channels(
         upscale(as_target_channels(img, model_in_nc, True)), in_img_c, True
     )

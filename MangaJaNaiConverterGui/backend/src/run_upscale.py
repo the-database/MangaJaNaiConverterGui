@@ -132,14 +132,17 @@ final downscale for grayscale images only
 
 
 def dotgain20_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
-    h, _ = image.shape[:2]
+    h, _, c = get_h_w_c(image)
     size_ratio = h / new_size[1]
     blur_size = (1 / size_ratio - 1) / 3.5
     if blur_size >= 0.1:
         if blur_size > 250:
             blur_size = 250
 
-    pil_image = Image.fromarray(image[:, :, 0], mode="L")
+    if c == 1:
+        pil_image = Image.fromarray(image, mode="L")
+    else:
+        pil_image = Image.fromarray(image[:, :, 0], mode="L")
     pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=blur_size))
     pil_image = ImageCms.applyTransform(pil_image, dotgain20togamma1transform, False)
 
@@ -229,10 +232,7 @@ def enhance_contrast(image: np.ndarray) -> MatLike:
     image_array = np.maximum(image_array - new_black_level, 0) / (
         new_white_level - new_black_level
     )
-    image_array = np.clip(image_array, 0, 1)
-
-    # gray_image =
-    return cv2.cvtColor(image_array, cv2.COLOR_GRAY2BGR)
+    return np.clip(image_array, 0, 1)
 
 
 def _read_cv(img_stream: BytesIO) -> MatLike:
@@ -333,6 +333,16 @@ def cv_image_is_grayscale(image: np.ndarray, user_threshold: float) -> bool:
     ratio = diff_sum / size_without_black_and_white
 
     return ratio <= user_threshold / 12
+
+
+def convert_image_to_grayscale(image: np.ndarray) -> np.ndarray:
+    channels = get_h_w_c(image)[2]
+    if channels == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    elif channels == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+
+    return image
 
 
 def get_chain_for_image(
@@ -436,7 +446,7 @@ def final_target_resize(
 ) -> np.ndarray:
     # fit to dimensions
     if target_height != 0 and target_width != 0:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         # determine whether to fit to height or width
         if target_height / original_height < target_width / original_width:
             target_width = 0
@@ -445,20 +455,20 @@ def final_target_resize(
 
     # resize height, keep proportional width
     if target_height != 0:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         if h != target_height:
             return image_resize(
                 image, (round(w * target_height / h), target_height), is_grayscale
             )
     # resize width, keep proportional height
     elif target_width != 0:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         if w != target_width:
             return image_resize(
                 image, (target_width, round(h * target_width / w)), is_grayscale
             )
     else:
-        h, w = image.shape[:2]
+        h, w, _ = get_h_w_c(image)
         new_target_height = round(original_height * target_scale)
         if h != new_target_height:
             return image_resize(
@@ -508,7 +518,11 @@ def save_image_zip(
 
         with Image.fromarray(image) as pil_im:
             output_buffer = io.BytesIO()
-            pil_im.save(output_buffer, format=image_format)
+            pil_im.save(
+                output_buffer,
+                format=image_format,
+                subsampling="4:0:0" if is_grayscale else "4:2:0",
+            )
     else:
         if image_format == "jpg":
             params = [
@@ -595,7 +609,11 @@ def save_image(
         )
 
         with Image.fromarray(image) as pil_im:
-            pil_im.save(output_file_path, quality=lossy_compression_quality)
+            pil_im.save(
+                output_file_path,
+                quality=lossy_compression_quality,
+                subsampling="4:0:0" if is_grayscale else "4:2:0",
+            )
     else:
         # save with cv2
         if image_format == "jpg":
@@ -729,6 +747,10 @@ def preprocess_worker_archive_file(
                         grayscale_detection_threshold,
                     )
                 )
+
+                if is_grayscale:
+                    image = convert_image_to_grayscale(image)
+
                 model = None
                 tile_size_str = ""
                 if chain is not None:
@@ -741,14 +763,14 @@ def preprocess_worker_archive_file(
                         resize_height_before_upscale != 0
                         and resize_width_before_upscale != 0
                     ):
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (resize_width_before_upscale, resize_height_before_upscale),
                         )
                     # resize height, keep proportional width
                     elif resize_height_before_upscale != 0:
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (
@@ -758,7 +780,7 @@ def preprocess_worker_archive_file(
                         )
                     # resize width, keep proportional height
                     elif resize_width_before_upscale != 0:
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (
@@ -767,7 +789,7 @@ def preprocess_worker_archive_file(
                             ),
                         )
                     elif resize_factor_before_upscale != 100:
-                        h, w = image.shape[:2]
+                        h, w, _ = get_h_w_c(image)
                         image = standard_resize(
                             image,
                             (
@@ -886,6 +908,10 @@ def preprocess_worker_folder(
                             grayscale_detection_threshold,
                         )
                     )
+
+                    if is_grayscale:
+                        image = convert_image_to_grayscale(image)
+
                     model = None
                     tile_size_str = ""
                     if chain is not None:
@@ -902,7 +928,7 @@ def preprocess_worker_folder(
                             resize_height_before_upscale != 0
                             and resize_width_before_upscale != 0
                         ):
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -912,7 +938,7 @@ def preprocess_worker_folder(
                             )
                         # resize height, keep proportional width
                         elif resize_height_before_upscale != 0:
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -922,7 +948,7 @@ def preprocess_worker_folder(
                             )
                         # resize width, keep proportional height
                         elif resize_width_before_upscale != 0:
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -931,7 +957,7 @@ def preprocess_worker_folder(
                                 ),
                             )
                         elif resize_factor_before_upscale != 100:
-                            h, w = image.shape[:2]
+                            h, w, _ = get_h_w_c(image)
                             image = standard_resize(
                                 image,
                                 (
@@ -971,9 +997,9 @@ def preprocess_worker_folder(
                             model,
                         )
                     )
-            elif filename.lower().endswith(ZIP_EXTENSIONS):  # TODO if archive
+            elif filename.lower().endswith(ZIP_EXTENSIONS):
                 if upscale_archives:
-                    output_file_path = str(output_file_path.with_suffix(".cbz"))
+                    output_file_path = f"{output_file_path}.cbz"
                     if not overwrite_existing_files and os.path.isfile(
                         output_file_path
                     ):
@@ -1030,6 +1056,10 @@ def preprocess_worker_image(
             chains,
             grayscale_detection_threshold,
         )
+
+        if is_grayscale:
+            image = convert_image_to_grayscale(image)
+
         model = None
         tile_size_str = ""
         if chain is not None:
@@ -1039,13 +1069,13 @@ def preprocess_worker_image(
 
             # resize width and height, distorting image
             if resize_height_before_upscale != 0 and resize_width_before_upscale != 0:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image, (resize_width_before_upscale, resize_height_before_upscale)
                 )
             # resize height, keep proportional width
             elif resize_height_before_upscale != 0:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image,
                     (
@@ -1055,7 +1085,7 @@ def preprocess_worker_image(
                 )
             # resize width, keep proportional height
             elif resize_width_before_upscale != 0:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image,
                     (
@@ -1064,7 +1094,7 @@ def preprocess_worker_image(
                     ),
                 )
             elif resize_factor_before_upscale != 100:
-                h, w = image.shape[:2]
+                h, w, _ = get_h_w_c(image)
                 image = standard_resize(
                     image,
                     (
@@ -1078,19 +1108,21 @@ def preprocess_worker_image(
             else:
                 image = normalize(image)
 
-            model_abs_path = get_model_abs_path(chain["ModelFilePath"])
+            if chain["ModelFilePath"] == "No Model":
+                pass
+            else:
+                model_abs_path = get_model_abs_path(chain["ModelFilePath"])
 
-            if not os.path.exists(model_abs_path):
-                raise FileNotFoundError(model_abs_path)
+                if not os.path.exists(model_abs_path):
+                    raise FileNotFoundError(model_abs_path)
 
-            print("model_abs_path", model_abs_path, os.path.exists(model_abs_path))
-            if model_abs_path in loaded_models:
-                model = loaded_models[model_abs_path]
+                if model_abs_path in loaded_models:
+                    model = loaded_models[model_abs_path]
 
-            elif os.path.exists(model_abs_path):
-                model, _, _ = load_model_node(context, Path(model_abs_path))
-                loaded_models[model_abs_path] = model
-            tile_size_str = chain["ModelTileSize"]
+                elif os.path.exists(model_abs_path):
+                    model, _, _ = load_model_node(context, Path(model_abs_path))
+                    loaded_models[model_abs_path] = model
+                tile_size_str = chain["ModelTileSize"]
         else:
             print("No chain!!!!!!!")
             image = normalize(image)
@@ -1133,6 +1165,11 @@ def upscale_worker(upscale_queue: Queue, postprocess_queue: Queue) -> None:
 
         if is_image:
             image = ai_upscale_image(image, model_tile_size, model)
+
+            # convert back to grayscale
+            if is_grayscale:
+                image = convert_image_to_grayscale(image)
+
         postprocess_queue.put(
             (image, file_name, is_image, is_grayscale, original_width, original_height)
         )
@@ -1410,12 +1447,10 @@ def upscale_file(
     if input_file_path.lower().endswith(ARCHIVE_EXTENSIONS):
         output_file_path = str(
             Path(
-                os.path.join(
-                    output_folder_path,
-                    output_filename.replace("%filename%", input_file_base),
-                )
-            ).with_suffix(".cbz")
+                f"{os.path.join(output_folder_path,output_filename.replace('%filename%', input_file_base))}.cbz"
+            )
         )
+        print("output_file_path", output_file_path, flush=True)
         if not overwrite_existing_files and os.path.isfile(output_file_path):
             print(f"file exists, skip: {output_file_path}", flush=True)
             return
@@ -1437,11 +1472,8 @@ def upscale_file(
     elif input_file_path.lower().endswith(IMAGE_EXTENSIONS):
         output_file_path = str(
             Path(
-                os.path.join(
-                    output_folder_path,
-                    output_filename.replace("%filename%", input_file_base),
-                )
-            ).with_suffix(f".{image_format}")
+                f"{os.path.join(output_folder_path,output_filename.replace('%filename%', input_file_base))}.{image_format}"
+            )
         )
         if not overwrite_existing_files and os.path.isfile(output_file_path):
             print(f"file exists, skip: {output_file_path}", flush=True)
@@ -1580,7 +1612,7 @@ models_directory = settings["ModelsDirectory"]
 UPSCALE_SENTINEL = (None, None, None, None, None, None, None, None)
 POSTPROCESS_SENTINEL = (None, None, None, None, None, None)
 CV2_IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
-IMAGE_EXTENSIONS = CV2_IMAGE_EXTENSIONS + tuple(".avif")
+IMAGE_EXTENSIONS = (*CV2_IMAGE_EXTENSIONS, ".avif")
 ZIP_EXTENSIONS = (".zip", ".cbz")
 RAR_EXTENSIONS = (".rar", ".cbr")
 ARCHIVE_EXTENSIONS = ZIP_EXTENSIONS + RAR_EXTENSIONS
