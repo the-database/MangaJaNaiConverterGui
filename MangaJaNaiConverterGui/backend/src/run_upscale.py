@@ -341,7 +341,7 @@ def get_chain_for_image(
     target_width: int,
     target_height: int,
     chains: list[dict[str, Any]],
-    grayscale_detection_threshold: int
+    grayscale_detection_threshold: int,
 ) -> tuple[dict[str, Any], bool, int, int] | tuple[None, None, int, int]:
     original_height, original_width, _ = get_h_w_c(image)
 
@@ -721,7 +721,12 @@ def preprocess_worker_archive_file(
 
                 chain, is_grayscale, original_width, original_height = (
                     get_chain_for_image(
-                        image, target_scale, target_width, target_height, chains, grayscale_detection_threshold
+                        image,
+                        target_scale,
+                        target_width,
+                        target_height,
+                        chains,
+                        grayscale_detection_threshold,
                     )
                 )
                 model = None
@@ -873,7 +878,12 @@ def preprocess_worker_folder(
 
                     chain, is_grayscale, original_width, original_height = (
                         get_chain_for_image(
-                            image, target_scale, target_width, target_height, chains, grayscale_detection_threshold
+                            image,
+                            target_scale,
+                            target_width,
+                            target_height,
+                            chains,
+                            grayscale_detection_threshold,
                         )
                     )
                     model = None
@@ -982,7 +992,7 @@ def preprocess_worker_folder(
                         target_height,
                         chains,
                         loaded_models,
-                        grayscale_detection_threshold
+                        grayscale_detection_threshold,
                     )  # TODO custom output extension
     upscale_queue.put(UPSCALE_SENTINEL)
     # print("preprocess_worker_folder exiting")
@@ -1013,7 +1023,12 @@ def preprocess_worker_image(
         image = _read_image_from_path(input_image_path)
 
         chain, is_grayscale, original_width, original_height = get_chain_for_image(
-            image, target_scale, target_width, target_height, chains, grayscale_detection_threshold
+            image,
+            target_scale,
+            target_width,
+            target_height,
+            chains,
+            grayscale_detection_threshold,
         )
         model = None
         tile_size_str = ""
@@ -1342,7 +1357,7 @@ def upscale_image_file(
             target_height,
             chains,
             loaded_models,
-            grayscale_detection_threshold
+            grayscale_detection_threshold,
         ),
     )
     preprocess_process.start()
@@ -1444,7 +1459,7 @@ def upscale_file(
             target_height,
             chains,
             loaded_models,
-            grayscale_detection_threshold
+            grayscale_detection_threshold,
         )
 
 
@@ -1490,7 +1505,7 @@ def upscale_folder(
             target_height,
             chains,
             loaded_models,
-            grayscale_detection_threshold
+            grayscale_detection_threshold,
         ),
     )
     preprocess_process.start()
@@ -1640,7 +1655,7 @@ if __name__ == "__main__":
             target_height,
             workflow["Chains"]["$values"],
             loaded_models,
-            grayscale_detection_threshold
+            grayscale_detection_threshold,
         )
     elif workflow["SelectedTabIndex"] == 0:
         upscale_file(
@@ -1656,7 +1671,7 @@ if __name__ == "__main__":
             target_height,
             workflow["Chains"]["$values"],
             loaded_models,
-            grayscale_detection_threshold
+            grayscale_detection_threshold,
         )
 
     # # Record the end time
