@@ -10,6 +10,7 @@ from api import Progress
 
 from ..upscale.auto_split import Split, Tiler, auto_split
 from .utils import safe_cuda_cache_empty
+from nodes.utils.utils import get_h_w_c
 
 
 def _into_standard_image_form(t: torch.Tensor) -> torch.Tensor:
@@ -92,23 +93,23 @@ def pytorch_auto_split(
 
         input_tensor = None
         try:
+            _, _, input_channels = get_h_w_c(img)
             # convert to tensor
             input_tensor = _into_tensor(img, device, dtype)
             # expand grayscale tensor to match model input channels
-            input_ndim = input_tensor.ndim
-            if input_ndim == 2 and model.input_channels > 1:
-                input_tensor = input_tensor.unsqueeze(-1).repeat(1, 1, model.input_channels)
+            # input_ndim = input_tensor.ndim
+            if input_channels == 1:
+                input_tensor = input_tensor.repeat(1, 1, model.input_channels)
             else:
                 input_tensor = _rgb_to_bgr(input_tensor)
             input_tensor = _into_batched_form(input_tensor)
-
             # inference
             output_tensor = model(input_tensor)
 
             # convert back to numpy
             output_tensor = _into_standard_image_form(output_tensor)
-            if input_ndim == 2:
-                output_tensor = output_tensor[..., 0]
+            if input_channels == 1:
+                output_tensor = output_tensor[:, :, 0].unsqueeze(-1)
             else:
                 output_tensor = _rgb_to_bgr(output_tensor)
             result = output_tensor.detach().cpu().detach().float().numpy()
