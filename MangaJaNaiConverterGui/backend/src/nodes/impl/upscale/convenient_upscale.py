@@ -95,6 +95,8 @@ def convenient_upscale(
     # skip all conversions for grayscale to improve performance by reducing the amount of data that needs to be copied
     # instead we do the color conversions on the tensors after they're already on the gpu
     if in_img_c == 1:
+        if img.ndim == 2:
+            img = np.expand_dims(img, axis=-1)
         return upscale(img)
 
     return as_target_channels(
