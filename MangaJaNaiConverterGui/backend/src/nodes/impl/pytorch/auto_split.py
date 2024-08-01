@@ -97,8 +97,7 @@ def pytorch_auto_split(
             # convert to tensor
             input_tensor = _into_tensor(img, device, dtype)
             # expand grayscale tensor to match model input channels
-            # input_ndim = input_tensor.ndim
-            if input_channels == 1:
+            if input_channels == 1 and model.input_channels > 1:
                 input_tensor = input_tensor.repeat(1, 1, model.input_channels)
             else:
                 input_tensor = _rgb_to_bgr(input_tensor)
