@@ -24,9 +24,9 @@ Check out [this README](MangaJaNaiConverterGui/backend/src/README.md).
 - [OpenModelDB](https://openmodeldb.info/): Repository of AI upscaling models.
 
 ## Related Projects
-- [MangaJaNai](https://github.com/the-database/mangajanai): Main repository for manga upscaling models
-- [AnimeJaNaiConverterGui](https://github.com/the-database/AnimeJaNaiConverterGui): Windows GUI for video upscaling with extremely fast performance
+- [MangaJaNai](https://github.com/the-database/mangajanai): Main repository for manga upscaling models.
+- [VideoJaNai](https://github.com/the-database/VideoJaNai): Windows GUI for video upscaling with extremely fast performance.
+- [traiNNer-redux](https://github.com/the-database/traiNNer-redux): Software for training upscaling models.
 
 ## Acknowledgments 
-- [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. This project uses its backend for running upscaling models.
-- [7-zip](https://www.7-zip.org/) and [SevenZipExtractor](https://github.com/adoconnection/SevenZipExtractor): File archiver and C# wrapper for 7z.dll.
+- [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. This project uses a modified version of its backend for running upscaling models.
