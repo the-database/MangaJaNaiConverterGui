@@ -13,8 +13,8 @@ dependencies = [
   "sanic==24.6.0",
   "spandrel_extra_arches==0.1.1",
   "spandrel==0.3.4",
-  "torch==2.1.2",
-  "torchvision==0.16.2"
+  "torch==2.3.0",
+  "torchvision==0.18.0"
 ]
 authors = [{name = "the-database"}]
 description = "Upscaling manga images and archives with PyTorch models."
