@@ -755,7 +755,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var cmd = $@".\python\python\python.exe ""{Path.GetFullPath(@".\backend\src\run_upscale.py")}"" --settings {Program.AppStatePath}";
+                var cmd = $@".\python\python\python.exe ""{Path.GetFullPath(@".\backend\src\run_upscale.py")}"" --settings ""{Program.AppStatePath}""";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
