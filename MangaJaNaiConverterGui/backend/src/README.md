@@ -33,10 +33,10 @@ Script should be run from `MangaJaNaiConverterGui/backend/src/` directory. Examp
 python run_upscale.py -h
 
 # Upscale single file with factor 4
-python run_upcale.py -f "/my/dir/myFile.jpg" -u 4
+python run_upscale.py -f "/my/dir/myFile.jpg" -u 4
 
 # Upscale whole directory into a custom output directory
-python run_upscae.py -d "/my/input/dir/" -o "/my/output/dir/"
+python run_upscale.py -d "/my/input/dir/" -o "/my/output/dir/"
 ```
 
 ## Advanced Utility
