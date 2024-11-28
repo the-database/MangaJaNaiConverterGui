@@ -13,7 +13,7 @@ from queue import Queue
 from multiprocessing import Queue as MPQueue, Process
 from threading import Thread
 from typing import Any, Literal
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 import cv2
 import numpy as np
@@ -1095,7 +1095,7 @@ def postprocess_worker_zip(
     wait for postprocess queue, for each queue entry, save the image to the zip file
     """
     # print("postprocess_worker_zip entering")
-    with ZipFile(output_zip_path, "w") as output_zip:
+    with ZipFile(output_zip_path, "w", ZIP_DEFLATED) as output_zip:
         while True:
             (
                 image,
