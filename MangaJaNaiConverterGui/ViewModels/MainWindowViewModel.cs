@@ -1259,7 +1259,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     await DownloadModels();
                 }
 
-                if (!_pythonService.IsPythonInstalled())
+                if (!_pythonService.IsPythonInstalled() || !(await _pythonService.IsPythonUpdated()))
                 {
                     // Download Python tgz
                     BackendSetupMainStatus = "Downloading Python...";

@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.Services
 {
@@ -46,6 +47,62 @@ namespace MangaJaNaiConverterGui.Services
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
         public bool IsPythonInstalled() => File.Exists(PythonPath);
+
+        public async Task<bool> IsPythonUpdated()
+        {
+            var relPythonPath = @".\python\python\python.exe";
+
+            var cmd = $@"{relPythonPath} -V";
+
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = @$"/C {cmd}";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+                process.StartInfo.WorkingDirectory = BackendDirectory;
+
+                Version? result = null;
+
+                // Create a StreamWriter to write the output to a log file
+                try
+                {
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            // ignore
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            result = new Version(e.Data.Replace("Python ", ""));
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+                }
+                catch (IOException) { }
+
+                if (result == null || result.CompareTo(new Version(PYTHON_DOWNLOADS["win32"].Version)) < 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
         public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0;
 
         public class PythonDownload
@@ -139,7 +196,6 @@ namespace MangaJaNaiConverterGui.Services
                     "opencv-python==4.10.0.84",
                     "pillow-avif-plugin==1.4.6",
                     "rarfile==4.2",
-                    "multiprocess==0.70.17",
                     "chainner_ext==0.3.10",
                     "sanic==24.6.0",
                     "pynvml==11.5.3",
