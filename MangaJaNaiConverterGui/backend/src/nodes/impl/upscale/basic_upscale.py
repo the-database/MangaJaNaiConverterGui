@@ -4,9 +4,9 @@ from enum import Enum
 
 import numpy as np
 from nodes.impl.image_op import ImageOp
-from nodes.impl.image_utils import BorderType, create_border
+from nodes.impl.image_utils import BorderType
 from nodes.impl.resize import ResizeFilter, resize
-from nodes.utils.utils import Padding, get_h_w_c
+from nodes.utils.utils import get_h_w_c
 
 from .convenient_upscale import convenient_upscale
 

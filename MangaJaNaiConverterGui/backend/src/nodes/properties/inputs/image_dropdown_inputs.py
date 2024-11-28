@@ -1,5 +1,4 @@
 import navi
-from nodes.impl.upscale.basic_upscale import PaddingType
 
 from ...impl.color.convert_data import (
     color_spaces,

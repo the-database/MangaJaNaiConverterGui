@@ -6,24 +6,21 @@ import os
 import platform
 import sys
 import time
-import typing
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
+from queue import Queue
+from threading import Thread
 from typing import Any, Literal
 from zipfile import ZipFile
 
 import cv2
 import numpy as np
 import pillow_avif  # noqa: F401  # pyright: ignore[reportUnusedImport]
+import pyvips
 import rarfile
 from chainner_ext import ResizeFilter, resize
 from cv2.typing import MatLike
-
-if typing.TYPE_CHECKING:
-    from multiprocessing import Process, Queue, set_start_method
-else:
-    from multiprocess import Process, Queue, set_start_method
 from PIL import Image, ImageCms, ImageFilter
 from PIL.Image import Image as ImageType
 from PIL.ImageCms import ImageCmsProfile
@@ -143,8 +140,7 @@ def dotgain20_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray
     size_ratio = h / new_size[1]
     blur_size = (1 / size_ratio - 1) / 3.5
     if blur_size >= 0.1:
-        if blur_size > 250:
-            blur_size = 250
+        blur_size = min(blur_size, 250)
 
     pil_image = Image.fromarray(image, mode="L")
     pil_image = pil_image.filter(ImageFilter.GaussianBlur(radius=blur_size))
@@ -267,11 +263,12 @@ def _read_cv_from_path(path: str) -> MatLike:
     return img
 
 
-def _read_image(img_stream: BytesIO, filename: str) -> np.ndarray:
-    for extension in CV2_IMAGE_EXTENSIONS:
-        if filename.lower().endswith(extension):
-            return _read_cv(img_stream)
-    return _read_pil(img_stream)
+def _read_image(img_stream: bytes, filename: str) -> np.ndarray:
+    # for extension in CV2_IMAGE_EXTENSIONS:
+    #     if filename.lower().endswith(extension):
+    #         return _read_cv(img_stream)
+    # return _read_pil(img_stream)
+    return _read_vips(img_stream)
 
 
 def _read_image_from_path(path: str) -> np.ndarray:
@@ -290,6 +287,10 @@ def _read_pil(img_stream: BytesIO) -> np.ndarray:
 def _read_pil_from_path(path: str) -> np.ndarray:
     im = Image.open(path)
     return _pil_to_cv2(im)
+
+
+def _read_vips(img_stream: bytes) -> np.ndarray:
+    return pyvips.Image.new_from_buffer(img_stream, "", access="sequential").numpy()
 
 
 def _pil_to_cv2(im: ImageType) -> np.ndarray:
@@ -745,9 +746,9 @@ def preprocess_worker_archive_file(
 
                 image_data = file_in_archive.read()
 
-                image_bytes = io.BytesIO(image_data)
-                image = _read_image(image_bytes, filename)
-
+                # image_bytes = io.BytesIO(image_data)
+                image = _read_image(image_data, filename)
+                print("read image", filename, flush=True)
                 chain, is_grayscale, original_width, original_height = (
                     get_chain_for_image(
                         image,
@@ -1331,7 +1332,7 @@ def upscale_archive_file(
     postprocess_queue = Queue(maxsize=1)
 
     # start preprocess zip process
-    preprocess_process = Process(
+    preprocess_process = Thread(
         target=preprocess_worker_archive,
         args=(
             upscale_queue,
@@ -1348,13 +1349,13 @@ def upscale_archive_file(
     preprocess_process.start()
 
     # start upscale process
-    upscale_process = Process(
+    upscale_process = Thread(
         target=upscale_worker, args=(upscale_queue, postprocess_queue)
     )
     upscale_process.start()
 
     # start postprocess zip process
-    postprocess_process = Process(
+    postprocess_process = Thread(
         target=postprocess_worker_zip,
         args=(
             postprocess_queue,
@@ -1393,7 +1394,7 @@ def upscale_image_file(
     postprocess_queue = Queue(maxsize=1)
 
     # start preprocess image process
-    preprocess_process = Process(
+    preprocess_process = Thread(
         target=preprocess_worker_image,
         args=(
             upscale_queue,
@@ -1411,13 +1412,13 @@ def upscale_image_file(
     preprocess_process.start()
 
     # start upscale process
-    upscale_process = Process(
+    upscale_process = Thread(
         target=upscale_worker, args=(upscale_queue, postprocess_queue)
     )
     upscale_process.start()
 
     # start postprocess image process
-    postprocess_process = Process(
+    postprocess_process = Thread(
         target=postprocess_worker_image,
         args=(
             postprocess_queue,
@@ -1530,7 +1531,7 @@ def upscale_folder(
     postprocess_queue = Queue(maxsize=1)
 
     # start preprocess folder process
-    preprocess_process = Process(
+    preprocess_process = Thread(
         target=preprocess_worker_folder,
         args=(
             upscale_queue,
@@ -1554,13 +1555,13 @@ def upscale_folder(
     preprocess_process.start()
 
     # start upscale process
-    upscale_process = Process(
+    upscale_process = Thread(
         target=upscale_worker, args=(upscale_queue, postprocess_queue)
     )
     upscale_process.start()
 
     # start postprocess folder process
-    postprocess_process = Process(
+    postprocess_process = Thread(
         target=postprocess_worker_folder,
         args=(
             postprocess_queue,
@@ -1603,10 +1604,6 @@ def get_dot20_icc_profile() -> ImageCmsProfile:
 
 
 is_linux = platform.system() == "Linux"
-if is_linux:
-    set_start_method("spawn", force=True)
-
-
 sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
 parser = argparse.ArgumentParser()
 

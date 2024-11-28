@@ -26,9 +26,9 @@ namespace MangaJaNaiConverterGui.Services
                 "win32",
                 new PythonDownload
                 {
-                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20240415/cpython-3.11.9+20240415-x86_64-pc-windows-msvc-shared-install_only.tar.gz",
+                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20241016/cpython-3.12.7+20241016-x86_64-pc-windows-msvc-shared-install_only.tar.gz",
                     Path = "python/python.exe",
-                    Version = "3.11.9",
+                    Version = "3.12.7",
                     Filename = "Python.tar.gz"
                 }
             },
@@ -120,8 +120,8 @@ namespace MangaJaNaiConverterGui.Services
 
         public void AddPythonPth(string destFolder)
         {
-            string[] lines = { "python311.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
-            var filename = "python311._pth";
+            string[] lines = { "python312.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
+            var filename = "python312._pth";
 
             using var outputFile = new StreamWriter(Path.Combine(destFolder, filename));
 
@@ -134,21 +134,23 @@ namespace MangaJaNaiConverterGui.Services
             get
             {
                 string[] dependencies = {
-                    "spandrel==0.3.4",
-                    "spandrel_extra_arches==0.1.1",
+                    "spandrel==0.4.0",
+                    "spandrel_extra_arches==0.2.0",
                     "opencv-python==4.10.0.84",
                     "pillow-avif-plugin==1.4.6",
                     "rarfile==4.2",
-                    "multiprocess==0.70.16",
+                    "multiprocess==0.70.17",
                     "chainner_ext==0.3.10",
                     "sanic==24.6.0",
                     "pynvml==11.5.3",
-                    "psutil==6.0.0"
+                    "psutil==6.1.0",
+                    "pyvips==2.2.3",
+                    "pyvips-binary==8.16.0"
                 };
 
                 var relPythonPath = @".\python\python\python.exe";
 
-                return $@"{relPythonPath} -m pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121 && {relPythonPath} -m pip install {string.Join(" ", dependencies)}";
+                return $@"{relPythonPath} -m pip install torch==2.5.1 torchvision --index-url https://download.pytorch.org/whl/cu124 && {relPythonPath} -m pip install {string.Join(" ", dependencies)}";
             }
         }
 
