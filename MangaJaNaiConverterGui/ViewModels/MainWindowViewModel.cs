@@ -1265,6 +1265,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                     BackendSetupMainStatus = "Downloading Python...";
                     var download = PythonService.PYTHON_DOWNLOADS["win32"];
                     var targetPath = Path.Join(_pythonService.PythonDirectory, download.Filename);
+                    if (Directory.Exists(_pythonService.PythonDirectory))
+                    {
+                        Directory.Delete(_pythonService.PythonDirectory, true);
+                    }
                     Directory.CreateDirectory(_pythonService.PythonDirectory);
                     await Downloader.DownloadFileAsync(download.Url, targetPath, (progress) =>
                     {
