@@ -196,6 +196,7 @@ namespace MangaJaNaiConverterGui.Services
                     "opencv-python==4.10.0.84",
                     "pillow-avif-plugin==1.4.6",
                     "rarfile==4.2",
+                    "numpy==2.1.3",
                     "chainner_ext==0.3.10",
                     "sanic==24.6.0",
                     "pynvml==11.5.3",
