@@ -1,10 +1,13 @@
 ﻿using Avalonia.Collections;
+using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.Services
 {
     public interface IPythonService
     {
         bool IsPythonInstalled();
+
+        Task<bool> IsPythonUpdated();
         bool AreModelsInstalled();
         string BackendDirectory { get; }
         string PythonDirectory { get; }

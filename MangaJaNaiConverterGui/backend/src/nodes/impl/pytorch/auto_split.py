@@ -4,13 +4,13 @@ import gc
 
 import numpy as np
 import torch
+from nodes.utils.utils import get_h_w_c
 from spandrel import ImageModelDescriptor
 
 from api import Progress
 
 from ..upscale.auto_split import Split, Tiler, auto_split
 from .utils import safe_cuda_cache_empty
-from nodes.utils.utils import get_h_w_c
 
 
 def _into_standard_image_form(t: torch.Tensor) -> torch.Tensor:
@@ -64,7 +64,9 @@ def _into_tensor(
             except Exception:
                 # Some arrays cannot be made writeable, and we need to copy them
                 img = np.copy(img)
-        input_tensor = torch.from_numpy(img).to(device, dtype)
+        input_tensor = (
+            torch.from_numpy(img).pin_memory().to(device, dtype, non_blocking=True)
+        )
         return input_tensor
     finally:
         img.flags.writeable = writeable
@@ -79,9 +81,16 @@ def pytorch_auto_split(
     tiler: Tiler,
     progress: Progress,
 ) -> np.ndarray:
-    dtype = torch.float16 if use_fp16 else torch.float32
+    dtype = torch.float32
+    if use_fp16:
+        if model.supports_half:
+            dtype = torch.float16
+        elif torch.cuda.is_bf16_supported():
+            dtype = torch.bfloat16
+    # print("dtype", dtype, use_fp16, flush=True)
     if model.dtype != dtype or model.device != device:
-        model = model.to(device, dtype)
+        # print("move model", flush=True)
+        model = model.to(device, dtype, memory_format=torch.channels_last)
 
     def upscale(img: np.ndarray, _: object):
         progress.check_aborted()
@@ -102,8 +111,12 @@ def pytorch_auto_split(
             else:
                 input_tensor = _rgb_to_bgr(input_tensor)
             input_tensor = _into_batched_form(input_tensor)
+            input_tensor = input_tensor.to(
+                memory_format=torch.channels_last
+            )  # TODO refactor
             # inference
-            output_tensor = model(input_tensor)
+            with torch.autocast(device_type="cuda", dtype=dtype, enabled=True):
+                output_tensor = model(input_tensor)
 
             # convert back to numpy
             output_tensor = _into_standard_image_form(output_tensor)
@@ -111,7 +124,12 @@ def pytorch_auto_split(
                 output_tensor = output_tensor[:, :, 0].unsqueeze(-1)
             else:
                 output_tensor = _rgb_to_bgr(output_tensor)
-            result = output_tensor.detach().cpu().detach().float().numpy()
+            print("out dtype", output_tensor.dtype, flush=True)
+            # result = output_tensor.detach().cpu().detach().float().numpy()
+            result = output_tensor.detach().cpu().detach()
+            if result.dtype == torch.bfloat16:
+                result = result.float()
+            result = result.numpy()
 
             return result
         except RuntimeError as e:

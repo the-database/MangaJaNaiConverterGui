@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.Services
 {
@@ -26,9 +27,9 @@ namespace MangaJaNaiConverterGui.Services
                 "win32",
                 new PythonDownload
                 {
-                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20240415/cpython-3.11.9+20240415-x86_64-pc-windows-msvc-shared-install_only.tar.gz",
+                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20241016/cpython-3.12.7+20241016-x86_64-pc-windows-msvc-shared-install_only.tar.gz",
                     Path = "python/python.exe",
-                    Version = "3.11.9",
+                    Version = "3.12.7",
                     Filename = "Python.tar.gz"
                 }
             },
@@ -46,6 +47,62 @@ namespace MangaJaNaiConverterGui.Services
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
         public bool IsPythonInstalled() => File.Exists(PythonPath);
+
+        public async Task<bool> IsPythonUpdated()
+        {
+            var relPythonPath = @".\python\python\python.exe";
+
+            var cmd = $@"{relPythonPath} -V";
+
+            // Create a new process to run the CMD command
+            using (var process = new Process())
+            {
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = @$"/C {cmd}";
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+                process.StartInfo.WorkingDirectory = BackendDirectory;
+
+                Version? result = null;
+
+                // Create a StreamWriter to write the output to a log file
+                try
+                {
+                    process.ErrorDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            // ignore
+                        }
+                    };
+
+                    process.OutputDataReceived += (sender, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            result = new Version(e.Data.Replace("Python ", ""));
+                        }
+                    };
+
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
+                    await process.WaitForExitAsync();
+                }
+                catch (IOException) { }
+
+                if (result == null || result.CompareTo(new Version(PYTHON_DOWNLOADS["win32"].Version)) < 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
         public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0;
 
         public class PythonDownload
@@ -120,8 +177,8 @@ namespace MangaJaNaiConverterGui.Services
 
         public void AddPythonPth(string destFolder)
         {
-            string[] lines = { "python311.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
-            var filename = "python311._pth";
+            string[] lines = { "python312.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
+            var filename = "python312._pth";
 
             using var outputFile = new StreamWriter(Path.Combine(destFolder, filename));
 
@@ -134,21 +191,22 @@ namespace MangaJaNaiConverterGui.Services
             get
             {
                 string[] dependencies = {
-                    "spandrel==0.3.4",
-                    "spandrel_extra_arches==0.1.1",
+                    "spandrel==0.4.0",
+                    "spandrel_extra_arches==0.2.0",
                     "opencv-python==4.10.0.84",
                     "pillow-avif-plugin==1.4.6",
                     "rarfile==4.2",
-                    "multiprocess==0.70.16",
                     "chainner_ext==0.3.10",
                     "sanic==24.6.0",
                     "pynvml==11.5.3",
-                    "psutil==6.0.0"
+                    "psutil==6.1.0",
+                    "pyvips==2.2.3",
+                    "pyvips-binary==8.16.0"
                 };
 
                 var relPythonPath = @".\python\python\python.exe";
 
-                return $@"{relPythonPath} -m pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121 && {relPythonPath} -m pip install {string.Join(" ", dependencies)}";
+                return $@"{relPythonPath} -m pip install torch==2.5.1 torchvision --index-url https://download.pytorch.org/whl/cu124 && {relPythonPath} -m pip install {string.Join(" ", dependencies)}";
             }
         }
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import torch
 from nodes.properties.inputs import PthFileInput
 from nodes.properties.outputs import DirectoryOutput, FileNameOutput, ModelOutput
 from nodes.utils.utils import split_file_path
@@ -86,9 +87,17 @@ def load_model_node(
             v.requires_grad = False
         model_descriptor.model.eval()
         model_descriptor = model_descriptor.to(pytorch_device)
-        should_use_fp16 = exec_options.use_fp16 and model_descriptor.supports_half
-        if should_use_fp16:
-            model_descriptor.model.half()
+        # if should_use_fp16:
+        #     model_descriptor.model.half()
+        # else:
+        #     model_descriptor.model.float()
+        if exec_options.use_fp16:
+            if model_descriptor.supports_half:
+                model_descriptor.model.half()
+            elif torch.cuda.is_bf16_supported():
+                model_descriptor.model.bfloat16()
+            else:
+                model_descriptor.model.float()
         else:
             model_descriptor.model.float()
     except Exception as e:

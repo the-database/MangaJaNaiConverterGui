@@ -16,7 +16,7 @@ from nodes.impl.upscale.auto_split_tiles import (
     estimate_tile_size,
     parse_tile_size_input,
 )
-from nodes.impl.upscale.basic_upscale import PaddingType, UpscaleInfo, basic_upscale
+from nodes.impl.upscale.basic_upscale import UpscaleInfo, basic_upscale
 from nodes.impl.upscale.tiler import MaxTileSize
 from nodes.properties.inputs import (
     BoolInput,
@@ -49,7 +49,7 @@ def upscale(
         logger.debug("Upscaling image")
 
         # TODO: use bfloat16 if RTX
-        use_fp16 = options.use_fp16 and model.supports_half
+        use_fp16 = options.use_fp16  # and model.supports_half
         device = options.device
 
         if model.tiling == ModelTiling.INTERNAL:
