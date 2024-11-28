@@ -10,13 +10,13 @@ from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
+from multiprocessing import Queue as MPQueue, Process
 from threading import Thread
 from typing import Any, Literal
 from zipfile import ZipFile
 
 import cv2
 import numpy as np
-import pillow_avif  # noqa: F401  # pyright: ignore[reportUnusedImport]
 import pyvips
 import rarfile
 from chainner_ext import ResizeFilter, resize
@@ -29,7 +29,7 @@ from spandrel import ImageModelDescriptor, ModelDescriptor
 
 sys.path.append(os.path.normpath(os.path.dirname(os.path.abspath(__file__))))
 
-from nodes.impl.image_utils import cv_save_image, normalize, to_uint8, to_uint16
+from nodes.impl.image_utils import normalize, to_uint8, to_uint16
 from nodes.impl.upscale.auto_split_tiles import (
     ESTIMATE,
     MAX_TILE_SIZE,
@@ -279,11 +279,6 @@ def _read_image_from_path(path: str) -> np.ndarray:
     return _read_pil_from_path(path)
 
 
-def _read_pil(img_stream: BytesIO) -> np.ndarray:
-    im = Image.open(img_stream, formats=["AVIF"])
-    return _pil_to_cv2(im)
-
-
 def _read_pil_from_path(path: str) -> np.ndarray:
     im = Image.open(path)
     return _pil_to_cv2(im)
@@ -508,75 +503,24 @@ def save_image_zip(
 ) -> None:
     print(f"save image to zip: {file_name}", flush=True)
 
-    if image_format == "avif":
-        image = to_uint8(image, normalized=True)
-        channels = get_h_w_c(image)[2]
-        if channels == 1:
-            pass
-        elif channels == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        elif channels == 4:
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+    image = to_uint8(image, normalized=True)
 
-        image = final_target_resize(
-            image,
-            target_scale,
-            target_width,
-            target_height,
-            original_width,
-            original_height,
-            is_grayscale,
-        )
+    image = final_target_resize(
+        image,
+        target_scale,
+        target_width,
+        target_height,
+        original_width,
+        original_height,
+        is_grayscale,
+    )
 
-        with Image.fromarray(image) as pil_im:
-            output_buffer = io.BytesIO()
-            pil_im.save(
-                output_buffer,
-                format=image_format,
-                subsampling="4:0:0" if is_grayscale else "4:2:0",
-            )
-    else:
-        if image_format == "jpg":
-            params = [
-                cv2.IMWRITE_JPEG_QUALITY,
-                int(lossy_compression_quality),
-                cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
-                cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
-                cv2.IMWRITE_JPEG_PROGRESSIVE,
-                1,  # jpeg_progressive
-            ]
-        elif image_format == "webp":
-            params = [
-                cv2.IMWRITE_WEBP_QUALITY,
-                101 if use_lossless_compression else int(lossy_compression_quality),
-            ]
-        else:
-            params = []
-
-        # the bit depth depends on the image format and settings
-        precision = "u8"
-
-        if precision == "u8":
-            image = to_uint8(image, normalized=True)
-        elif precision == "u16":
-            image = to_uint16(image, normalized=True)
-        elif precision == "f32":
-            # chainner images are always f32
-            pass
-
-        image = final_target_resize(
-            image,
-            target_scale,
-            target_width,
-            target_height,
-            original_width,
-            original_height,
-            is_grayscale,
-        )
-
-        # Convert the resized image back to bytes
-        _, buf_img = cv2.imencode(f".{image_format}", image, params)
-        output_buffer = io.BytesIO(buf_img)  # type: ignore
+    # Convert the resized image back to bytes
+    args = {"Q": int(lossy_compression_quality)}
+    if image_format in {"webp"}:
+        args["lossless"] = use_lossless_compression
+    buf_img = pyvips.Image.new_from_array(image).write_to_buffer(f".{image_format}", **args)
+    output_buffer = io.BytesIO(buf_img)  # type: ignore
 
     upscaled_image_data = output_buffer.getvalue()
 
@@ -599,74 +543,22 @@ def save_image(
 ) -> None:
     print(f"save image: {output_file_path}", flush=True)
 
-    # save with pillow
-    if image_format == "avif":
-        image = to_uint8(image, normalized=True)
-        channels = get_h_w_c(image)[2]
-        if channels == 1:
-            pass
-        elif channels == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        elif channels == 4:
-            image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+    image = to_uint8(image, normalized=True)
 
-        image = final_target_resize(
-            image,
-            target_scale,
-            target_width,
-            target_height,
-            original_width,
-            original_height,
-            is_grayscale,
-        )
+    image = final_target_resize(
+        image,
+        target_scale,
+        target_width,
+        target_height,
+        original_width,
+        original_height,
+        is_grayscale,
+    )
 
-        with Image.fromarray(image) as pil_im:
-            pil_im.save(
-                output_file_path,
-                quality=lossy_compression_quality,
-                subsampling="4:0:0" if is_grayscale else "4:2:0",
-            )
-    else:
-        # save with cv2
-        if image_format == "jpg":
-            params = [
-                cv2.IMWRITE_JPEG_QUALITY,
-                int(lossy_compression_quality),
-                cv2.IMWRITE_JPEG_SAMPLING_FACTOR,
-                cv2.IMWRITE_JPEG_SAMPLING_FACTOR_420,
-                cv2.IMWRITE_JPEG_PROGRESSIVE,
-                1,  # jpeg_progressive
-            ]
-        elif image_format == "webp":
-            params = [
-                cv2.IMWRITE_WEBP_QUALITY,
-                101 if use_lossless_compression else int(lossy_compression_quality),
-            ]
-        else:
-            params = []
-
-        # the bit depth depends on the image format and settings
-        precision = "u8"
-
-        if precision == "u8":
-            image = to_uint8(image, normalized=True)
-        elif precision == "u16":
-            image = to_uint16(image, normalized=True)
-        elif precision == "f32":
-            # chainner images are always f32
-            pass
-
-        image = final_target_resize(
-            image,
-            target_scale,
-            target_width,
-            target_height,
-            original_width,
-            original_height,
-            is_grayscale,
-        )
-
-        cv_save_image(output_file_path, image, params)
+    args = {"Q": int(lossy_compression_quality)}
+    if image_format in {"webp"}:
+        args["lossless"] = use_lossless_compression
+    pyvips.Image.new_from_array(image).write_to_file(f".{image_format}", **args)
 
 
 def preprocess_worker_archive(
@@ -1329,7 +1221,7 @@ def upscale_archive_file(
     # TODO accept multiple paths to reuse simple queues?
 
     upscale_queue = Queue(maxsize=1)
-    postprocess_queue = Queue(maxsize=1)
+    postprocess_queue = MPQueue(maxsize=1)
 
     # start preprocess zip process
     preprocess_process = Thread(
@@ -1355,7 +1247,7 @@ def upscale_archive_file(
     upscale_process.start()
 
     # start postprocess zip process
-    postprocess_process = Thread(
+    postprocess_process = Process(
         target=postprocess_worker_zip,
         args=(
             postprocess_queue,
@@ -1391,7 +1283,7 @@ def upscale_image_file(
     grayscale_detection_threshold: int,
 ) -> None:
     upscale_queue = Queue(maxsize=1)
-    postprocess_queue = Queue(maxsize=1)
+    postprocess_queue = MPQueue(maxsize=1)
 
     # start preprocess image process
     preprocess_process = Thread(
@@ -1418,7 +1310,7 @@ def upscale_image_file(
     upscale_process.start()
 
     # start postprocess image process
-    postprocess_process = Thread(
+    postprocess_process = Process(
         target=postprocess_worker_image,
         args=(
             postprocess_queue,
@@ -1528,7 +1420,7 @@ def upscale_folder(
 
     # preprocess_queue = Queue(maxsize=1)
     upscale_queue = Queue(maxsize=1)
-    postprocess_queue = Queue(maxsize=1)
+    postprocess_queue = MPQueue(maxsize=1)
 
     # start preprocess folder process
     preprocess_process = Thread(
@@ -1561,7 +1453,7 @@ def upscale_folder(
     upscale_process.start()
 
     # start postprocess folder process
-    postprocess_process = Thread(
+    postprocess_process = Process(
         target=postprocess_worker_folder,
         args=(
             postprocess_queue,
