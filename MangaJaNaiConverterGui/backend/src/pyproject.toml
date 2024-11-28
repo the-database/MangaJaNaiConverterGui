@@ -4,18 +4,16 @@ requires-python = ">=3.11"
 dynamic = ["version"]
 dependencies = [
   "chainner_ext==0.3.10",
-  "multiprocess==0.70.16",
   "opencv-python==4.10.0.84",
-  "pillow-avif-plugin==1.4.6",
   "psutil==6.0.0",
   "pynvml==11.5.3",
   "rarfile==4.2",
   "sanic==24.6.0",
-  "spandrel_extra_arches==0.1.1",
-  "spandrel==0.3.4",
-  "torch==2.1.2",
-  "torchvision==0.16.2",
-  "numpy==1.26.4"
+  "spandrel_extra_arches==0.2.0",
+  "spandrel==0.4.0",
+  "torch==2.5.1",
+  "torchvision==0.20.0",
+  "numpy==2.3.1"
 ]
 authors = [{name = "the-database"}]
 description = "Upscaling manga images and archives with PyTorch models."
