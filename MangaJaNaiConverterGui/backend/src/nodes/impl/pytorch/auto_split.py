@@ -108,8 +108,6 @@ def pytorch_auto_split(
             # expand grayscale tensor to match model input channels
             if input_channels == 1 and model.input_channels > 1:
                 input_tensor = input_tensor.repeat(1, 1, model.input_channels)
-            else:
-                input_tensor = _rgb_to_bgr(input_tensor)
             input_tensor = _into_batched_form(input_tensor)
             input_tensor = input_tensor.to(
                 memory_format=torch.channels_last
@@ -122,8 +120,6 @@ def pytorch_auto_split(
             output_tensor = _into_standard_image_form(output_tensor)
             if input_channels == 1:
                 output_tensor = output_tensor[:, :, 0].unsqueeze(-1)
-            else:
-                output_tensor = _rgb_to_bgr(output_tensor)
             # print("out dtype", output_tensor.dtype, flush=True)
             # result = output_tensor.detach().cpu().detach().float().numpy()
             result = output_tensor.detach().cpu().detach()
