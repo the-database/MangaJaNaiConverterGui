@@ -234,68 +234,16 @@ def enhance_contrast(image: np.ndarray) -> MatLike:
     return np.clip(image_array, 0, 1)
 
 
-def _read_cv(img_stream: BytesIO) -> MatLike:
-    return cv2.imdecode(
-        np.frombuffer(img_stream.read(), dtype=np.uint8), cv2.IMREAD_COLOR
-    )
-
-
-def _read_cv_from_path(path: str) -> MatLike:
-    img = None
-    try:
-        img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
-    except Exception as cv_err:
-        print(f"Error loading image, trying with imdecode: {cv_err}", flush=True)
-
-    if img is None:
-        try:
-            img = cv2.imread(str(path), cv2.IMREAD_COLOR)
-        except Exception as e:
-            raise RuntimeError(
-                f'Error reading image image from path "{path}". Image may be corrupt.'
-            ) from e
-
-    if img is None:  # type: ignore
-        raise RuntimeError(
-            f'Error reading image image from path "{path}". Image may be corrupt.'
-        )
-
-    return img
-
-
 def _read_image(img_stream: bytes, filename: str) -> np.ndarray:
-    # for extension in CV2_IMAGE_EXTENSIONS:
-    #     if filename.lower().endswith(extension):
-    #         return _read_cv(img_stream)
-    # return _read_pil(img_stream)
     return _read_vips(img_stream)
 
 
 def _read_image_from_path(path: str) -> np.ndarray:
-    for extension in CV2_IMAGE_EXTENSIONS:
-        if path.lower().endswith(extension):
-            return _read_cv_from_path(path)
-
-    return _read_pil_from_path(path)
-
-
-def _read_pil_from_path(path: str) -> np.ndarray:
-    im = Image.open(path)
-    return _pil_to_cv2(im)
+    return pyvips.Image.new_from_file(path, access="sequential", fail=True).numpy()
 
 
 def _read_vips(img_stream: bytes) -> np.ndarray:
     return pyvips.Image.new_from_buffer(img_stream, "", access="sequential").numpy()
-
-
-def _pil_to_cv2(im: ImageType) -> np.ndarray:
-    img = np.array(im)
-    _, _, c = get_h_w_c(img)
-    if c == 3:
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    elif c == 4:
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
-    return img
 
 
 def cv_image_is_grayscale(image: np.ndarray, user_threshold: float) -> bool:
