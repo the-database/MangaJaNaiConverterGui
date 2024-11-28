@@ -124,7 +124,7 @@ def pytorch_auto_split(
                 output_tensor = output_tensor[:, :, 0].unsqueeze(-1)
             else:
                 output_tensor = _rgb_to_bgr(output_tensor)
-            print("out dtype", output_tensor.dtype, flush=True)
+            # print("out dtype", output_tensor.dtype, flush=True)
             # result = output_tensor.detach().cpu().detach().float().numpy()
             result = output_tensor.detach().cpu().detach()
             if result.dtype == torch.bfloat16:
