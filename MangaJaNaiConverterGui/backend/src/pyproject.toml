@@ -7,6 +7,8 @@ dependencies = [
   "opencv-python==4.10.0.84",
   "psutil==6.0.0",
   "pynvml==11.5.3",
+  "pyvips>=2.2.3",
+  "pyvips-binary>=8.16.0",
   "rarfile==4.2",
   "sanic==24.6.0",
   "spandrel_extra_arches==0.2.0",
