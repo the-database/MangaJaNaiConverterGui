@@ -42,6 +42,7 @@ namespace MangaJaNaiConverterGui.Services
 
         public string BackendDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui") : Path.GetFullPath(@".\backend");
 
+        public string LogsDirectory => Path.Combine(BackendDirectory, "logs");
         public string ModelsDirectory => Path.Combine(BackendDirectory, "models");
         public string PythonDirectory => Path.Combine(BackendDirectory, "python");
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
@@ -190,23 +191,9 @@ namespace MangaJaNaiConverterGui.Services
         {
             get
             {
-                string[] dependencies = {
-                    "spandrel==0.4.0",
-                    "spandrel_extra_arches==0.2.0",
-                    "opencv-python==4.10.0.84",
-                    "rarfile==4.2",
-                    "numpy==2.1.3",
-                    "chainner_ext==0.3.10",
-                    "sanic==24.6.0",
-                    "pynvml==11.5.3",
-                    "psutil==6.1.0",
-                    "pyvips==2.2.3",
-                    "pyvips-binary==8.16.0"
-                };
-
                 var relPythonPath = @".\python\python\python.exe";
 
-                return $@"{relPythonPath} -m pip install torch==2.5.1 torchvision --index-url https://download.pytorch.org/whl/cu124 && {relPythonPath} -m pip install {string.Join(" ", dependencies)}";
+                return $@"{relPythonPath} -m pip install wheel && {relPythonPath} -m pip install torch==2.5.1 torchvision --index-url https://download.pytorch.org/whl/cu124 && {relPythonPath} -m pip install ""{Path.GetFullPath(@".\backend\src")}""";
             }
         }
 

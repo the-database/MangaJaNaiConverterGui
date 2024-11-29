@@ -10,6 +10,7 @@ namespace MangaJaNaiConverterGui.Services
         Task<bool> IsPythonUpdated();
         bool AreModelsInstalled();
         string BackendDirectory { get; }
+        string LogsDirectory { get; }
         string PythonDirectory { get; }
         string ModelsDirectory { get; }
         string PythonPath { get; }

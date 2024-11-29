@@ -1006,7 +1006,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
                 // Create a StreamWriter to write the output to a log file
-                using (var outputFile = new StreamWriter("error.log", append: true))
+                using (var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: true))
                 {
                     process.ErrorDataReceived += (sender, e) =>
                     {
@@ -1090,7 +1090,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 // Create a StreamWriter to write the output to a log file
                 try
                 {
-                    using var outputFile = new StreamWriter("error.log", append: true);
+                    using var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: true);
                     process.ErrorDataReceived += (sender, e) =>
                     {
                         if (!string.IsNullOrEmpty(e.Data))
@@ -1254,6 +1254,11 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 IsExtractingBackend = true;
 
+                if (!Directory.Exists(_pythonService.LogsDirectory))
+                {
+                    Directory.CreateDirectory(_pythonService.LogsDirectory);
+                }
+
                 if (!_pythonService.AreModelsInstalled())
                 {
                     await DownloadModels();
@@ -1380,7 +1385,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
 
                 var result = string.Empty;
-
+                using var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "install.log"));
+                outputFile.WriteLine($"Working Directory: {process.StartInfo.WorkingDirectory}");
+                outputFile.WriteLine($"Run Command: {cmd}");
                 // Create a StreamWriter to write the output to a log file
                 try
                 {
@@ -1390,6 +1397,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         if (!string.IsNullOrEmpty(e.Data))
                         {
                             //Debug.WriteLine($"STDERR = {e.Data}");
+                            outputFile.WriteLine(e.Data);
                             BackendSetupSubStatusQueueEnqueue(e.Data);
                         }
                     };
@@ -1399,6 +1407,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         if (!string.IsNullOrEmpty(e.Data))
                         {
                             result = e.Data;
+                            outputFile.WriteLine(e.Data);
                             //Debug.WriteLine($"STDOUT = {e.Data}");
                             BackendSetupSubStatusQueueEnqueue(e.Data);
                         }
