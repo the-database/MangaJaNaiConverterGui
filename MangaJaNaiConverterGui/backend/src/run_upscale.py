@@ -239,11 +239,11 @@ def _read_image(img_stream: bytes, filename: str) -> np.ndarray:
 
 
 def _read_image_from_path(path: str) -> np.ndarray:
-    return pyvips.Image.new_from_file(path, access="sequential", fail=True).numpy()
+    return pyvips.Image.new_from_file(path, access="sequential", fail=True).icc_transform("srgb").numpy()
 
 
 def _read_vips(img_stream: bytes) -> np.ndarray:
-    return pyvips.Image.new_from_buffer(img_stream, "", access="sequential").numpy()
+    return pyvips.Image.new_from_buffer(img_stream, "", access="sequential").icc_transform("srgb").numpy()
 
 
 def cv_image_is_grayscale(image: np.ndarray, user_threshold: float) -> bool:
