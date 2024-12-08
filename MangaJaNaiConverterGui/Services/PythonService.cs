@@ -47,6 +47,11 @@ namespace MangaJaNaiConverterGui.Services
         public string PythonDirectory => Path.Combine(BackendDirectory, "python");
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
+        public string AppStateFolder => ((_updateManagerService?.IsInstalled ?? false) && !(_updateManagerService?.IsPortable ?? false)) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui") : Path.GetFullPath(@".");
+
+        public string AppStateFilename => "appstate2.json";
+        public string AppStatePath => Path.Join(AppStateFolder, AppStateFilename);
+
         public bool IsPythonInstalled() => File.Exists(PythonPath);
 
         public async Task<bool> IsPythonUpdated()

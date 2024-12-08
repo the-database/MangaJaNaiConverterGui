@@ -35,11 +35,13 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private readonly IPythonService _pythonService;
         private readonly IUpdateManagerService _updateManagerService;
+        private readonly ISuspensionDriverService _suspensionDriverService;
 
-        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null)
+        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null, ISuspensionDriverService? suspensionDriverService = null)
         {
             _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
+            _suspensionDriverService = suspensionDriverService ?? Locator.Current.GetService<ISuspensionDriverService>()!;
 
             var g1 = this.WhenAnyValue
             (
@@ -743,7 +745,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             var task = Task.Run(async () =>
             {
-                await Program.SuspensionDriver.SaveState(this);
+                await _suspensionDriverService.SuspensionDriver.SaveState(this);
                 ElapsedTime = TimeSpan.FromSeconds(0);
                 ShowEstimates = true;
                 _archiveEtaCalculator.Reset();
@@ -755,7 +757,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var cmd = $@".\python\python\python.exe ""{Path.GetFullPath(@".\backend\src\run_upscale.py")}"" --settings ""{Program.AppStatePath}""";
+                var cmd = $@".\python\python\python.exe ""{Path.GetFullPath(@".\backend\src\run_upscale.py")}"" --settings ""{_pythonService.AppStatePath}""";
                 ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
                 await RunCommand($@" /C {cmd}");
 
@@ -1428,10 +1430,10 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             Task.Run(() =>
             {
-                if (Path.Exists(Program.AppStatePath))
+                if (Path.Exists(_pythonService.AppStatePath))
                 {
-                    var files = Directory.EnumerateFiles(Program.AppStateFolder)
-                    .Where(f => Path.GetFileName(f).StartsWith("autobackup_") && Path.GetFileName(f).EndsWith(Program.AppStateFilename))
+                    var files = Directory.EnumerateFiles(_pythonService.AppStateFolder)
+                    .Where(f => Path.GetFileName(f).StartsWith("autobackup_") && Path.GetFileName(f).EndsWith(_pythonService.AppStateFilename))
                     .OrderByDescending(f => f)
                     .ToList();
 
@@ -1443,8 +1445,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                     File.Copy
                     (
-                        Program.AppStatePath,
-                        Path.Join(Program.AppStateFolder, $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{Program.AppStateFilename}")
+                        _pythonService.AppStatePath,
+                        Path.Join(_pythonService.AppStateFolder, $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{_pythonService.AppStateFilename}")
                     );
                 }
             });

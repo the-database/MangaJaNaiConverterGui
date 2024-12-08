@@ -1,7 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
-using MangaJaNaiConverterGui.Drivers;
-using ReactiveUI;
 using System;
 using System.IO;
 using Velopack;
@@ -12,14 +10,13 @@ namespace MangaJaNaiConverterGui
     {
         public static bool WasFirstRun { get; private set; }
 
-        public static readonly string AppStateFolder = Path.Combine(
+        public static readonly string InstalledAppStateFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "MangaJaNaiConverterGui"
         );
-        public static readonly string AppStateFilename = "appstate2.json";
-        public static readonly string AppStatePath = Path.Combine(AppStateFolder, AppStateFilename);
 
-        public static readonly ISuspensionDriver SuspensionDriver = new NewtonsoftJsonSuspensionDriver(AppStatePath);
+        public static readonly string InstalledAppStateFilename = "appstate2.json";
+        public static readonly string InstalledAppStatePath = Path.Combine(InstalledAppStateFolder, InstalledAppStateFilename);
 
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -31,8 +28,8 @@ namespace MangaJaNaiConverterGui
                 .WithBeforeUninstallFastCallback((v) =>
                 {
                     // On uninstall, remove Python and models from app data
-                    var pythonDir = Path.Combine(AppStateFolder, "python");
-                    var modelsDir = Path.Combine(AppStateFolder, "models");
+                    var pythonDir = Path.Combine(InstalledAppStateFolder, "python");
+                    var modelsDir = Path.Combine(InstalledAppStateFolder, "models");
                     if (Directory.Exists(pythonDir))
                     {
                         Directory.Delete(pythonDir, true);

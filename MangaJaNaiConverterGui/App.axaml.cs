@@ -20,23 +20,13 @@ namespace MangaJaNaiConverterGui
 
         public override void OnFrameworkInitializationCompleted()
         {
-            if (!Directory.Exists(Program.AppStateFolder))
-            {
-                Directory.CreateDirectory(Program.AppStateFolder);
-            }
-
-            if (!File.Exists(Program.AppStatePath))
-            {
-                File.Copy(Program.AppStateFilename, Program.AppStatePath);
-            }
-
             // Create a new Autofac container builder.
             var builder = new ContainerBuilder();
             builder.RegisterType<MainWindowViewModel>().AsSelf();
             builder.RegisterType<PythonService>().As<IPythonService>().SingleInstance();
             builder.RegisterType<UpdateManagerService>().As<IUpdateManagerService>().SingleInstance();
+            builder.RegisterType<SuspensionDriverService>().As<ISuspensionDriverService>().SingleInstance();
             // etc.
-
             // Register the Adapter to Splat.
             // Creates and sets the Autofac resolver as the Locator.
             var autofacResolver = builder.UseAutofacDependencyResolver();
@@ -52,10 +42,24 @@ namespace MangaJaNaiConverterGui
             autofacResolver.SetLifetimeScope(container);
 
             //var vm = container.Resolve<MainWindowViewModel>();
+            var umService = container.Resolve<IUpdateManagerService>();
+
+            if (umService.IsInstalled)
+            {
+                if (!Directory.Exists(Program.InstalledAppStateFolder))
+                {
+                    Directory.CreateDirectory(Program.InstalledAppStateFolder);
+                }
+
+                if (!File.Exists(Program.InstalledAppStatePath))
+                {
+                    File.Copy(Program.InstalledAppStateFilename, Program.InstalledAppStatePath);
+                }
+            }
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime);
             RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
-            RxApp.SuspensionHost.SetupDefaultSuspendResume(Program.SuspensionDriver);
+            RxApp.SuspensionHost.SetupDefaultSuspendResume(container.Resolve<ISuspensionDriverService>().SuspensionDriver);
             suspension.OnFrameworkInitializationCompleted();
 
             // Load the saved view model state.
