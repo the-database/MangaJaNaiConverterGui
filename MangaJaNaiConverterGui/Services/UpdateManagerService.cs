@@ -16,7 +16,7 @@ namespace MangaJaNaiConverterGui.Services
 
         public string AppVersion { get => _um?.CurrentVersion?.ToString() ?? ""; }
 
-        public bool IsInstalled { get => _um.IsInstalled; }
+        public bool IsInstalled { get => !_um.IsPortable; }
 
         public bool IsUpdatePendingRestart { get => _um.IsUpdatePendingRestart; }
 
