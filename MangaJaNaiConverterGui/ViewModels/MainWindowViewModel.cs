@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
 using File = System.IO.File;
+using Path = System.IO.Path;
 
 namespace MangaJaNaiConverterGui.ViewModels
 {
@@ -1266,34 +1267,35 @@ namespace MangaJaNaiConverterGui.ViewModels
                     await DownloadModels();
                 }
 
-                if (!_pythonService.IsPythonInstalled() || !(await _pythonService.IsPythonUpdated()))
+                if (!_pythonService.IsPythonInstalled() || !(await _pythonService.IsBackendUpdated()))
                 {
                     // Download Python tgz
-                    BackendSetupMainStatus = "Downloading Python...";
-                    var download = PythonService.PYTHON_DOWNLOADS["win32"];
-                    var targetPath = Path.Join(_pythonService.PythonDirectory, download.Filename);
+                    BackendSetupMainStatus = "Downloading Python Backend...";
+                    var downloadUrl = _pythonService.BackendUrl;
+                    var targetPath = Path.Join(_pythonService.PythonDirectory, "backend.7z");
                     if (Directory.Exists(_pythonService.PythonDirectory))
                     {
                         Directory.Delete(_pythonService.PythonDirectory, true);
                     }
                     Directory.CreateDirectory(_pythonService.PythonDirectory);
-                    await Downloader.DownloadFileAsync(download.Url, targetPath, (progress) =>
+                    await Downloader.DownloadFileAsync(downloadUrl, targetPath, (progress) =>
                     {
-                        BackendSetupMainStatus = $"Downloading Python ({progress}%)...";
+                        BackendSetupMainStatus = $"Downloading Python Backend ({progress}%)...";
                     });
 
-                    // Extract Python tgz
-                    BackendSetupMainStatus = "Extracting Python...";
-                    _pythonService.ExtractTgz(targetPath, _pythonService.PythonDirectory);
+                    // Extract Python 7z
+                    BackendSetupMainStatus = "Extracting Python Backend...";
+                    _pythonService.Extract7z(targetPath, _pythonService.PythonDirectory);
+
+                    Directory.Move(Path.Combine(_pythonService.PythonDirectory, "backend", "python"), Path.Combine(_pythonService.PythonDirectory, "python"));
+
+                    using (StreamWriter sw = File.CreateText(_pythonService.PythonBackendVersionPath))
+                    {
+                        sw.WriteLine(_pythonService.BackendVersion);
+                    }
+
+                    Directory.Delete(Path.Combine(_pythonService.PythonDirectory, "backend"));
                     File.Delete(targetPath);
-
-                    var pthDirectory = Path.GetDirectoryName(_pythonService.PythonPath) ?? throw new ArgumentNullException("pthDirectory");
-
-                    _pythonService.AddPythonPth(pthDirectory);
-
-                    // Install Python Dependencies
-                    BackendSetupMainStatus = "Installing Python Dependencies (this may take several minutes)...";
-                    await InstallUpdatePythonDependencies();
                 }
                 else
                 {

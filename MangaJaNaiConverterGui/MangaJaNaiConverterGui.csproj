@@ -42,6 +42,7 @@
     <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.1.10" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SevenZipExtractor" Version="1.0.17" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="Splat.Autofac" Version="15.2.22" />
     <PackageReference Include="Velopack" Version="0.0.942" />
