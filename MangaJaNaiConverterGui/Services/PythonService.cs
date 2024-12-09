@@ -3,6 +3,7 @@ using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
+using SevenZipExtractor;
 using Splat;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,10 @@ namespace MangaJaNaiConverterGui.Services
             },
         };
 
+        public Version BackendVersion => new Version(1, 2, 2);
+
+        public string BackendUrl => $"https://github.com/the-database/MangaJaNaiConverterGui-backend/releases/download/{BackendVersion}/mangajanaiconvertergui-backend-{BackendVersion}.7z";
+
         public PythonService(IUpdateManagerService? updateManagerService = null)
         {
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
@@ -45,6 +50,7 @@ namespace MangaJaNaiConverterGui.Services
         public string LogsDirectory => Path.Combine(BackendDirectory, "logs");
         public string ModelsDirectory => Path.Combine(BackendDirectory, "models");
         public string PythonDirectory => Path.Combine(BackendDirectory, "python");
+        public string PythonBackendVersionPath => Path.Combine(PythonDirectory, "Version.txt");
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
         public string AppStateFolder => ((_updateManagerService?.IsInstalled ?? false) && !(_updateManagerService?.IsPortable ?? false)) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui") : Path.GetFullPath(@".");
@@ -109,6 +115,19 @@ namespace MangaJaNaiConverterGui.Services
 
             return true;
         }
+
+        public async Task<bool> IsBackendUpdated()
+        {
+            if (File.Exists(PythonBackendVersionPath))
+            {
+                var currentVersion = new Version(await File.ReadAllTextAsync(PythonBackendVersionPath));
+
+                return BackendVersion.CompareTo(currentVersion) >= 0;
+            }
+
+            return false;
+        }
+
         public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0;
 
         public class PythonDownload
@@ -179,6 +198,12 @@ namespace MangaJaNaiConverterGui.Services
                     progressChanged?.Invoke(percentage);
                 }
             }
+        }
+
+        public void Extract7z(string archiveName, string outFolder)
+        {
+            using ArchiveFile archiveFile = new(archiveName);
+            archiveFile.Extract(outFolder);
         }
 
         public void AddPythonPth(string destFolder)
