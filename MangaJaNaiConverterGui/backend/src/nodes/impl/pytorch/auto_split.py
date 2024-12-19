@@ -64,9 +64,14 @@ def _into_tensor(
             except Exception:
                 # Some arrays cannot be made writeable, and we need to copy them
                 img = np.copy(img)
-        input_tensor = (
-            torch.from_numpy(img).pin_memory().to(device, dtype, non_blocking=True)
-        )
+        if device == torch.device("cpu"):
+            input_tensor = (
+                torch.from_numpy(img).to(device, dtype, non_blocking=True)
+            )
+        else:
+            input_tensor = (
+                torch.from_numpy(img).pin_memory().to(device, dtype, non_blocking=True)
+            )
         return input_tensor
     finally:
         img.flags.writeable = writeable
