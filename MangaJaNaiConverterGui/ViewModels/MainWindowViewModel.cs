@@ -1297,14 +1297,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                     Directory.Delete(Path.Combine(_pythonService.PythonDirectory, "backend"));
                     File.Delete(targetPath);
                 }
-                else
-                {
-                    if (Program.WasFirstRun)
-                    {
-                        BackendSetupMainStatus = "Checking Python Dependencies...";
-                        await InstallUpdatePythonDependencies();
-                    }
-                }
 
                 IsExtractingBackend = false;
             });
