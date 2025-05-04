@@ -4,7 +4,7 @@ dynamic = ["version"]
 dependencies = [
   "chainner_ext==0.3.10",
   "numpy==2.2.5",
-  "opencv-python==4.10.0.86",
+  "opencv-python==4.11.0.86",
   "psutil==6.0.0",
   "pynvml==11.5.3",
   "pyvips==3.0.0",
