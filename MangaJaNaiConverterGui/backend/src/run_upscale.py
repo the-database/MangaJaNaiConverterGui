@@ -849,7 +849,7 @@ def preprocess_worker_folder(
                             model,
                         )
                     )
-            elif filename.lower().endswith(ZIP_EXTENSIONS):
+            elif filename.lower().endswith(ARCHIVE_EXTENSIONS):
                 if upscale_archives:
                     output_file_path = f"{output_file_path}.cbz"
                     if not overwrite_existing_files and os.path.isfile(
