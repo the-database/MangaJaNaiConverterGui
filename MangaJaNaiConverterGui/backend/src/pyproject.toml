@@ -1,6 +1,5 @@
 [project]
 name = "mangajanaiconvertergui"
-requires-python = ">=3.12,<3.13"
 dynamic = ["version"]
 dependencies = [
   "chainner_ext==0.3.10",
