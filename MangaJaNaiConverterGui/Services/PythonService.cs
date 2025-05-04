@@ -122,7 +122,7 @@ namespace MangaJaNaiConverterGui.Services
             {
                 var currentVersion = new Version(await File.ReadAllTextAsync(PythonBackendVersionPath));
 
-                return BackendVersion.CompareTo(currentVersion) >= 0;
+                return currentVersion.CompareTo(BackendVersion) >= 0;
             }
 
             return false;
