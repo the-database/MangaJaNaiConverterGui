@@ -36,7 +36,7 @@ namespace MangaJaNaiConverterGui.Services
             },
         };
 
-        public Version BackendVersion => new Version(1, 2, 2);
+        public Version BackendVersion => new Version(1, 3, 0);
 
         public string BackendUrl => $"https://github.com/the-database/MangaJaNaiConverterGui-backend/releases/download/{BackendVersion}/mangajanaiconvertergui-backend-{BackendVersion}.7z";
 
