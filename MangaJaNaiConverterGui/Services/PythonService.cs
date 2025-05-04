@@ -223,7 +223,7 @@ namespace MangaJaNaiConverterGui.Services
             {
                 var relPythonPath = @".\python\python\python.exe";
 
-                return $@"{relPythonPath} -m pip install -U pip wheel --no-warn-script-location && {relPythonPath} -m pip install torch==2.5.1 torchvision --index-url https://download.pytorch.org/whl/cu124 --no-warn-script-location && {relPythonPath} -m pip install ""{Path.GetFullPath(@".\backend\src")}"" --no-warn-script-location";
+                return $@"{relPythonPath} -m pip install -U pip wheel --no-warn-script-location && {relPythonPath} -m pip install torch==2.7.0 torchvision --index-url https://download.pytorch.org/whl/cu128 --no-warn-script-location && {relPythonPath} -m pip install ""{Path.GetFullPath(@".\backend\src")}"" --no-warn-script-location";
             }
         }
 
