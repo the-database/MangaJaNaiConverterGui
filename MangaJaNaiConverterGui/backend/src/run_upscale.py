@@ -166,7 +166,7 @@ def image_resize(
 
 
 def get_system_codepage() -> Any:
-    return None if is_linux else ctypes.windll.kernel32.GetConsoleOutputCP()
+    return None if not is_windows else ctypes.windll.kernel32.GetConsoleOutputCP()
 
 
 def enhance_contrast(image: np.ndarray) -> MatLike:
@@ -1509,7 +1509,7 @@ def parse_manual_settings(args):
     return default_json
 
 
-is_linux = platform.system() == "Linux"
+is_windows = platform.system() == "win32"
 sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
 
 settings = parse_settings_from_cli()
