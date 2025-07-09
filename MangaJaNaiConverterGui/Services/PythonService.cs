@@ -128,7 +128,7 @@ namespace MangaJaNaiConverterGui.Services
             return false;
         }
 
-        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0;
+        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0 && Directory.GetFiles(ModelsDirectory).Any(x => x.Contains("V2"));
 
         public class PythonDownload
         {
