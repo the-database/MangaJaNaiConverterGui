@@ -26,10 +26,10 @@ from PIL.Image import Image as ImageType
 from PIL.ImageCms import ImageCmsProfile
 from rarfile import RarFile
 from spandrel import ImageModelDescriptor, ModelDescriptor
-import spandrel_custom
 
 sys.path.append(os.path.normpath(os.path.dirname(os.path.abspath(__file__))))
 
+import spandrel_custom
 from nodes.impl.image_utils import normalize, to_uint8, to_uint16
 from nodes.impl.upscale.auto_split_tiles import (
     ESTIMATE,
