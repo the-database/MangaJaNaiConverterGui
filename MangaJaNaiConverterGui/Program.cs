@@ -25,7 +25,7 @@ namespace MangaJaNaiConverterGui
         public static void Main(string[] args)
         {
             VelopackApp.Build()
-                .WithBeforeUninstallFastCallback((v) =>
+                .OnBeforeUninstallFastCallback((v) =>
                 {
                     // On uninstall, remove Python and models from app data
                     var pythonDir = Path.Combine(InstalledAppStateFolder, "python");
@@ -39,7 +39,7 @@ namespace MangaJaNaiConverterGui
                         Directory.Delete(modelsDir, true);
                     }
                 })
-                .WithFirstRun(_ =>
+                .OnFirstRun(_ =>
                 {
                     WasFirstRun = true;
                 })
