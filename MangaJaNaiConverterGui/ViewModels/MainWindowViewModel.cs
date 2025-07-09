@@ -121,7 +121,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_IllustrationJaNai_V1_ESRGAN_120k.pth",
+        "ModelFilePath": "4x_IllustrationJaNai_V2standard_FDAT_M_52k.safetensors",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,
@@ -137,7 +137,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_IllustrationJaNai_V1_ESRGAN_135k.pth",
+        "ModelFilePath": "4x_IllustrationJaNai_V2standard_FDAT_M_52k.safetensors",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,
@@ -1344,18 +1344,18 @@ namespace MangaJaNaiConverterGui.ViewModels
             });
             File.Delete(targetPath);
 
-            BackendSetupMainStatus = "Downloading IllustrationJaNai Models...";
-            download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/IllustrationJaNai_V1_ModelsOnly.zip";
+            BackendSetupMainStatus = "Downloading IllustrationJaNai V2 Models...";
+            download = "https://github.com/the-database/MangaJaNai/releases/download/2.0.0/4x_IllustrationJaNai_V2standard_ModelsOnly.zip";
             targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
             await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
             {
-                BackendSetupMainStatus = $"Downloading IllustrationJaNai Models ({progress}%)...";
+                BackendSetupMainStatus = $"Downloading IllustrationJaNai V2 Models ({progress}%)...";
             });
 
-            BackendSetupMainStatus = "Extracting IllustrationJaNai Models...";
+            BackendSetupMainStatus = "Extracting IllustrationJaNai V2 Models...";
             _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
             {
-                BackendSetupMainStatus = $"Extracting IllustrationJaNai Models ({progress}%)...";
+                BackendSetupMainStatus = $"Extracting IllustrationJaNai V2 Models ({progress}%)...";
             });
             File.Delete(targetPath);
         }

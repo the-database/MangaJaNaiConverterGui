@@ -26,6 +26,7 @@ from PIL.Image import Image as ImageType
 from PIL.ImageCms import ImageCmsProfile
 from rarfile import RarFile
 from spandrel import ImageModelDescriptor, ModelDescriptor
+import spandrel_custom
 
 sys.path.append(os.path.normpath(os.path.dirname(os.path.abspath(__file__))))
 
@@ -1549,6 +1550,7 @@ gamma1todotgain20transform = ImageCms.buildTransformFromOpenProfiles(
 )
 
 if __name__ == "__main__":
+    spandrel_custom.install()
     # gc.disable() #TODO!!!!!!!!!!!!
     # Record the start time
     start_time = time.time()
