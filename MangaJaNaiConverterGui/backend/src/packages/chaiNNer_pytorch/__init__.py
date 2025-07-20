@@ -1,26 +1,41 @@
 import os
 
+from accelerator_detection import AcceleratorType, get_accelerator_detector
 from gpu import nvidia
 from sanic.log import logger
 from system import is_arm_mac
 
 from api import GB, KB, MB, Dependency, add_package
 
+# Get available accelerators
+detector = get_accelerator_detector()
+available_devices = detector.available_devices
+gpu_devices = [d for d in available_devices if d.type != AcceleratorType.CPU]
+
+# Build description based on available accelerators
+accelerator_names = []
+if any(d.type == AcceleratorType.CUDA for d in gpu_devices):
+    accelerator_names.append("NVIDIA CUDA")
+if any(d.type == AcceleratorType.ROCM for d in gpu_devices):
+    accelerator_names.append("AMD ROCm")
+if any(d.type == AcceleratorType.XPU for d in gpu_devices):
+    accelerator_names.append("Intel XPU")
+if any(d.type == AcceleratorType.MPS for d in gpu_devices):
+    accelerator_names.append("Apple MPS")
+
 general = "PyTorch uses .pth models to upscale images."
 
 if is_arm_mac:
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-    package_description = general
-    inst_hint = f"{general} It is the most widely-used upscaling architecture."
+    package_description = f"{general} Optimized for Apple Silicon with MPS acceleration."
+    inst_hint = f"{general} It is the most widely-used upscaling architecture and supports Apple Silicon acceleration."
+elif accelerator_names:
+    accelerator_list = ", ".join(accelerator_names)
+    package_description = f"{general} Supports hardware acceleration with: {accelerator_list}."
+    inst_hint = f"{general} It is the most widely-used upscaling architecture and supports multiple accelerators including {accelerator_list}."
 else:
-    package_description = (
-        f"{general} and is fastest when CUDA is supported (Nvidia GPU). If CUDA is"
-        " unsupported, it will install with CPU support (which is very slow)."
-    )
-    inst_hint = (
-        f"{general} It is the most widely-used upscaling architecture. However, it does"
-        " not support AMD GPUs."
-    )
+    package_description = f"{general} Running on CPU (no hardware accelerators detected)."
+    inst_hint = f"{general} It is the most widely-used upscaling architecture. No hardware accelerators were detected, so it will run on CPU (which is slow)."
 
 
 def get_pytorch():

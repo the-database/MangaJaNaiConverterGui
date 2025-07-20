@@ -4,13 +4,14 @@ import gc
 
 import numpy as np
 import torch
+from accelerator_detection import get_autocast_device_type, is_device_type_supported_for_autocast
 from nodes.utils.utils import get_h_w_c
 from spandrel import ImageModelDescriptor
 
 from api import Progress
 
 from ..upscale.auto_split import Split, Tiler, auto_split
-from .utils import safe_cuda_cache_empty
+from .utils import safe_accelerator_cache_empty
 
 
 def _into_standard_image_form(t: torch.Tensor) -> torch.Tensor:
@@ -117,8 +118,11 @@ def pytorch_auto_split(
             input_tensor = input_tensor.to(
                 memory_format=torch.channels_last
             )  # TODO refactor
-            # inference
-            with torch.autocast(device_type="cuda", dtype=dtype, enabled=True):
+            # inference with accelerator-aware autocast
+            autocast_device_type = get_autocast_device_type(device)
+            autocast_enabled = is_device_type_supported_for_autocast(device) and use_fp16
+            
+            with torch.autocast(device_type=autocast_device_type, dtype=dtype, enabled=autocast_enabled):
                 output_tensor = model(input_tensor)
 
             # convert back to numpy
@@ -134,9 +138,9 @@ def pytorch_auto_split(
 
             return result
         except RuntimeError as e:
-            # Check to see if its actually the CUDA out of memory error
-            if "allocate" in str(e) or "CUDA" in str(e):
-                # Collect garbage (clear VRAM)
+            # Check to see if its actually an out of memory error
+            if "allocate" in str(e) or "CUDA" in str(e) or "out of memory" in str(e).lower():
+                # Collect garbage (clear memory)
                 if input_tensor is not None:
                     try:
                         input_tensor.detach().cpu()
@@ -144,7 +148,7 @@ def pytorch_auto_split(
                         pass
                     del input_tensor
                 gc.collect()
-                safe_cuda_cache_empty()
+                safe_accelerator_cache_empty(device)
                 return Split()
             else:
                 # Re-raise the exception if not an OOM error

@@ -11,7 +11,7 @@ from ...upscale.auto_split import Split, auto_split
 from ...upscale.grayscale import SplitMode, grayscale_split
 from ...upscale.passthrough import passthrough_single_color
 from ...upscale.tiler import Tiler
-from ..utils import safe_cuda_cache_empty
+from ..utils import safe_accelerator_cache_empty
 from .pix_transform import Params, pix_transform
 
 
@@ -79,19 +79,20 @@ def pix_transform_auto_split(
 
             return grayscale_split(tile, pass_op, split_mode)
         except RuntimeError as e:
-            # Check to see if its actually the CUDA out of memory error
-            if "allocate" in str(e) or "CUDA" in str(e):
-                # Collect garbage (clear VRAM)
+            # Check to see if its actually an out of memory error
+            if "allocate" in str(e) or "CUDA" in str(e) or "out of memory" in str(e).lower():
+                # Collect garbage (clear memory)
                 gc.collect()
-                safe_cuda_cache_empty()
+                safe_accelerator_cache_empty(device)
+                # Retry once with smaller tiles
                 return Split()
             else:
                 # Re-raise the exception if not an OOM error
                 raise
 
-    try:
-        return auto_split(source, upscale, tiler)
-    finally:
-        del device
-        gc.collect()
-        safe_cuda_cache_empty()
+    return auto_split(source, upscale, tiler)
+
+
+def _run_pix_transform():
+    with torch.no_grad():
+        safe_accelerator_cache_empty(device)

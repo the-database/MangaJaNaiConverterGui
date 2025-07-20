@@ -5,9 +5,10 @@ import weakref
 import numpy as np
 import psutil
 import torch
+from accelerator_detection import AcceleratorType
 from nodes.groups import Condition, if_enum_group, if_group
 from nodes.impl.pytorch.auto_split import pytorch_auto_split
-from nodes.impl.pytorch.utils import safe_cuda_cache_empty
+from nodes.impl.pytorch.utils import safe_accelerator_cache_empty
 from nodes.impl.upscale.auto_split_tiles import (
     CUSTOM,
     NO_TILING,
@@ -62,18 +63,64 @@ def upscale(
                 model_bytes = sum(p.numel() * 4 for p in model.model.parameters())
                 MODEL_BYTES_CACHE[model] = model_bytes
 
-            if "cuda" in device.type:
+            device_type = device.type
+            accelerator_device = options.accelerator_device
+
+            # Memory estimation for different accelerator types
+            if device_type in ["cuda", "rocm"]:  # CUDA/ROCm
                 if options.use_fp16:
                     model_bytes = model_bytes // 2
-                mem_info: tuple[int, int] = torch.cuda.mem_get_info(device)  # type: ignore
-                _free, total = mem_info
-                # only use 75% of the total memory
-                total = int(total * 0.75)
-                if options.budget_limit > 0:
-                    total = min(options.budget_limit * 1024**3, total)
-                # Estimate using 80% of the value to be more conservative
-                budget = int(total * 0.8)
+                try:
+                    mem_info: tuple[int, int] = torch.cuda.mem_get_info(device)  # type: ignore
+                    _free, total = mem_info
+                    # only use 75% of the total memory
+                    total = int(total * 0.75)
+                    if options.budget_limit > 0:
+                        total = min(options.budget_limit * 1024**3, total)
+                    # Estimate using 80% of the value to be more conservative
+                    budget = int(total * 0.8)
 
+                    return MaxTileSize(
+                        estimate_tile_size(
+                            budget,
+                            model_bytes,
+                            img,
+                            2 if use_fp16 else 4,
+                        )
+                    )
+                except Exception:
+                    # Fallback if memory info fails
+                    return MaxTileSize()
+            elif device_type == "xpu":  # Intel XPU
+                if options.use_fp16:
+                    model_bytes = model_bytes // 2
+                try:
+                    if hasattr(torch.xpu, 'mem_get_info'):
+                        mem_info = torch.xpu.mem_get_info(device)
+                        _free, total = mem_info
+                        total = int(total * 0.75)
+                        if options.budget_limit > 0:
+                            total = min(options.budget_limit * 1024**3, total)
+                        budget = int(total * 0.8)
+                        return MaxTileSize(
+                            estimate_tile_size(
+                                budget,
+                                model_bytes,
+                                img,
+                                2 if use_fp16 else 4,
+                            )
+                        )
+                except Exception:
+                    pass
+                # Fallback for XPU without memory info
+                return MaxTileSize()
+            elif device_type == "mps":  # Apple MPS
+                # MPS doesn't have direct memory querying, use conservative estimation
+                # Assume 8GB unified memory with 50% available for inference
+                estimated_budget = 4 * 1024**3  # 4GB conservative estimate
+                if options.budget_limit > 0:
+                    estimated_budget = min(options.budget_limit * 1024**3, estimated_budget)
+                budget = int(estimated_budget * 0.8)
                 return MaxTileSize(
                     estimate_tile_size(
                         budget,
@@ -82,7 +129,7 @@ def upscale(
                         2 if use_fp16 else 4,
                     )
                 )
-            elif device.type == "cpu":
+            elif device_type == "cpu":
                 free = psutil.virtual_memory().available
                 if options.budget_limit > 0:
                     free = min(options.budget_limit * 1024**3, free)
@@ -92,10 +139,23 @@ def upscale(
                         budget,
                         model_bytes,
                         img,
-                        4,
+                        4,  # CPU always uses FP32
                     )
                 )
-            return MaxTileSize()
+            else:
+                # For other device types, use conservative estimation
+                estimated_budget = 2 * 1024**3  # 2GB conservative estimate
+                if options.budget_limit > 0:
+                    estimated_budget = min(options.budget_limit * 1024**3, estimated_budget)
+                budget = int(estimated_budget * 0.8)
+                return MaxTileSize(
+                    estimate_tile_size(
+                        budget,
+                        model_bytes,
+                        img,
+                        2 if use_fp16 else 4,
+                    )
+                )
 
         img_out = pytorch_auto_split(
             img,
@@ -267,7 +327,7 @@ def upscale_image_node(
     exec_options = get_settings(context)
 
     context.add_cleanup(
-        safe_cuda_cache_empty,
+        lambda: safe_accelerator_cache_empty(exec_options.device),
         after="node" if exec_options.force_cache_wipe else "chain",
     )
 
