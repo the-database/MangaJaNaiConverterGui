@@ -2,7 +2,7 @@ import math
 
 from spandrel.util import KeyCondition, get_seq_len
 
-from spandrel.__helpers.model_descriptor import Architecture, ImageModelDescriptor, StateDict
+from ...__helpers.model_descriptor import Architecture, ImageModelDescriptor, StateDict
 from .__arch.fdat import FDAT, SampleMods3
 
 
@@ -10,15 +10,42 @@ class FDATArch(Architecture[FDAT]):
     def __init__(self):
         super().__init__(
             id="FDAT",
-            detect=KeyCondition.has_all(
-                "groups.0.blocks.0.n1.weight", "upsampler.MetaUpsample"
+            detect=KeyCondition.has_any(
+                KeyCondition.has_all(
+                    "conv_first.weight",
+                    "groups.0.blocks.0.attn.bias",
+                    "groups.0.blocks.0.inter.cg.1.weight",
+                    "groups.0.blocks.0.ffn.fc1.weight",
+                    "groups.0.blocks.0.n1.weight",
+                    "upsampler.MetaUpsample",
+                ),
+                KeyCondition.has_all(
+                    "conv_first.1.weight",
+                    "groups.0.blocks.0.attn.bias",
+                    "groups.0.blocks.0.inter.cg.1.weight",
+                    "groups.0.blocks.0.ffn.fc1.weight",
+                    "groups.0.blocks.0.n1.weight",
+                    "upsampler.MetaUpsample",
+                ),
             ),
         )
 
     def load(self, state_dict: StateDict) -> ImageModelDescriptor[FDAT]:
-        num_in_ch = state_dict["conv_first.weight"].shape[1]
-        num_out_ch = state_dict["upsampler.MetaUpsample"].tolist()[4]
-        embed_dim = state_dict["conv_first.weight"].shape[0]
+        _, upsampler_index, scale, embed_dim, num_out_ch, mid_dim, _ = state_dict[
+            "upsampler.MetaUpsample"
+        ].tolist()
+        upsampler_type = list(SampleMods3.__args__)[upsampler_index]
+
+        if "conv_first.1.weight" in state_dict:
+            num_in_ch = num_out_ch
+            scale = 4 // (
+                math.isqrt(state_dict["conv_first.1.weight"].shape[1] // num_in_ch)
+            )
+            unshuffle_mod = True
+        else:
+            unshuffle_mod = False
+            num_in_ch = state_dict["conv_first.weight"].shape[1]
+
         num_groups = get_seq_len(state_dict, "groups")
         group_block_pattern = ["spatial", "channel"]
         depth_per_group = get_seq_len(state_dict, "groups.0.blocks") // len(
@@ -32,13 +59,6 @@ class FDATArch(Architecture[FDAT]):
         aim_reduction_ratio = (
             embed_dim // state_dict["groups.0.blocks.0.inter.cg.1.weight"].shape[0]
         )
-
-        # drop_path_rate = 0
-
-        upsampler_type = list(SampleMods3.__args__)[
-            state_dict["upsampler.MetaUpsample"].tolist()[1]
-        ]
-        scale = state_dict["upsampler.MetaUpsample"].tolist()[2]
 
         img_range = 1.0
 
@@ -55,7 +75,9 @@ class FDATArch(Architecture[FDAT]):
             aim_reduction_ratio=aim_reduction_ratio,
             group_block_pattern=None,
             upsampler_type=upsampler_type,
+            mid_dim=mid_dim,
             img_range=img_range,
+            unshuffle_mod=unshuffle_mod,
         )
 
         sizes = {96: "tiny", 108: "light", 120: "medium", 180: "large"}
@@ -73,6 +95,9 @@ class FDATArch(Architecture[FDAT]):
 
         if size_tag:
             tags.append(size_tag)
+
+        if unshuffle_mod:
+            tags.append("unshuffle")
 
         return ImageModelDescriptor(
             model,
