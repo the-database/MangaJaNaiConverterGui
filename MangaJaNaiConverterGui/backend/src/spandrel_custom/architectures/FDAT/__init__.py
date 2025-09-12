@@ -2,7 +2,7 @@ import math
 
 from spandrel.util import KeyCondition, get_seq_len
 
-from ...__helpers.model_descriptor import Architecture, ImageModelDescriptor, StateDict
+from spandrel.__helpers.model_descriptor import Architecture, ImageModelDescriptor, StateDict
 from .__arch.fdat import FDAT, SampleMods3
 
 
