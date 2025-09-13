@@ -121,7 +121,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "4x_IllustrationJaNai_V2standard_FDAT_M_52k.safetensors",
+        "ModelFilePath": "2x_IllustrationJaNai_V2standard_FDAT_M_unshuffle_40k.safetensors",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,

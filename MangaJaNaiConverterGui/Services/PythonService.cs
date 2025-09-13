@@ -128,7 +128,7 @@ namespace MangaJaNaiConverterGui.Services
             return false;
         }
 
-        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0 && Directory.GetFiles(ModelsDirectory).Any(x => x.Contains("V2"));
+        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0 && Directory.GetFiles(ModelsDirectory).Any(x => x.Contains("2x_IllustrationJaNai_V2standard_FDAT_M_unshuffle_40k"));
 
         public class PythonDownload
         {
