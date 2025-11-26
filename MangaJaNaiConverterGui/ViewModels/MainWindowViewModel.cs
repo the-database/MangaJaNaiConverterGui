@@ -1009,7 +1009,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
                 // Create a StreamWriter to write the output to a log file
-                using (var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: true))
+                using (var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: false))
                 {
                     process.ErrorDataReceived += (sender, e) =>
                     {
@@ -1093,7 +1093,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 // Create a StreamWriter to write the output to a log file
                 try
                 {
-                    using var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: true);
+                    using var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: false);
                     process.ErrorDataReceived += (sender, e) =>
                     {
                         if (!string.IsNullOrEmpty(e.Data))
@@ -1439,26 +1439,63 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             Task.Run(() =>
             {
-                if (Path.Exists(_pythonService.AppStatePath))
+                try
                 {
-                    var files = Directory.EnumerateFiles(_pythonService.AppStateFolder)
-                    .Where(f => Path.GetFileName(f).StartsWith("autobackup_") && Path.GetFileName(f).EndsWith(_pythonService.AppStateFilename))
-                    .OrderByDescending(f => f)
-                    .ToList();
+                    if (!File.Exists(_pythonService.AppStatePath))
+                        return;
 
-                    if (files.Count >= 10)
+                    var files = Directory.EnumerateFiles(_pythonService.AppStateFolder)
+                        .Where(f =>
+                        {
+                            var name = Path.GetFileName(f);
+                            return name.StartsWith("autobackup_") &&
+                                   name.EndsWith(_pythonService.AppStateFilename);
+                        })
+                        .OrderByDescending(f => f)
+                        .ToList();
+
+                    var latestBackup = files.FirstOrDefault();
+                    if (latestBackup is not null &&
+                        FilesAreEqual(_pythonService.AppStatePath, latestBackup))
                     {
-                        // Delete oldest backup
-                        File.Delete(files.Last());
+                        return;
                     }
 
-                    File.Copy
-                    (
-                        _pythonService.AppStatePath,
-                        Path.Join(_pythonService.AppStateFolder, $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{_pythonService.AppStateFilename}")
-                    );
+                    var backupName =
+                        $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{_pythonService.AppStateFilename}";
+                    var backupPath = Path.Combine(_pythonService.AppStateFolder, backupName);
+
+                    File.Copy(_pythonService.AppStatePath, backupPath);
+
+                    files.Insert(0, backupPath);
+
+                    const int maxBackups = 10;
+                    if (files.Count > maxBackups)
+                    {
+                        foreach (var old in files.Skip(maxBackups))
+                        {
+                            try { File.Delete(old); }
+                            catch { }
+                        }
+                    }
+                }
+                catch
+                {
                 }
             });
+        }
+
+        private static bool FilesAreEqual(string path1, string path2)
+        {
+            var info1 = new FileInfo(path1);
+            var info2 = new FileInfo(path2);
+            if (info1.Length != info2.Length)
+                return false;
+
+            var bytes1 = File.ReadAllBytes(path1);
+            var bytes2 = File.ReadAllBytes(path2);
+
+            return bytes1.AsSpan().SequenceEqual(bytes2);
         }
 
         public void ResetCurrentWorkflow()
