@@ -8,7 +8,7 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>-->
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -31,20 +31,20 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.5" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.5" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.5" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.5" />
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.9" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.5" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.5" />
-    <PackageReference Include="FluentAvaloniaUI" Version="2.4.0" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.9" />
+    <PackageReference Include="FluentAvaloniaUI" Version="2.4.1" />
     <PackageReference Include="HyperText.Avalonia" Version="2.0.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
     <PackageReference Include="SevenZipExtractor" Version="1.0.19" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="Splat.Autofac" Version="16.2.1" />
+    <PackageReference Include="Splat.Autofac" Version="17.1.1" />
     <PackageReference Include="Velopack" Version="0.0.1298" />
   </ItemGroup>
 

@@ -28,9 +28,9 @@ namespace MangaJaNaiConverterGui.Services
                 "win32",
                 new PythonDownload
                 {
-                    Url = "https://github.com/indygreg/python-build-standalone/releases/download/20241016/cpython-3.12.7+20241016-x86_64-pc-windows-msvc-shared-install_only.tar.gz",
+                    Url = "https://github.com/astral-sh/python-build-standalone/releases/download/20251120/cpython-3.13.9+20251120-x86_64-pc-windows-msvc-install_only.tar.gz",
                     Path = "python/python.exe",
-                    Version = "3.12.7",
+                    Version = "3.13.9",
                     Filename = "Python.tar.gz"
                 }
             },
@@ -128,7 +128,7 @@ namespace MangaJaNaiConverterGui.Services
             return false;
         }
 
-        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0 && Directory.GetFiles(ModelsDirectory).Any(x => x.Contains("2x_IllustrationJaNai_V2standard_FDAT_M_unshuffle_40k"));
+        public bool AreModelsInstalled() => Directory.Exists(ModelsDirectory) && Directory.GetFiles(ModelsDirectory).Length > 0 && Directory.GetFiles(ModelsDirectory).Any(x => x.Contains("2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16"));
 
         public class PythonDownload
         {
@@ -208,8 +208,8 @@ namespace MangaJaNaiConverterGui.Services
 
         public void AddPythonPth(string destFolder)
         {
-            string[] lines = { "python312.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
-            var filename = "python312._pth";
+            string[] lines = { "python313.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
+            var filename = "python313._pth";
 
             using var outputFile = new StreamWriter(Path.Combine(destFolder, filename));
 
@@ -223,7 +223,7 @@ namespace MangaJaNaiConverterGui.Services
             {
                 var relPythonPath = @".\python\python\python.exe";
 
-                return $@"{relPythonPath} -m pip install -U pip wheel --no-warn-script-location && {relPythonPath} -m pip install torch==2.7.0 torchvision --index-url https://download.pytorch.org/whl/cu128 --no-warn-script-location && {relPythonPath} -m pip install ""{Path.GetFullPath(@".\backend\src")}"" --no-warn-script-location";
+                return $@"{relPythonPath} -m pip install -U pip wheel --no-warn-script-location && {relPythonPath} -m pip install torch==2.9.1 torchvision --index-url https://download.pytorch.org/whl/cu128 --no-warn-script-location && {relPythonPath} -m pip install ""{Path.GetFullPath(@".\backend\src")}"" --no-warn-script-location";
             }
         }
 

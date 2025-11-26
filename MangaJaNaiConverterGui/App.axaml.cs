@@ -1,13 +1,17 @@
 using Autofac;
 using Avalonia;
 using Avalonia.Markup.Xaml;
-using Avalonia.ReactiveUI;
 using MangaJaNaiConverterGui.Services;
 using MangaJaNaiConverterGui.ViewModels;
 using MangaJaNaiConverterGui.Views;
 using ReactiveUI;
+using Splat;
 using Splat.Autofac;
 using System.IO;
+using ReactiveUI;
+using ReactiveUI.Avalonia;
+using Splat;
+using Splat.Autofac;
 
 namespace MangaJaNaiConverterGui
 {

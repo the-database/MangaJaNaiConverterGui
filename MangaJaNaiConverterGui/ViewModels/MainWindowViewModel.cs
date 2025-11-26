@@ -121,7 +121,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_IllustrationJaNai_V2standard_FDAT_M_unshuffle_40k.safetensors",
+        "ModelFilePath": "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.safetensors",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,
@@ -137,7 +137,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_IllustrationJaNai_V2standard_FDAT_M_52k.safetensors",
+        "ModelFilePath": "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.safetensors",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,
@@ -1344,18 +1344,33 @@ namespace MangaJaNaiConverterGui.ViewModels
             });
             File.Delete(targetPath);
 
-            BackendSetupMainStatus = "Downloading IllustrationJaNai V2 Models...";
-            download = "https://github.com/the-database/MangaJaNai/releases/download/2.0.0/4x_IllustrationJaNai_V2standard_ModelsOnly.zip";
+            BackendSetupMainStatus = "Downloading IllustrationJaNai V3denoise Models...";
+            download = "https://github.com/the-database/MangaJaNai/releases/download/3.0.0/IllustrationJaNai_V3denoise.zip";
             targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
             await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
             {
-                BackendSetupMainStatus = $"Downloading IllustrationJaNai V2 Models ({progress}%)...";
+                BackendSetupMainStatus = $"Downloading IllustrationJaNai V3denoise Models ({progress}%)...";
             });
 
-            BackendSetupMainStatus = "Extracting IllustrationJaNai V2 Models...";
+            BackendSetupMainStatus = "Extracting IllustrationJaNai V3denoise Models...";
             _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
             {
-                BackendSetupMainStatus = $"Extracting IllustrationJaNai V2 Models ({progress}%)...";
+                BackendSetupMainStatus = $"Extracting IllustrationJaNai V3denoise Models ({progress}%)...";
+            });
+            File.Delete(targetPath);
+
+            BackendSetupMainStatus = "Downloading IllustrationJaNai V3detail Models...";
+            download = "https://github.com/the-database/MangaJaNai/releases/download/3.0.0/IllustrationJaNai_V3detail.zip";
+            targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
+            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
+            {
+                BackendSetupMainStatus = $"Downloading IllustrationJaNai V3detail Models ({progress}%)...";
+            });
+
+            BackendSetupMainStatus = "Extracting IllustrationJaNai V3detail Models...";
+            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
+            {
+                BackendSetupMainStatus = $"Extracting IllustrationJaNai V3detail Models ({progress}%)...";
             });
             File.Delete(targetPath);
         }
