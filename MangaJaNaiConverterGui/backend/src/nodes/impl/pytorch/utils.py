@@ -149,9 +149,44 @@ def tensor2np(
 def safe_cuda_cache_empty() -> None:
     """
     Empties the CUDA cache if CUDA is available. Hopefully without causing any errors.
+    
+    DEPRECATED: Use safe_accelerator_cache_empty() instead for better accelerator support.
     """
     try:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
     except Exception:
         pass
+
+
+def safe_accelerator_cache_empty(device: torch.device) -> None:
+    """
+    Empties the accelerator cache for the given device type. 
+    Supports CUDA, ROCm, XPU, MPS, and other accelerators.
+    """
+    try:
+        device_type = device.type
+        
+        if device_type in ["cuda", "rocm"]:  # ROCm uses CUDA API
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        elif device_type == "xpu":
+            if hasattr(torch, 'xpu') and torch.xpu.is_available():
+                torch.xpu.empty_cache()
+        elif device_type == "mps":
+            if (hasattr(torch, 'backends') and 
+                hasattr(torch.backends, 'mps') and 
+                torch.backends.mps.is_available()):
+                # MPS doesn't have an explicit empty_cache, but we can try
+                # to trigger garbage collection
+                import gc
+                gc.collect()
+        # For other device types, we just do garbage collection
+        # since they typically don't have specific cache clearing APIs
+        else:
+            import gc
+            gc.collect()
+    except Exception:
+        # Fallback to garbage collection if anything fails
+        import gc
+        gc.collect()
