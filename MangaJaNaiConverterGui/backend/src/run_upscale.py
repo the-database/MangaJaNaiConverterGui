@@ -1530,12 +1530,14 @@ system_codepage = get_system_codepage()
 
 settings_parser = SettingsParser(
     {
-        "use_cpu": settings["UseCpu"],
+        "use_cpu": settings["SelectedDeviceIndex"] == 0,
         "use_fp16": settings["UseFp16"],
-        "gpu_index": settings["SelectedDeviceIndex"],
+        "accelerator_device_index": settings["SelectedDeviceIndex"],
         "budget_limit": 0,
     }
 )
+
+print("settings", settings_parser.get_int("accelerator_device_index", 0), flush=True)
 
 context = _ExecutorNodeContext(ProgressController(), settings_parser, Path())
 

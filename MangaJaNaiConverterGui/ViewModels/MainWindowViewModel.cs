@@ -15,6 +15,7 @@ using System.Net.Http;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
@@ -1067,11 +1068,11 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public async Task<string[]> InitializeDeviceList()
+        public async Task<DeviceResponse?> InitializeDeviceList()
         {
             if (!File.Exists(@".\backend\src\device_list.py"))
             {
-                return [];
+                return null;
             }
 
             // Create a new process to run the CMD command
@@ -1120,13 +1121,13 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                     if (!string.IsNullOrEmpty(result))
                     {
-                        return JsonConvert.DeserializeObject<string[]>(result);
+                        return JsonConvert.DeserializeObject<DeviceResponse>(result);
                     }
                 }
                 catch (IOException) { }
             }
 
-            return [];
+            return null;
         }
 
         public async Task<string> RunPythonPipList()
@@ -1301,11 +1302,15 @@ namespace MangaJaNaiConverterGui.ViewModels
                 IsExtractingBackend = false;
             });
 
-            DeviceList = await InitializeDeviceList();
-
-            if (DeviceList.Length == 0)
+            var deviceResponse = await InitializeDeviceList();
+            if (deviceResponse != null)
             {
-                UseCpu = true;
+                DeviceList = [.. deviceResponse.AllDevices.Select(d => d.Name)];
+                SelectedDeviceIndex = deviceResponse.BestDevice;
+            }
+            else
+            {
+                SelectedDeviceIndex = 1; // default to first non cpu device
             }
 
             PythonPipList = await RunPythonPipList();
@@ -2459,5 +2464,41 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             return string.Join(" ", parts);
         }
+    }
+
+    public class DeviceResponse
+    {
+        [JsonProperty("all_devices")]
+        public List<AcceleratorDevice> AllDevices { get; set; } = [];
+
+        [JsonProperty("best_device")]
+        public int BestDevice { get; set; }
+    }
+
+    public class AcceleratorDevice
+    {
+        [JsonProperty("type")]
+        public string Type { get; set; } = string.Empty;
+
+        [JsonProperty("index")]
+        public int Index { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonProperty("device_string")]
+        public string DeviceString { get; set; } = string.Empty;
+
+        [JsonProperty("supports_fp16")]
+        public bool SupportsFp16 { get; set; }
+
+        [JsonProperty("supports_bf16")]
+        public bool SupportsBf16 { get; set; }
+
+        [JsonProperty("memory_total")]
+        public long? MemoryTotal { get; set; }
+
+        [JsonProperty("memory_free")]
+        public long? MemoryFree { get; set; }
     }
 }

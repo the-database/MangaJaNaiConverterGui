@@ -8,7 +8,7 @@ import warnings
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
-from typing import Any, Optional, Sequence
+from typing import Any, Optional, Sequence, override
 
 import torch
 from sanic.log import logger
@@ -47,6 +47,17 @@ class AcceleratorDevice:
         """Get the corresponding torch.device"""
         return torch.device(self.device_string)
 
+    @override
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, AcceleratorDevice):
+            return self.device_string == other.device_string
+        return NotImplemented
+
+    @override
+    def __hash__(self) -> int:
+        # only needed if you ever put Device in sets / dict keys
+        return hash(self.device_string)
+
 
 class AcceleratorDetector:
     """Detects and manages available accelerators"""
@@ -64,7 +75,7 @@ class AcceleratorDetector:
     def _detect_all_devices(self) -> list[AcceleratorDevice]:
         """Detect all available accelerator devices"""
         devices = []
-        
+
         # Always add CPU
         devices.append(AcceleratorDevice(
             type=AcceleratorType.CPU,

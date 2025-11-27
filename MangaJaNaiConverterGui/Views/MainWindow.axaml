@@ -656,17 +656,10 @@
           <Border Classes="border">
             <StackPanel>
               <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">GPU</TextBlock>
+                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Device</TextBlock>
                 <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}"  />
                 <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Which GPU to use for upscaling with PyTorch.
-                </TextBlock>
-              </StackPanel>
-
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                <CheckBox IsChecked="{Binding UseCpu}">CPU Mode</CheckBox>
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Use CPU for upscaling with PyTorch instead of GPU.
+                  Which device to use for upscaling with PyTorch. CPU is much slower than GPU and should be avoided unless no GPU is available.
                 </TextBlock>
               </StackPanel>
 
