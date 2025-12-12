@@ -119,6 +119,14 @@ downscale and final color downscale
 
 
 def standard_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
+    h, w, _ = get_h_w_c(image)
+    if (w, h) == new_size:
+        return image
+    
+    # prevent upscaling
+    if new_size[0] > w or new_size[1] > h:
+        return image
+    
     new_image = image.astype(np.float32) / 255.0
     new_image = resize(new_image, new_size, ResizeFilter.Lanczos, False)
     new_image = (new_image * 255).round().astype(np.uint8)
@@ -137,7 +145,14 @@ final downscale for grayscale images only
 
 
 def dotgain20_resize(image: np.ndarray, new_size: tuple[int, int]) -> np.ndarray:
-    h, _, c = get_h_w_c(image)
+    h, w, _ = get_h_w_c(image)
+    if (w, h) == new_size:
+        return image
+    
+    # prevent upscaling
+    if new_size[0] > w or new_size[1] > h:
+        return image
+    
     size_ratio = h / new_size[1]
     blur_size = (1 / size_ratio - 1) / 3.5
     if blur_size >= 0.1:
@@ -650,6 +665,9 @@ def preprocess_worker_archive_file(
                                 round(h * resize_factor_before_upscale / 100),
                             ),
                         )
+                    
+                    # ensure the resized image dimensions are correctly updated    
+                    original_height, original_width, _ = get_h_w_c(image) 
 
                     if is_grayscale and chain["AutoAdjustLevels"]:
                         image = enhance_contrast(image)
@@ -818,6 +836,9 @@ def preprocess_worker_folder(
                                     round(h * resize_factor_before_upscale / 100),
                                 ),
                             )
+                            
+                        # ensure the resized image dimensions are correctly updated    
+                        original_height, original_width, _ = get_h_w_c(image) 
 
                         if is_grayscale and chain["AutoAdjustLevels"]:
                             image = enhance_contrast(image)
@@ -955,6 +976,9 @@ def preprocess_worker_image(
                         round(h * resize_factor_before_upscale / 100),
                     ),
                 )
+                
+            # ensure the resized image dimensions are correctly updated    
+            original_height, original_width, _ = get_h_w_c(image) 
 
             if is_grayscale and chain["AutoAdjustLevels"]:
                 image = enhance_contrast(image)
