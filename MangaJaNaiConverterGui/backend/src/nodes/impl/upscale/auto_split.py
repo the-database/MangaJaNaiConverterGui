@@ -178,7 +178,7 @@ def _max_split(
 
                     new_tile_count_y = math.ceil(h / max_tile_size[1])
                     new_tile_size_y = math.ceil(h / new_tile_count_y)
-                    start_y = (y * tile_size_x) // new_tile_size_y
+                    start_y = (y * tile_size_y) // new_tile_size_y
 
                     logger.debug(
                         f"Split occurred. New tile size is {max_tile_size}. Starting at row {start_y}."
@@ -187,7 +187,7 @@ def _max_split(
                     # reset result
                     if result is not None:
                         # we already added at least one row, so we have to set the offset back
-                        result.offset = start_y * new_tile_size_y
+                        result.offset = start_y * new_tile_size_y * scale
 
                     restart = True
                     break
