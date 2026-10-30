@@ -9,6 +9,8 @@ using Splat;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -1839,7 +1841,114 @@ namespace MangaJaNaiConverterGui.ViewModels
                     }
                 }
             });
+
+            // The collapsed sections' summaries follow every setting.
+            PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is not null && !e.PropertyName.EndsWith("Summary", StringComparison.Ordinal))
+                {
+                    RaiseSummaries();
+                }
+            };
         }
+
+        // ---- collapsible sections ----------------------------------------------------------
+
+        private bool _inputSectionExpanded = true;
+        [DataMember]
+        public bool InputSectionExpanded
+        {
+            get => _inputSectionExpanded;
+            set => this.RaiseAndSetIfChanged(ref _inputSectionExpanded, value);
+        }
+
+        private bool _upscaleSectionExpanded = true;
+        [DataMember]
+        public bool UpscaleSectionExpanded
+        {
+            get => _upscaleSectionExpanded;
+            set => this.RaiseAndSetIfChanged(ref _upscaleSectionExpanded, value);
+        }
+
+        private bool _outputSectionExpanded = true;
+        [DataMember]
+        public bool OutputSectionExpanded
+        {
+            get => _outputSectionExpanded;
+            set => this.RaiseAndSetIfChanged(ref _outputSectionExpanded, value);
+        }
+
+        // The Model Chains section is open when ShowAdvancedSettings is on (the saved setting that
+        // used to show those settings), so existing workflows keep how they looked.
+
+        public string InputSummary
+        {
+            get
+            {
+                if (SelectedTabIndex == 0)
+                {
+                    return string.IsNullOrWhiteSpace(InputFilePath) ? "Single file · none selected" : $"Single file · {Path.GetFileName(InputFilePath)}";
+                }
+                var kinds = (UpscaleArchives, UpscaleImages) switch
+                {
+                    (true, true) => "archives + images",
+                    (true, false) => "archives",
+                    (false, true) => "images",
+                    _ => "nothing selected",
+                };
+                return string.IsNullOrWhiteSpace(InputFolderPath) ? $"Batch folder · none selected" : $"Batch folder · {InputFolderPath} · {kinds}";
+            }
+        }
+
+        public string UpscaleSummary
+        {
+            get
+            {
+                if (ModeWidthSelected)
+                {
+                    return $"Width {ResizeWidthAfterUpscale} px";
+                }
+                if (ModeHeightSelected)
+                {
+                    return $"Height {ResizeHeightAfterUpscale} px";
+                }
+                if (ModeFitToDisplaySelected)
+                {
+                    var orientation = DisplayPortraitSelected ? "portrait" : "landscape";
+                    return string.IsNullOrWhiteSpace(DisplayDevice) ? "Fit to display" : $"Fit to {DisplayDevice} · {orientation}";
+                }
+                return $"Scale {UpscaleScaleFactor}x";
+            }
+        }
+
+        public string ChainsSummary
+        {
+            get
+            {
+                var count = Chains?.Count ?? 0;
+                return $"{count} {(count == 1 ? "chain" : "chains")} · grayscale threshold {GrayscaleDetectionThreshold}";
+            }
+        }
+
+        public string OutputSummary
+        {
+            get
+            {
+                var format = WebpSelected ? "WebP" : PngSelected ? "PNG" : AvifSelected ? "AVIF" : "JPEG";
+                var quality = ShowLossyCompressionQuality ? $" q{LossyCompressionQuality}" : ShowUseLosslessCompression ? " lossless" : "";
+                return string.IsNullOrWhiteSpace(OutputFolderPath) ? $"{format}{quality}" : $"{format}{quality} → {OutputFolderPath}";
+            }
+        }
+
+        private void RaiseSummaries()
+        {
+            this.RaisePropertyChanged(nameof(InputSummary));
+            this.RaisePropertyChanged(nameof(UpscaleSummary));
+            this.RaisePropertyChanged(nameof(ChainsSummary));
+            this.RaisePropertyChanged(nameof(OutputSummary));
+        }
+
+        private void ChainsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => this.RaisePropertyChanged(nameof(ChainsSummary));
 
         private IDisposable? sub;
 
@@ -2212,7 +2321,18 @@ namespace MangaJaNaiConverterGui.ViewModels
         public AvaloniaList<UpscaleChain> Chains
         {
             get => _chains;
-            set => this.RaiseAndSetIfChanged(ref _chains, value);
+            set
+            {
+                if (_chains != null)
+                {
+                    _chains.CollectionChanged -= ChainsCollectionChanged;
+                }
+                this.RaiseAndSetIfChanged(ref _chains, value);
+                if (_chains != null)
+                {
+                    _chains.CollectionChanged += ChainsCollectionChanged;
+                }
+            }
         }
 
         private bool _valid = false;
