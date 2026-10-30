@@ -1002,6 +1002,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             CurrentWorkflow?.Chains.Add(new UpscaleChain
             {
                 Vm = this,
+                ChainSectionExpanded = true,
             });
             UpdateChainHeaders();
         }
@@ -1964,6 +1965,10 @@ namespace MangaJaNaiConverterGui.ViewModels
             UpscaleSectionExpanded = expanded;
             ShowAdvancedSettings = expanded;
             OutputSectionExpanded = expanded;
+            foreach (var chain in Chains)
+            {
+                chain.ChainSectionExpanded = expanded;
+            }
         }
 
         private void RaiseSummaries()
@@ -2548,6 +2553,17 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             this.RaisePropertyChanged(nameof(AllModels));
             this.RaisePropertyChanged(nameof(ModelFilePath));
+
+            // The collapsed chains' summaries follow every setting.
+            PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is { } name && !name.EndsWith("Summary", StringComparison.Ordinal) && !name.EndsWith("Expanded", StringComparison.Ordinal))
+                {
+                    this.RaisePropertyChanged(nameof(ChainSummary));
+                    this.RaisePropertyChanged(nameof(ActivationSummary));
+                    this.RaisePropertyChanged(nameof(UpscaleSummary));
+                }
+            };
         }
 
         private IDisposable? sub;
@@ -2558,6 +2574,128 @@ namespace MangaJaNaiConverterGui.ViewModels
             get => _vm;
             set => this.RaiseAndSetIfChanged(ref _vm, value);
         }
+
+        // ---- collapsible sections ----------------------------------------------------------
+        // Saved with the chain (the backend ignores these keys). The default workflow has 16 chains,
+        // so a chain starts collapsed, showing its summary; its inner sections start open.
+
+        private bool _chainSectionExpanded = false;
+        [DataMember]
+        public bool ChainSectionExpanded
+        {
+            get => _chainSectionExpanded;
+            set => this.RaiseAndSetIfChanged(ref _chainSectionExpanded, value);
+        }
+
+        private bool _activationSectionExpanded = true;
+        [DataMember]
+        public bool ActivationSectionExpanded
+        {
+            get => _activationSectionExpanded;
+            set => this.RaiseAndSetIfChanged(ref _activationSectionExpanded, value);
+        }
+
+        private bool _upscaleSectionExpanded = true;
+        [DataMember]
+        public bool UpscaleSectionExpanded
+        {
+            get => _upscaleSectionExpanded;
+            set => this.RaiseAndSetIfChanged(ref _upscaleSectionExpanded, value);
+        }
+
+        // ---- header summaries ------------------------------------------------------------------
+
+        private static string RangeText(string? min, string? max, string any, string unit = "")
+        {
+            bool noMin = string.IsNullOrEmpty(min) || min == "0" || min == "0x0";
+            bool noMax = string.IsNullOrEmpty(max) || max == "0" || max == "0x0";
+            return (noMin, noMax) switch
+            {
+                (true, true) => any,
+                (false, true) => $"{min}{unit}+",
+                (true, false) => $"up to {max}{unit}",
+                _ => $"{min}{unit} - {max}{unit}",
+            };
+        }
+
+        // "0x1250" -> "1250p", "800x0" -> "800px wide"; a 0 dimension means any.
+        private static string? ResolutionText(string? resolution)
+        {
+            var parts = resolution?.Split('x');
+            if (parts is not [var w, var h])
+            {
+                return resolution;
+            }
+            return (w.Trim(), h.Trim()) switch
+            {
+                ("0", "0") => "0",
+                ("0", var height) => $"{height}p",
+                (var width, "0") => $"{width}px wide",
+                _ => resolution,
+            };
+        }
+
+        private string ResolutionRange => RangeText(ResolutionText(MinResolution), ResolutionText(MaxResolution), "any resolution");
+
+        // "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.safetensors" -> "2x IllustrationJaNai_V3denoise_FDAT_M"
+        public static string ShortModelName(string? fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return "no model";
+            }
+            if (fileName == "No Model")
+            {
+                return "No Model";
+            }
+            var name = Path.GetFileNameWithoutExtension(fileName);
+            var scale = Regex.Match(name, @"^(\d+x)_");
+            if (scale.Success)
+            {
+                name = $"{scale.Groups[1].Value} {name[scale.Length..]}";
+            }
+            var cut = Regex.Match(name, @"_(unshuffle|fp16|fp32|bf16|\d+k)(_|$)", RegexOptions.IgnoreCase);
+            return cut.Success && cut.Index > 0 ? name[..cut.Index] : name;
+        }
+
+        private string ImageKinds => (IsColor, IsGrayscale) switch
+        {
+            (true, true) => "color + grayscale",
+            (true, false) => "color",
+            (false, true) => "grayscale",
+            _ => "no images",
+        };
+
+        public string ActivationSummary =>
+            $"{ResolutionRange} · {RangeText(MinScaleFactor?.ToString(), MaxScaleFactor?.ToString(), "any scale", "x")} · {ImageKinds}";
+
+        public string UpscaleSummary
+        {
+            get
+            {
+                var parts = new List<string> { ShortModelName(ModelFilePath), $"tile {ModelTileSize}" };
+                if (ResizeHeightBeforeUpscale > 0)
+                {
+                    parts.Add($"resize to {ResizeHeightBeforeUpscale}px tall first");
+                }
+                else if (ResizeWidthBeforeUpscale > 0)
+                {
+                    parts.Add($"resize to {ResizeWidthBeforeUpscale}px wide first");
+                }
+                else if (ResizeFactorBeforeUpscale is { } factor && factor != 100)
+                {
+                    parts.Add($"resize {factor}% first");
+                }
+                if (AutoAdjustLevels)
+                {
+                    parts.Add("auto levels");
+                }
+                return string.Join(" · ", parts);
+            }
+        }
+
+        public string ChainSummary =>
+            $"{ResolutionRange} · {ImageKinds} → {ShortModelName(ModelFilePath)}";
 
         private string _chainNumber = string.Empty;
         [DataMember]
