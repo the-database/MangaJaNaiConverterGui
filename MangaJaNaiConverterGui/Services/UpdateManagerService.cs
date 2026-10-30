@@ -19,11 +19,11 @@ namespace MangaJaNaiConverterGui.Services
         public bool IsInstalled { get => _um.IsInstalled; }
         public bool IsPortable { get => _um.IsPortable; }
 
-        public bool IsUpdatePendingRestart { get => _um.IsUpdatePendingRestart; }
+        public bool IsUpdatePendingRestart { get => _um.UpdatePendingRestart != null; }
 
         public void ApplyUpdatesAndRestart(UpdateInfo update)
         {
-            _um.ApplyUpdatesAndRestart(update);
+            _um.ApplyUpdatesAndRestart(update.TargetFullRelease);
         }
 
         public async Task<UpdateInfo?> CheckForUpdatesAsync()

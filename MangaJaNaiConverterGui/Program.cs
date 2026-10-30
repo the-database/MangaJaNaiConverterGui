@@ -53,6 +53,11 @@ namespace MangaJaNaiConverterGui
                 .UsePlatformDetect()
                 .WithInterFont()
                 .LogToTrace()
-                .UseReactiveUI();
+                // UseReactiveUI runs WithAvalonia() (which configures a SuspensionHost<Unit>) and then
+                // invokes this callback before committing the suspension host singleton. We override it
+                // with a plain non-generic SuspensionHost (AppState starts null, like the old
+                // RxApp.SuspensionHost) so the app state can be loaded/typed as MainWindowViewModel.
+                // Otherwise GetAppState<MainWindowViewModel>() in App throws InvalidCastException.
+                .UseReactiveUI(b => b.WithSuspensionHost());
     }
 }

@@ -5,13 +5,11 @@ using MangaJaNaiConverterGui.Services;
 using MangaJaNaiConverterGui.ViewModels;
 using MangaJaNaiConverterGui.Views;
 using ReactiveUI;
+using ReactiveUI.Avalonia;
+using ReactiveUI.Builder;
 using Splat;
 using Splat.Autofac;
 using System.IO;
-using ReactiveUI;
-using ReactiveUI.Avalonia;
-using Splat;
-using Splat.Autofac;
 
 namespace MangaJaNaiConverterGui
 {
@@ -38,8 +36,14 @@ namespace MangaJaNaiConverterGui
             // Register the resolver in Autofac so it can be later resolved.
             builder.RegisterInstance(autofacResolver);
 
-            // Initialize ReactiveUI components.
-            autofacResolver.InitializeReactiveUI();
+            // Initialize ReactiveUI into the Autofac-backed resolver (replaces the old
+            // InitializeReactiveUI() extension). Statement form, not a fluent chain: WithCoreServices()
+            // returns the base IAppBuilder, which doesn't expose the full builder method set.
+            var rxuiBuilder = autofacResolver.CreateReactiveUIBuilder();
+            rxuiBuilder.WithPlatformServices();
+            rxuiBuilder.WithAvalonia();
+            rxuiBuilder.WithCoreServices();
+            rxuiBuilder.Build();
 
             var container = builder.Build();
 
@@ -61,13 +65,13 @@ namespace MangaJaNaiConverterGui
                 }
             }
 
-            var suspension = new AutoSuspendHelper(ApplicationLifetime);
-            RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
-            RxApp.SuspensionHost.SetupDefaultSuspendResume(container.Resolve<ISuspensionDriverService>().SuspensionDriver);
+            var suspension = new AutoSuspendHelper(ApplicationLifetime!);
+            RxSuspension.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
+            RxSuspension.SuspensionHost.SetupDefaultSuspendResume(container.Resolve<ISuspensionDriverService>().SuspensionDriver);
             suspension.OnFrameworkInitializationCompleted();
 
             // Load the saved view model state.
-            var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
+            var state = RxSuspension.SuspensionHost.GetAppState<MainWindowViewModel>();
 
             foreach (var wf in state.Workflows)
             {

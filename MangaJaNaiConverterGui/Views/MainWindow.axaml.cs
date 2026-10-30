@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace MangaJaNaiConverterGui.Views
 {
-    public partial class MainWindow : AppWindow
+    public partial class MainWindow : FAAppWindow
     {
         private bool _autoScrollConsole = true;
         private bool _userWantsToQuit = false;
@@ -118,7 +118,7 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
-                var files = e.Data.GetFiles().ToList();
+                var files = (e.DataTransfer.TryGetFiles() ?? []).ToList();
 
 
                 if (files.Count > 0)
@@ -136,7 +136,7 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
-                var files = e.Data.GetFiles().ToList();
+                var files = (e.DataTransfer.TryGetFiles() ?? []).ToList();
 
 
                 if (files.Count > 0)
@@ -154,7 +154,7 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
-                var files = e.Data.GetFiles().ToList();
+                var files = (e.DataTransfer.TryGetFiles() ?? []).ToList();
 
 
                 if (files.Count > 0)
@@ -293,7 +293,7 @@ namespace MangaJaNaiConverterGui.Views
 
                     if (inPath != null)
                     {
-                        var td = new TaskDialog
+                        var td = new FATaskDialog
                         {
                             Title = "Confirm Workflow Import",
                             ShowProgressBar = false,
@@ -301,32 +301,19 @@ namespace MangaJaNaiConverterGui.Views
                             inPath,
                             Buttons =
                         {
-                            TaskDialogButton.OKButton,
-                            TaskDialogButton.CancelButton
+                            FATaskDialogButton.OKButton,
+                            FATaskDialogButton.CancelButton
                         }
                         };
 
-
-                        td.Closing += async (s, e) =>
+                        // The XamlRoot must be the window: in Avalonia 12 VisualRoot is an internal host
+                        // that FATaskDialog can't show on.
+                        td.XamlRoot = this;
+                        // Swap the workflow on the UI thread: it's bound to the sidebar and the form.
+                        if (await td.ShowAsync() is FATaskDialogStandardResult.OK)
                         {
-                            if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.OK)
-                            {
-                                var deferral = e.GetDeferral();
-
-                                td.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
-                                td.ShowProgressBar = true;
-
-                                await Task.Run(() =>
-                                {
-                                    vm.ReadWorkflowFileToCurrentWorkflow(inPath);
-                                });
-
-                                deferral.Complete();
-                            }
-                        };
-
-                        td.XamlRoot = VisualRoot as Visual;
-                        _ = await td.ShowAsync();
+                            vm.ReadWorkflowFileToCurrentWorkflow(inPath);
+                        }
                     }
                 }
             }
@@ -337,39 +324,23 @@ namespace MangaJaNaiConverterGui.Views
             if (DataContext is MainWindowViewModel vm)
             {
 
-                var td = new TaskDialog
+                var td = new FATaskDialog
                 {
                     Title = "Confirm Workflow Reset",
                     ShowProgressBar = false,
                     Content = $"The current workflow's settings will be reset to the default settings. Any unsaved settings for the current workflow will be lost.",
                     Buttons =
                 {
-                    TaskDialogButton.OKButton,
-                    TaskDialogButton.CancelButton
+                    FATaskDialogButton.OKButton,
+                    FATaskDialogButton.CancelButton
                 }
                 };
 
-
-                td.Closing += async (s, e) =>
+                td.XamlRoot = this;
+                if (await td.ShowAsync() is FATaskDialogStandardResult.OK)
                 {
-                    if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.OK)
-                    {
-                        var deferral = e.GetDeferral();
-
-                        td.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
-                        td.ShowProgressBar = true;
-
-                        await Task.Run(() =>
-                        {
-                            vm.ResetCurrentWorkflow();
-                        });
-
-                        deferral.Complete();
-                    }
-                };
-
-                td.XamlRoot = VisualRoot as Visual;
-                _ = await td.ShowAsync();
+                    vm.ResetCurrentWorkflow();
+                }
 
             }
         }
@@ -500,7 +471,7 @@ namespace MangaJaNaiConverterGui.Views
             return result ?? false;
         }
 
-        public void HandleDevicesGotFocus(object? sender, GotFocusEventArgs e)
+        public void HandleDevicesGotFocus(object? sender, FocusChangedEventArgs e)
         {
             if (DataContext is MainWindowViewModel vm && sender is AutoCompleteBox cb)
             {
