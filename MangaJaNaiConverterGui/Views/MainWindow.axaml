@@ -43,6 +43,51 @@
         </Style>
       </Style>
     </Style>
+    <!-- The settings page's collapsible sections: a bold title and a grey one-line summary of its
+         settings. -->
+    <Style Selector="Expander.section">
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="Margin" Value="0,8,0,0"/>
+      <!-- open and close at once: the theme's 0.25 s crossfade made sections feel slow -->
+      <Setter Property="ContentTransition" Value="{x:Null}"/>
+      <!-- the theme pads 16 all round; less on top, right under the header -->
+      <Setter Property="Padding" Value="16,6,16,16"/>
+    </Style>
+    <Style Selector="Expander.section /template/ ToggleButton#ExpanderHeader">
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="TextBlock.sectionTitle">
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.summary">
+      <Setter Property="Foreground" Value="Gray"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="StackPanel.row">
+      <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+    <!-- A setting's label (text, or a CheckBox) followed by a (?) icon; its ToolTip.Tip explains
+         the setting when either is hovered. -->
+    <Style Selector="ContentControl.hint">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="ToolTip.ShowDelay" Value="200"/>
+      <!-- explanations stay readable while settings are disabled during an upscale -->
+      <Setter Property="ToolTip.ShowOnDisabled" Value="True"/>
+      <Setter Property="ToolTip.Placement" Value="Bottom"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <StackPanel Orientation="Horizontal" Background="Transparent">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <materialIcons:MaterialIcon Kind="QuestionMarkCircle" Opacity="0.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+          </StackPanel>
+        </ControlTemplate>
+      </Setter>
+    </Style>
     <Style Selector="GridSplitter:pointerover, GridSplitter:pressed">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
     </Style>
@@ -220,7 +265,7 @@
           </DockPanel>
         </StackPanel>
 
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
           <!-- Main Form -->
           <StackPanel Margin="20">
             <Grid>
@@ -254,371 +299,349 @@
               </StackPanel>
 
             </Grid>
-            <DockPanel>
-              <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Input and Output"></TextBlock>
-              <CheckBox DockPanel.Dock="Right" IsChecked="{Binding CurrentWorkflow.ShowAdvancedSettings}" Content="Show Advanced Settings" />
-              <Rectangle />
-            </DockPanel>
 
-            <!--Input and Output -->
-            <Border Classes="border"
-                    IsEnabled="{Binding !Upscaling}">
-              <StackPanel>
-                <TabControl SelectedIndex="{Binding CurrentWorkflow.SelectedTabIndex}" Margin="0">
-                  <TabItem VerticalContentAlignment="Center" FontSize="16" Margin="0">
-                    <TabItem.Header>
-                      <StackPanel Orientation="Horizontal">
-                        <materialIcons:MaterialIcon Kind="File" />
-                        <TextBlock Margin="5,0,5,0">Single File Upscale</TextBlock>
-                      </StackPanel>
-                    </TabItem.Header>
-                    <Border Classes="border">
-                      <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                          <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input File</TextBlock>
-                          <TextBox x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.InputFilePath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True"/>
-                          <Button Content="Select File" Click="OpenInputFileButtonClick" />
-                          <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Path of the image or archive file (such as zip or cbz) to upscale. If an archive file is selected, each image in the archive will be upscaled and saved to a new archive.</TextBlock>
-                        </StackPanel>
+            <!-- The sections follow the pipeline: input, upscaling, the model chains that pick the
+                 model for each image, output. Collapsed, each shows a one-line summary. -->
 
-                      </StackPanel>
-                    </Border>
-
-                  </TabItem>
-                  <TabItem VerticalAlignment="Center" FontSize="16">
-                    <TabItem.Header>
-                      <StackPanel Orientation="Horizontal">
-                        <materialIcons:MaterialIcon Kind="Folder" />
-                        <TextBlock Margin="5,0,5,0">Batch Folder Upscale</TextBlock>
-                      </StackPanel>
-                    </TabItem.Header>
-                    <StackPanel>
-
-                      <Border Classes="border">
-                        <StackPanel>
-                          <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Input Folder</TextBlock>
-                            <TextBox x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.InputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                            <Button Content="Select Folder" Click="OpenInputFolderButtonClick" />
-                            <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                              Path of the folder to upscale. The folder and all of its subfolders will be scanned and images and/or archives will be upscaled depending on the selection below.
-                            </TextBlock>
-                          </StackPanel>
-
-                          <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                            <CheckBox Margin="0,0,5,0" IsChecked="{Binding CurrentWorkflow.UpscaleArchives}">Upscale Archives</CheckBox>
-                            <CheckBox IsChecked="{Binding CurrentWorkflow.UpscaleImages}">Upscale Images</CheckBox>
-                            <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                              Whether to upscale Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp) and/or Archive files (*.zip, *.cbz, *.rar, *.cbr) in the selected Input Folder.
-                            </TextBlock>
-                          </StackPanel>
-                        </StackPanel>
-                      </Border>
-
+            <!-- Input -->
+            <Expander Classes="section" IsExpanded="{Binding CurrentWorkflow.InputSectionExpanded}">
+              <Expander.Header>
+                <Grid ColumnDefinitions="170,*">
+                  <TextBlock Classes="sectionTitle" Text="Input" />
+                  <TextBlock Grid.Column="1" Classes="summary" Text="{Binding CurrentWorkflow.InputSummary}" />
+                </Grid>
+              </Expander.Header>
+              <TabControl SelectedIndex="{Binding CurrentWorkflow.SelectedTabIndex}" IsEnabled="{Binding !Upscaling}">
+                <!-- compact tabs inside the section (the theme's are 48 px tall) -->
+                <TabControl.Styles>
+                  <Style Selector="TabItem">
+                    <Setter Property="MinHeight" Value="40"/>
+                    <Setter Property="FontSize" Value="15"/>
+                    <Setter Property="Padding" Value="10,0"/>
+                  </Style>
+                </TabControl.Styles>
+                <TabItem VerticalContentAlignment="Center">
+                  <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                      <materialIcons:MaterialIcon Kind="File" />
+                      <TextBlock Margin="5,0,5,0">Single File Upscale</TextBlock>
                     </StackPanel>
-                  </TabItem>
-                </TabControl>
-
-                <Border Classes="border">
-                  <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Folder</TextBlock>
-                      <TextBox x:Name="OutputFolderNameTextBox" Classes="clearButton" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.OutputFolderPath}" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                      <Button Content="Select Folder" Click="OpenOutputFolderButtonClick" />
-                      <TextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                        Path of the folder to save the upscaled image(s) or archive(s).
-                      </TextBlock>
+                  </TabItem.Header>
+                  <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,10,0,0">
+                    <ContentControl Classes="hint" Content="Input File"
+                                    ToolTip.Tip="Path of the image or archive file (such as zip or cbz) to upscale. If an archive file is selected, each image in the archive will be upscaled and saved to a new archive." />
+                    <TextBox Grid.Column="1" x:Name="InputFileNameTextBox" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.InputFilePath}" DragDrop.AllowDrop="True" />
+                    <Button Grid.Column="2" Content="Select File" Click="OpenInputFileButtonClick" />
+                  </Grid>
+                </TabItem>
+                <TabItem VerticalContentAlignment="Center">
+                  <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                      <materialIcons:MaterialIcon Kind="Folder" />
+                      <TextBlock Margin="5,0,5,0">Batch Folder Upscale</TextBlock>
                     </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                      <TextBlock Margin="0,0,5,0">Output Filename</TextBlock>
-                      <TextBox Text="{Binding CurrentWorkflow.OutputFilename}" Margin="0,0,5,0" IsReadOnly="False" Width="600" DragDrop.AllowDrop="True" />
-                      <SelectableTextBlock Foreground="Gray" Width="500" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                        The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension. Archives will be output with .cbz extension; images will be output with the extension of the image format selected below.
-                      </SelectableTextBlock>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
-                      <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding CurrentWorkflow.OverwriteExistingFiles}">Allow Files in Output Path to be Overwritten</CheckBox>
-                      <TextBlock Width="600" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If unchecked, upscaling will be skipped for files that already exist in the output path. If checked, any files that already exist in the output path will be overwritten without warning. Use with caution.</TextBlock>
+                  </TabItem.Header>
+                  <StackPanel Spacing="12" Margin="0,10,0,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <ContentControl Classes="hint" Content="Input Folder"
+                                      ToolTip.Tip="Path of the folder to upscale. The folder and all of its subfolders will be scanned and images and/or archives will be upscaled depending on the selection below." />
+                      <TextBox Grid.Column="1" x:Name="InputFolderNameTextBox" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.InputFolderPath}" DragDrop.AllowDrop="True" />
+                      <Button Grid.Column="2" Content="Select Folder" Click="OpenInputFolderButtonClick" />
+                    </Grid>
+                    <StackPanel Classes="row">
+                      <CheckBox Margin="0,0,10,0" IsChecked="{Binding CurrentWorkflow.UpscaleArchives}">Upscale Archives</CheckBox>
+                      <ContentControl Classes="hint"
+                                      ToolTip.Tip="Whether to upscale Image files (*.png, *.jpg, *.jpeg, *.webp, *.bmp, *.avif) and/or Archive files (*.zip, *.cbz, *.rar, *.cbr) in the selected Input Folder.">
+                        <CheckBox IsChecked="{Binding CurrentWorkflow.UpscaleImages}">Upscale Images</CheckBox>
+                      </ContentControl>
                     </StackPanel>
                   </StackPanel>
-                </Border>
+                </TabItem>
+              </TabControl>
+            </Expander>
 
-
-                <Border Classes="border">
-                  <StackPanel>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
-                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Image Format</TextBlock>
-                      <ToggleButton IsChecked="{Binding CurrentWorkflow.WebpSelected}" Content="WebP" Command="{Binding CurrentWorkflow.SetWebpSelected}" />
-                      <ToggleButton IsChecked="{Binding CurrentWorkflow.AvifSelected}" Content="AVIF" Command="{Binding CurrentWorkflow.SetAvifSelected}" />
-                      <ToggleButton IsChecked="{Binding CurrentWorkflow.PngSelected}" Content="PNG" Command="{Binding CurrentWorkflow.SetPngSelected}" />
-                      <ToggleButton IsChecked="{Binding CurrentWorkflow.JpegSelected}" Content="JPEG" Command="{Binding CurrentWorkflow.SetJpegSelected}" />
-                      <TextBlock Foreground="Gray" Width="950" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression, with good compatibility on modern devices. Supports lossless and lossy compression. 
-<Bold>AVIF</Bold>: Modern format with better lossy compression efficiency than WebP, but not as widely supported and slower to save and load compared to WebP.
-<Bold>PNG</Bold>: Lossless compressed format with excellent compatibility, but worse compression efficiency than WebP and AVIF. 
-<Bold>JPEG</Bold>: Lossy compressed format with excellent compatibility, but worse compression efficiency than WebP and AVIF. 
-            </TextBlock>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ShowUseLosslessCompression}">
-                      <CheckBox Margin="0,0,5,0" IsChecked="{Binding CurrentWorkflow.UseLosslessCompression}">Use Lossless Compression</CheckBox>
-                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                        Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.
-                      </TextBlock>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ShowLossyCompressionQuality}">
-                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Lossy Compression Quality</TextBlock>
-                      <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100" Width="120"  />
-                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                        Quality level for compression. Note that a quality level of 100 is still lossy.
-                      </TextBlock>
-                    </StackPanel>
-                  </StackPanel>
-                </Border>
-
-              </StackPanel>
-            </Border>
-
-            <TextBlock Margin="0,40,0,0" FontWeight="Bold" Text="Upscaling"></TextBlock>
-            <Border Classes="border" IsEnabled="{Binding !Upscaling}">
-
-              <StackPanel>
-
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,10,0,10">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Upscale Mode</TextBlock>
+            <!-- Upscaling -->
+            <Expander Classes="section" IsExpanded="{Binding CurrentWorkflow.UpscaleSectionExpanded}">
+              <Expander.Header>
+                <Grid ColumnDefinitions="170,*">
+                  <TextBlock Classes="sectionTitle" Text="Upscaling" />
+                  <TextBlock Grid.Column="1" Classes="summary" Text="{Binding CurrentWorkflow.UpscaleSummary}" />
+                </Grid>
+              </Expander.Header>
+              <StackPanel Spacing="12" IsEnabled="{Binding !Upscaling}">
+                <StackPanel Classes="row">
+                  <ContentControl Classes="hint" Content="Upscale Mode">
+                    <ToolTip.Tip>
+                      <StackPanel Spacing="6">
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Scale</Bold>: All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Width</Bold>: All images will be upscaled to the specified width, while maintaining aspect ratio of the image.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Height</Bold>: All images will be upscaled to the specified height, while maintaining aspect ratio of the image.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Fit to Display</Bold>: All images will be upscaled to fit exactly within the specified display device.</TextBlock>
+                      </StackPanel>
+                    </ToolTip.Tip>
+                  </ContentControl>
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeScaleSelected}" Content="Scale" Command="{Binding CurrentWorkflow.SetModeScaleSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeWidthSelected}" Content="Width" Command="{Binding CurrentWorkflow.SetModeWidthSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeHeightSelected}" Content="Height" Command="{Binding CurrentWorkflow.SetModeHeightSelected}" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.ModeFitToDisplaySelected}" Content="Fit to Display" Command="{Binding CurrentWorkflow.SetModeFitToDisplaySelected}" />
-                  <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0" xml:space="preserve"><Bold>Scale</Bold>: All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.
-<Bold>Width</Bold>: All images will be upscaled to the specified width, while maintaining aspect ratio of the image. 
-<Bold>Height</Bold>: All images will be upscaled to the specified height, while maintaining aspect ratio of the image. 
-<Bold>Fit to Display</Bold>: All images will be upscaled to fit exactly within the specified display device. 
-            </TextBlock>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeScaleSelected}">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scale Factor</TextBlock>
+                <StackPanel Classes="row" IsVisible="{Binding CurrentWorkflow.ModeScaleSelected}">
+                  <ContentControl Classes="hint" Content="Scale Factor"
+                                  ToolTip.Tip="All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image." />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.Is1x}" Content="1x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="1" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.Is2x}" Content="2x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="2" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.Is3x}" Content="3x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="3" />
                   <ToggleButton IsChecked="{Binding CurrentWorkflow.Is4x}" Content="4x" Command="{Binding CurrentWorkflow.SetUpscaleScaleFactor}" CommandParameter="4" />
-                  <TextBlock Foreground="Gray" Width="900" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="40,0,0,0">
-                    All images will be upscaled by the specified scaling factor. For example, a factor of 2x will double the width and height of each image.
-                  </TextBlock>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeHeightSelected}">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Height</TextBlock>
+                <StackPanel Classes="row" IsVisible="{Binding CurrentWorkflow.ModeHeightSelected}">
+                  <ContentControl Classes="hint" Content="Output Height"
+                                  ToolTip.Tip="All images will be upscaled to this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display." />
                   <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeHeightAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                    All images will be upscaled to this height. For reading on tablets, this can be used to set the image height to the resolution of your tablet's display.
-                  </TextBlock>
+                  <TextBlock>px</TextBlock>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,10" IsVisible="{Binding CurrentWorkflow.ModeWidthSelected}">
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Output Width</TextBlock>
+                <StackPanel Classes="row" IsVisible="{Binding CurrentWorkflow.ModeWidthSelected}">
+                  <ContentControl Classes="hint" Content="Output Width"
+                                  ToolTip.Tip="All images will be upscaled to this width. For reading on tablets, this can be used to set the image width to the resolution of your tablet's display." />
                   <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.ResizeWidthAfterUpscale}" AllowSpin="False" ShowButtonSpinner="False" Minimum="1" />
-                  <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                  <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                    All images will be upscaled to this width. For reading on tablets, this can be used to set the image width to the resolution of your tablet's display.
-                  </TextBlock>
+                  <TextBlock>px</TextBlock>
                 </StackPanel>
 
                 <!--Fit to Device Mode-->
-                <StackPanel IsVisible="{Binding CurrentWorkflow.ModeFitToDisplaySelected}">
-                  <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Tablet Device or Display</TextBlock>
-                    <AutoCompleteBox Classes="clearButton" Margin="0,0,5,0" AsyncPopulator="{Binding DevicesPopulator}" FilterMode="None" Width="400" Text="{Binding CurrentWorkflow.DisplayDevice}" Tapped="HandleDevicesTapped" GotFocus="HandleDevicesGotFocus" MinimumPrefixLength="0"  />
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                      The name of the tablet or display device. Start typing to show more options.
-                    </TextBlock>
-                  </StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Orientation</TextBlock>
-                    <ToggleButton IsChecked="{Binding CurrentWorkflow.DisplayPortraitSelected}" Content="Portrait"  />
+                <StackPanel Spacing="12" IsVisible="{Binding CurrentWorkflow.ModeFitToDisplaySelected}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" MaxWidth="500" />
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Classes="hint" Content="Tablet Device or Display"
+                                    ToolTip.Tip="The name of the tablet or display device. Start typing to show more options." />
+                    <AutoCompleteBox Grid.Column="1" Classes="clearButton" HorizontalAlignment="Stretch" AsyncPopulator="{Binding DevicesPopulator}" FilterMode="None" Text="{Binding CurrentWorkflow.DisplayDevice}" Tapped="HandleDevicesTapped" GotFocus="HandleDevicesGotFocus" MinimumPrefixLength="0" />
+                  </Grid>
+                  <StackPanel Classes="row">
+                    <ContentControl Classes="hint" Content="Display Orientation"
+                                    ToolTip.Tip="Whether the display will be used in portrait/vertical mode or landscape/horizontal mode." />
+                    <ToggleButton IsChecked="{Binding CurrentWorkflow.DisplayPortraitSelected}" Content="Portrait" />
                     <ToggleButton IsChecked="{Binding !CurrentWorkflow.DisplayPortraitSelected}" Content="Landscape" />
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                      Whether the display will be used in portrait/vertical mode or landscape/horizontal mode.
-                    </TextBlock>
                   </StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                    <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Display Resolution</TextBlock>
-                    <TextBlock Margin="5,5,5,0" FontFamily="Consolas"  VerticalAlignment="Center">
+                  <StackPanel Classes="row">
+                    <ContentControl Classes="hint" Content="Display Resolution"
+                                    ToolTip.Tip="Actual resolution of the selected display with the selected orientation, width × height." />
+                    <TextBlock FontFamily="Consolas">
                       <Run Text="{Binding CurrentWorkflow.DisplayDeviceWidth}"/>
                       <Run Text="px" />
                       <Run Text="×" />
                       <Run Text="{Binding CurrentWorkflow.DisplayDeviceHeight}" />
                       <Run Text="px" />
                     </TextBlock>
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" Width="900" TextWrapping="WrapWithOverflow">
-                      Actual resolution of the selected display with the selected orientation, width × height.
-                    </TextBlock>
                   </StackPanel>
                 </StackPanel>
               </StackPanel>
-            </Border>
+            </Expander>
 
-            <StackPanel IsVisible="{Binding CurrentWorkflow.ShowAdvancedSettings}" IsEnabled="{Binding !Upscaling}">
-              <StackPanel Margin="0,40,0,0" VerticalAlignment="Center" Orientation="Horizontal" ToolTip.Tip="Advanced settings allow you to select different settings to use depending on the image selected for upscaling.&#013;&#013;A chain is a set of conditions and the desired settings to apply when those conditions are met. When upscaling each image, if that image meets the activation conditions of a chain, then that chain's settings are applied to an image. If the image meets the activation conditions of multiple chains, only the settings of the highest matching chain in the list are applied. If the image doesn't meet the activation condition of any chain, then no processing or upscaling is applied to that image.&#013;&#013;The default settings use one upscaling model for color images, IllustrationJaNai, and several different MangaJaNai models for grayscale images. Each MangaJaNai model is optimized to work on images with a different height, ranging from 1200p to 2048p, so the chains are used to select the most suitable MangaJaNai model based on the resolution of the image.">
-                <TextBlock Margin="0,0,5,0" FontWeight="Bold" Text="Advanced Settings"/>
-                <materialIcons:MaterialIcon Kind="QuestionMarkCircle" Opacity="0.5" VerticalAlignment="Center" />
-              </StackPanel>
+            <!-- Model Chains: which model runs on which image -->
+            <Expander Classes="section" IsExpanded="{Binding CurrentWorkflow.ShowAdvancedSettings}">
+              <Expander.Header>
+                <Grid ColumnDefinitions="170,*">
+                  <ContentControl Classes="hint" HorizontalAlignment="Left"
+                                  ToolTip.Tip="A chain is a set of conditions and the desired settings to apply when those conditions are met. When upscaling each image, if that image meets the activation conditions of a chain, then that chain's settings are applied to an image. If the image meets the activation conditions of multiple chains, only the settings of the highest matching chain in the list are applied. If the image doesn't meet the activation condition of any chain, then no processing or upscaling is applied to that image.&#013;&#013;The default settings use one upscaling model for color images, IllustrationJaNai, and several different MangaJaNai models for grayscale images. Each MangaJaNai model is optimized to work on images with a different height, ranging from 1200p to 2048p, so the chains are used to select the most suitable MangaJaNai model based on the resolution of the image.">
+                    <TextBlock Classes="sectionTitle" Text="Model Chains" />
+                  </ContentControl>
+                  <TextBlock Grid.Column="1" Classes="summary" Text="{Binding CurrentWorkflow.ChainsSummary}" />
+                </Grid>
+              </Expander.Header>
+              <StackPanel IsEnabled="{Binding !Upscaling}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MaxWidth="500" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <ContentControl Classes="hint" Content="Grayscale Detection Threshold"
+                                  ToolTip.Tip="The threshold for which an image is considered grayscale. The default value of 12 considers images with slight color as grayscale, because some grayscale images have slight color due to artifacts. Set the threshold to 0 to consider only strictly grayscale images as grayscale, and increase the threshold to consider images with more color as grayscale." />
+                  <Slider Grid.Column="1" Value="{Binding CurrentWorkflow.GrayscaleDetectionThreshold}" Minimum="0" Maximum="24" TickFrequency="1" IsSnapToTickEnabled="True" />
+                  <TextBlock Grid.Column="2" Width="40" Margin="10,0,0,0" TextAlignment="Center" Text="{Binding CurrentWorkflow.GrayscaleDetectionThreshold}" />
+                </Grid>
 
-              <Border Classes="border">
-                <StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
-                    <TextBlock Margin="0,0,5,0" Text="Grayscale Detection Threshold" VerticalAlignment="Center" />
-                    <Slider VerticalAlignment="Center" Value="{Binding CurrentWorkflow.GrayscaleDetectionThreshold}" Minimum="0" Maximum="24" Width="500" TickFrequency="1" IsSnapToTickEnabled="True" />
-                    <TextBlock VerticalAlignment="Center" Width="40" Margin="10,10,0,10" Text="{Binding CurrentWorkflow.GrayscaleDetectionThreshold}" HorizontalAlignment="Center"/>
-                    <TextBlock Width="650" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The threshold for which an image is considered grayscale. The default value of 12 considers images with slight color as grayscale, because some grayscale images have slight color due to artifacts. Set the threshold to 0 to consider only strictly grayscale images as grayscale, and increase the threshold to consider images with more color as grayscale.</TextBlock>
-                  </StackPanel>
-
-                </StackPanel>
-              </Border>
-
-              <Border Classes="border">
-                <StackPanel>
-                  <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="vm:UpscaleChain">
-                        <StackPanel>
-                          <TextBlock Margin="10,10,0,10" FontWeight="Bold" Text="{Binding ChainNumber, StringFormat=Chain {0}}"  />
-                          <Border Classes="border" Margin="0,0,0,20">
-                            <Grid>
-                              <StackPanel Grid.Column="0">
-                                <TextBlock Margin="10,10,0,5" Text="Activation Condition" />
-                                <Border Classes="border">
-                                  <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10" VerticalAlignment="Center">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resolution Range</TextBlock>
-                                      <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
-                                                     VerticalAlignment="Center"
-                                                     ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-
-                                      <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
-                                      <ui:FAComboBox IsEditable="True" Width="120"  MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
-                                                     VerticalAlignment="Center"
-                                                     ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                      <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means no resolution limit.</TextBlock>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Scaling Factor Range</TextBlock>
-                                      <NumericUpDown Margin="0,0,5,0" Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
-
-                                      <TextBlock Margin="10,0,20,0" VerticalAlignment="Center"> - </TextBlock>
-                                      <NumericUpDown Margin="0,0,5,0" Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">x</TextBlock>
-                                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit.</TextBlock>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                      <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsColor}">Is Color Image</CheckBox>
-                                      <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding IsGrayscale}">Is Grayscale Image</CheckBox>
-                                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.</TextBlock>
-                                    </StackPanel>
-
-                                  </StackPanel>
-                                </Border>
-
-                                <TextBlock Margin="10,20,0,5" Text="Upscale Settings" />
-                                <Border Classes="border">
-                                  <StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
-                                      <CheckBox Margin="0,0,5,0" VerticalAlignment="Center" IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
-                                      <TextBlock Width="800" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast. </TextBlock>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Height Before Upscale</TextBlock>
-                                      <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeHeightBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                                        Resize each image to this height before upscaling, set to 0 to disable.
-                                      </TextBlock>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Width Before Upscale</TextBlock>
-                                      <NumericUpDown Margin="0,0,5,0" Value="{Binding ResizeWidthBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                      <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                                        Resize each image to this width before upscaling, set to 0 to disable.
-                                      </TextBlock>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Resize Factor Before Upscale</TextBlock>
-                                      <NumericUpDown Margin="0,0,5,0" VerticalAlignment="Center" Value="{Binding ResizeFactorBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">%</TextBlock>
-                                      <TextBlock Foreground="Gray" Width="800" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                                        Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified.
-                                      </TextBlock>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model</TextBlock>
-                                      <ComboBox ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" Width="400" />
-                                      <Button Margin="5,0,0,0" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
-                                        <StackPanel Orientation="Horizontal">
-                                          <materialIcons:MaterialIcon Kind="Launch" />
-                                          <TextBlock Margin="5,0,0,0" Text="Open Models Directory" />
-                                        </StackPanel>
-                                      </Button>
-                                      <TextBlock Width="500" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">The upscaling model to run. To choose from more models, add PyTorch (*.pth) model files to the models directory. Select No Model to skip running any upscaling model for this chain.</TextBlock>
-                                    </StackPanel>
-
-                                    <StackPanel Orientation="Horizontal" Margin="10,0,0,10">
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Model Tile Size</TextBlock>
-                                      <ui:FAComboBox IsEnabled="True" IsEditable="True" Width="160"  MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
-                                                     VerticalAlignment="Center"
-                                                     ItemsSource="{Binding TileSizes}" />
-                                      <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">px</TextBlock>
-                                      <TextBlock Width="700" TextWrapping="WrapWithOverflow" Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users.</TextBlock>
-                                    </StackPanel>
-
-                                  </StackPanel>
-
-                                </Border>
-
+                <ItemsControl ItemsSource="{Binding CurrentWorkflow.Chains}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:UpscaleChain">
+                      <Border Classes="border" Margin="0,10,0,0">
+                        <StackPanel Spacing="12">
+                          <DockPanel>
+                            <Button DockPanel.Dock="Right"
+                                    IsVisible="{Binding !$parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CurrentWorkflow.IsDefaultWorkflow}"
+                                    Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteChain}"
+                                    CommandParameter="{Binding}">
+                              <StackPanel Orientation="Horizontal">
+                                <materialIcons:MaterialIcon Kind="MinusCircle" />
+                                <TextBlock Margin="5,0,0,0" Text="Remove" />
                               </StackPanel>
-                              <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top"
-        IsVisible="{Binding !$parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CurrentWorkflow.IsDefaultWorkflow}"
-        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).DeleteChain}"
-        CommandParameter="{Binding}">
-                                <StackPanel Orientation="Horizontal">
-                                  <materialIcons:MaterialIcon Kind="MinusCircle" />
-                                  <TextBlock Margin="5,0,0,0" Text="{Binding ChainNumber, StringFormat=Remove Chain {0}}" />
-                                </StackPanel>
-                              </Button>
-                            </Grid>
-                          </Border>
+                            </Button>
+                            <TextBlock FontWeight="Bold" Text="{Binding ChainNumber, StringFormat=Chain {0}}" />
+                          </DockPanel>
 
+                          <TextBlock Foreground="Gray" Text="Activation Condition" />
+                          <StackPanel Classes="row">
+                            <ContentControl Classes="hint" Content="Resolution Range"
+                                            ToolTip.Tip="Range of image resolutions to activate this chain. Select a common resolution from the drop down or type a custom resolution. Larger resolutions require more processing power to upscale. A dimension value of 0 means any value for that dimension, for example 0x1250 means any width, and 1250px tall. A maximum resolution of 0x0 means no resolution limit." />
+                            <ui:FAComboBox IsEditable="True" Width="120" MaxDropDownHeight="600" Text="{Binding MinResolution, Mode=TwoWay}"
+                                           ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
+                            <TextBlock Margin="5,0,0,0">px</TextBlock>
+                            <TextBlock Margin="15,0,15,0"> - </TextBlock>
+                            <ui:FAComboBox IsEditable="True" Width="120" MaxDropDownHeight="600" Text="{Binding MaxResolution, Mode=TwoWay}"
+                                           ItemsSource="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).CommonResolutions}" />
+                            <TextBlock Margin="5,0,0,0">px</TextBlock>
+                          </StackPanel>
+                          <StackPanel Classes="row">
+                            <ContentControl Classes="hint" Content="Scaling Factor Range"
+                                            ToolTip.Tip="Range of necessary scaling factor to activate this chain. A maximum scaling factor of 0 means no maximum limit." />
+                            <NumericUpDown Value="{Binding MinScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
+                            <TextBlock Margin="5,0,0,0">x</TextBlock>
+                            <TextBlock Margin="15,0,15,0"> - </TextBlock>
+                            <NumericUpDown Value="{Binding MaxScaleFactor}" Minimum="0" Maximum="999" Width="80" AllowSpin="False" ShowButtonSpinner="False" />
+                            <TextBlock Margin="5,0,0,0">x</TextBlock>
+                          </StackPanel>
+                          <StackPanel Classes="row">
+                            <CheckBox Margin="0,0,10,0" IsChecked="{Binding IsColor}">Is Color Image</CheckBox>
+                            <ContentControl Classes="hint"
+                                            ToolTip.Tip="Whether the image is color and/or grayscale. Images that appear grayscale but have faint color due to JPEG artifacts are still considered grayscale.">
+                              <CheckBox IsChecked="{Binding IsGrayscale}">Is Grayscale Image</CheckBox>
+                            </ContentControl>
+                          </StackPanel>
+
+                          <TextBlock Foreground="Gray" Margin="0,8,0,0" Text="Upscale Settings" />
+                          <ContentControl Classes="hint" HorizontalAlignment="Left"
+                                          ToolTip.Tip="If checked, automatically increase the contrast of all grayscale images if necessary. For best results with the MangaJaNai grayscale model, this setting is recommend when upscaling images which appear to be faded. This will have no effect on color images or grayscale images with sufficient contrast.">
+                            <CheckBox IsChecked="{Binding AutoAdjustLevels}">Auto Adjust Levels on Grayscale Images</CheckBox>
+                          </ContentControl>
+                          <WrapPanel>
+                            <StackPanel Classes="row" Margin="0,0,25,8">
+                              <ContentControl Classes="hint" Content="Resize Height Before Upscale"
+                                              ToolTip.Tip="Resize each image to this height before upscaling, set to 0 to disable." />
+                              <NumericUpDown Value="{Binding ResizeHeightBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
+                              <TextBlock Margin="5,0,0,0">px</TextBlock>
+                            </StackPanel>
+                            <StackPanel Classes="row" Margin="0,0,25,8">
+                              <ContentControl Classes="hint" Content="Resize Width Before Upscale"
+                                              ToolTip.Tip="Resize each image to this width before upscaling, set to 0 to disable." />
+                              <NumericUpDown Value="{Binding ResizeWidthBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
+                              <TextBlock Margin="5,0,0,0">px</TextBlock>
+                            </StackPanel>
+                            <StackPanel Classes="row" Margin="0,0,25,8">
+                              <ContentControl Classes="hint" Content="Resize Factor Before Upscale"
+                                              ToolTip.Tip="Resize each image by this factor before upscaling. This setting is ignored if Resize Height Before Upscale is specified." />
+                              <NumericUpDown Value="{Binding ResizeFactorBeforeUpscale}" Minimum="0" AllowSpin="False" ShowButtonSpinner="False" />
+                              <TextBlock Margin="5,0,0,0">%</TextBlock>
+                            </StackPanel>
+                          </WrapPanel>
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="*" MaxWidth="500" />
+                              <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl Classes="hint" Content="Model"
+                                            ToolTip.Tip="The upscaling model to run. To choose from more models, add PyTorch (*.pth) model files to the models directory. Select No Model to skip running any upscaling model for this chain." />
+                            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" />
+                            <Button Grid.Column="2" Margin="5,0,0,0" ToolTip.Tip="Open Models Directory" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
+                              <StackPanel Orientation="Horizontal">
+                                <materialIcons:MaterialIcon Kind="Launch" />
+                                <TextBlock Margin="5,0,0,0" Text="Models Folder" />
+                              </StackPanel>
+                            </Button>
+                          </Grid>
+                          <StackPanel Classes="row">
+                            <ContentControl Classes="hint" Content="Model Tile Size"
+                                            ToolTip.Tip="Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users." />
+                            <ui:FAComboBox IsEditable="True" Width="160" MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
+                                           ItemsSource="{Binding TileSizes}" />
+                            <TextBlock Margin="5,0,0,0">px</TextBlock>
+                          </StackPanel>
                         </StackPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                  <StackPanel Orientation="Horizontal" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
-                    <Button Margin="10,20,0,20" Command="{Binding AddChain}">
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Classes="row" Margin="0,10,0,0" IsVisible="{Binding !CurrentWorkflow.IsDefaultWorkflow}">
+                  <ContentControl Classes="hint"
+                                  ToolTip.Tip="A chain is a set of upscale settings which can be activated based on conditions such as the image resolution and whether the image is color or grayscale. This allows you to specify different upscale models for different types of images.">
+                    <Button Command="{Binding AddChain}">
                       <StackPanel Orientation="Horizontal">
                         <materialIcons:MaterialIcon Kind="PlusCircle" />
                         <TextBlock Margin="5,0,0,0">Add Chain</TextBlock>
                       </StackPanel>
                     </Button>
-                    <TextBlock Foreground="Gray" Width="700" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      A chain is a a set of upscale settings which can be activated based on conditions such as the image resolution and whether the image is color or grayscale.
-                      This allows you to specify different upscale models for different types of images.
-                    </TextBlock>
-                  </StackPanel>
+                  </ContentControl>
                 </StackPanel>
-              </Border>
-            </StackPanel>
+              </StackPanel>
+            </Expander>
 
+            <!-- Output -->
+            <Expander Classes="section" IsExpanded="{Binding CurrentWorkflow.OutputSectionExpanded}">
+              <Expander.Header>
+                <Grid ColumnDefinitions="170,*">
+                  <TextBlock Classes="sectionTitle" Text="Output" />
+                  <TextBlock Grid.Column="1" Classes="summary" Text="{Binding CurrentWorkflow.OutputSummary}" />
+                </Grid>
+              </Expander.Header>
+              <StackPanel Spacing="12" IsEnabled="{Binding !Upscaling}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <ContentControl Classes="hint" Content="Output Folder"
+                                  ToolTip.Tip="Path of the folder to save the upscaled image(s) or archive(s)." />
+                  <TextBox Grid.Column="1" x:Name="OutputFolderNameTextBox" Classes="clearButton" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.OutputFolderPath}" DragDrop.AllowDrop="True" />
+                  <Button Grid.Column="2" Content="Select Folder" Click="OpenOutputFolderButtonClick" />
+                </Grid>
+
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MaxWidth="500" />
+                  </Grid.ColumnDefinitions>
+                  <ContentControl Classes="hint" Content="Output Filename">
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap">The filename of the upscaled image(s) or archive(s), without the file extension. <Run FontFamily="Consolas">%filename%</Run> is the input filename without extension. Archives will be output with .cbz extension; images will be output with the extension of the image format selected below.</TextBlock>
+                    </ToolTip.Tip>
+                  </ContentControl>
+                  <TextBox Grid.Column="1" Text="{Binding CurrentWorkflow.OutputFilename}" />
+                </Grid>
+
+                <ContentControl Classes="hint" HorizontalAlignment="Left"
+                                ToolTip.Tip="If unchecked, upscaling will be skipped for files that already exist in the output path. If checked, any files that already exist in the output path will be overwritten without warning. Use with caution.">
+                  <CheckBox IsChecked="{Binding CurrentWorkflow.OverwriteExistingFiles}">Allow Files in Output Path to be Overwritten</CheckBox>
+                </ContentControl>
+
+                <StackPanel Classes="row">
+                  <ContentControl Classes="hint" Content="Output Image Format">
+                    <ToolTip.Tip>
+                      <StackPanel Spacing="6">
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>WebP</Bold>: Modern format recommended for good quality and efficient filesize compression, with good compatibility on modern devices. Supports lossless and lossy compression.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>AVIF</Bold>: Modern format with better lossy compression efficiency than WebP, but not as widely supported and slower to save and load compared to WebP.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>PNG</Bold>: Lossless compressed format with excellent compatibility, but worse compression efficiency than WebP and AVIF.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>JPEG</Bold>: Lossy compressed format with excellent compatibility, but worse compression efficiency than WebP and AVIF.</TextBlock>
+                      </StackPanel>
+                    </ToolTip.Tip>
+                  </ContentControl>
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.WebpSelected}" Content="WebP" Command="{Binding CurrentWorkflow.SetWebpSelected}" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.AvifSelected}" Content="AVIF" Command="{Binding CurrentWorkflow.SetAvifSelected}" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.PngSelected}" Content="PNG" Command="{Binding CurrentWorkflow.SetPngSelected}" />
+                  <ToggleButton IsChecked="{Binding CurrentWorkflow.JpegSelected}" Content="JPEG" Command="{Binding CurrentWorkflow.SetJpegSelected}" />
+                </StackPanel>
+
+                <ContentControl Classes="hint" HorizontalAlignment="Left" IsVisible="{Binding CurrentWorkflow.ShowUseLosslessCompression}"
+                                ToolTip.Tip="Use lossless compression. Usually not recommended due to producing images with much larger filesize with little visual benefit.">
+                  <CheckBox IsChecked="{Binding CurrentWorkflow.UseLosslessCompression}">Use Lossless Compression</CheckBox>
+                </ContentControl>
+
+                <StackPanel Classes="row" IsVisible="{Binding CurrentWorkflow.ShowLossyCompressionQuality}">
+                  <ContentControl Classes="hint" Content="Lossy Compression Quality"
+                                  ToolTip.Tip="Quality level for compression. Note that a quality level of 100 is still lossy." />
+                  <NumericUpDown Margin="0,0,5,0" Value="{Binding CurrentWorkflow.LossyCompressionQuality}" Increment="1" Minimum="0" Maximum="100" Width="120" />
+                  <TextBlock>%</TextBlock>
+                </StackPanel>
+              </StackPanel>
+            </Expander>
 
           </StackPanel>
         </ScrollViewer>
