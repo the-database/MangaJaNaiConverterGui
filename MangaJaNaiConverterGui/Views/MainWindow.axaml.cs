@@ -400,19 +400,6 @@ namespace MangaJaNaiConverterGui.Views
             }
         }
 
-        private async void ReinstallBackendClick(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is MainWindowViewModel vm)
-            {
-                var confirm = await ShowConfirmationDialog("Reinstall Python Backend", "The existing Python backend will be removed and then reinstalled. Your workflow settings will be preserved. This process will take several minutes. Proceed?");
-
-                if (confirm)
-                {
-                    await vm.ReinstallBackend();
-                }
-            }
-        }
-
         private async Task<bool> ShowConfirmationDialog(string title, string message)
         {
             var dialog = new Window

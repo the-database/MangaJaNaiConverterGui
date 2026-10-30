@@ -3,9 +3,9 @@ using ReactiveUI;
 
 namespace MangaJaNaiConverterGui.Services
 {
-    public class SuspensionDriverService(IPythonService pythonService) : ISuspensionDriverService
+    public class SuspensionDriverService(IBackendService backendService) : ISuspensionDriverService
     {
-        private readonly ISuspensionDriver _driver = new NewtonsoftJsonSuspensionDriver(pythonService.AppStatePath);
+        private readonly ISuspensionDriver _driver = new NewtonsoftJsonSuspensionDriver(backendService.AppStatePath);
         public ISuspensionDriver SuspensionDriver => _driver;
     }
 }

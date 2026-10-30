@@ -547,7 +547,7 @@
                                   <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <ContentControl Classes="hint" Content="Model"
-                                                ToolTip.Tip="The upscaling model to run. To choose from more models, add PyTorch (*.pth) model files to the models directory. Select No Model to skip running any upscaling model for this chain." />
+                                                ToolTip.Tip="The upscaling model to run. To choose from more models, add ONNX (*.onnx) model files to the models folder (App Settings &gt; Models). Select No Model to skip running any upscaling model for this chain." />
                                 <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" />
                                 <Button Grid.Column="2" Margin="5,0,0,0" ToolTip.Tip="Open Models Directory" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
                                   <materialIcons:MaterialIcon Kind="FolderOpen" />
@@ -555,7 +555,7 @@
                               </Grid>
                               <StackPanel Classes="row">
                                 <ContentControl Classes="hint" Content="Model Tile Size"
-                                                ToolTip.Tip="Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. The auto setting estimates the largest tile size which can be used based on available VRAM and is recommended for most users." />
+                                                ToolTip.Tip="Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. Auto uses 512, which suits most GPUs. With TensorRT, each tile size builds its own engine the first time it is used." />
                                 <ui:FAComboBox IsEditable="True" Width="160" MaxDropDownHeight="600" Text="{Binding ModelTileSize, Mode=TwoWay}"
                                                ItemsSource="{Binding TileSizes}" />
                                 <TextBlock Margin="5,0,0,0">px</TextBlock>
@@ -756,31 +756,38 @@
             <StackPanel Spacing="12">
               <TextBlock FontWeight="Bold" Text="Upscale Settings" />
               <StackPanel Classes="row">
-                <ContentControl Classes="hint" Content="Device"
-                                ToolTip.Tip="Which device to use for upscaling with PyTorch. CPU is much slower than GPU and should be avoided unless no GPU is available." />
-                <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}" />
+                <ContentControl Classes="hint" Content="Backend">
+                  <ToolTip.Tip>
+                    <StackPanel Spacing="6">
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Auto</Bold>: TensorRT on an NVIDIA GPU it supports, otherwise DirectML.</TextBlock>
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT</Bold>: fastest, NVIDIA RTX GPUs only. Builds an engine for each model and tile size the first time it's used, which takes a few minutes.</TextBlock>
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>DirectML</Bold>: any DirectX 12 GPU (NVIDIA, AMD, Intel). Slower than TensorRT, with no engine build.</TextBlock>
+                    </StackPanel>
+                  </ToolTip.Tip>
+                </ContentControl>
+                <ToggleButton IsChecked="{Binding AutoBackendSelected, Mode=OneWay}" Content="Auto" Command="{Binding SetBackendAuto}" IsEnabled="{Binding !Upscaling}" />
+                <ToggleButton IsChecked="{Binding TensorRtBackendSelected, Mode=OneWay}" Content="TensorRT" Command="{Binding SetBackendTensorRt}" IsEnabled="{Binding !Upscaling}" />
+                <ToggleButton IsChecked="{Binding DirectMlBackendSelected, Mode=OneWay}" Content="DirectML" Command="{Binding SetBackendDirectMl}" IsEnabled="{Binding !Upscaling}" />
               </StackPanel>
-              <ContentControl Classes="hint" HorizontalAlignment="Left"
-                              ToolTip.Tip="Runs PyTorch upscaling in FP16 mode for less VRAM usage and speedup on RTX GPUs.">
-                <CheckBox IsChecked="{Binding UseFp16}">FP16 Mode</CheckBox>
-              </ContentControl>
+              <StackPanel Classes="row">
+                <ContentControl Classes="hint" Content="Device"
+                                ToolTip.Tip="Which GPU upscales." />
+                <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}" IsEnabled="{Binding !Upscaling}" />
+              </StackPanel>
+              <TextBlock Foreground="Gray" TextWrapping="Wrap" Text="{Binding DeviceStatusText}" />
             </StackPanel>
           </Border>
 
-          <!-- Python Environment -->
+          <!-- Models -->
           <Border Classes="border">
             <StackPanel Spacing="12">
-              <TextBlock FontWeight="Bold" Text="Python Environment" />
-              <SelectableTextBlock FontFamily="Consolas" TextWrapping="Wrap" Text="{Binding PythonPath}" />
-
-              <ScrollViewer Background="#111111" Height="300" HorizontalScrollBarVisibility="Auto" Foreground="Gray" PropertyChanged="ConsoleScrollViewer_PropertyChanged">
-                <SelectableTextBlock Margin="20" Text="{Binding PythonPipList}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
-              </ScrollViewer>
-
-              <ContentControl Classes="hint" HorizontalAlignment="Left"
-                              ToolTip.Tip="Reinstall the Python environment. Try this if you are having any problems getting upscales to work. This process may take several minutes.">
-                <Button FontWeight="Bold" Background="Red" Content="Reinstall Python Environment" Click="ReinstallBackendClick" />
-              </ContentControl>
+              <TextBlock FontWeight="Bold" Text="Models" />
+              <TextBlock TextWrapping="Wrap" Text="Put your own ONNX models (.onnx) in the models folder to use them in a chain. PyTorch models (.pth, .safetensors) need converting to ONNX first." />
+              <StackPanel Classes="row">
+                <Button Content="Open Models Folder" Command="{Binding OpenModelsDirectory}" />
+                <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/tree/main/tools/onnx-export" />
+              </StackPanel>
+              <TextBlock Foreground="Gray" FontFamily="Consolas" TextWrapping="Wrap" Text="{Binding ModelsDirectory}" />
             </StackPanel>
           </Border>
         </StackPanel>

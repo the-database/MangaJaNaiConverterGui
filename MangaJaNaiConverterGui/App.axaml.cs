@@ -26,7 +26,7 @@ namespace MangaJaNaiConverterGui
             // Create a new Autofac container builder.
             var builder = new ContainerBuilder();
             builder.RegisterType<MainWindowViewModel>().AsSelf();
-            builder.RegisterType<PythonService>().As<IPythonService>().SingleInstance();
+            builder.RegisterType<BackendService>().As<IBackendService>().SingleInstance();
             builder.RegisterType<UpdateManagerService>().As<IUpdateManagerService>().SingleInstance();
             builder.RegisterType<SuspensionDriverService>().As<ISuspensionDriverService>().SingleInstance();
             // etc.
@@ -50,17 +50,17 @@ namespace MangaJaNaiConverterGui
 
             autofacResolver.SetLifetimeScope(container);
 
-            var pythonService = container.Resolve<IPythonService>();
+            var backendService = container.Resolve<IBackendService>();
 
-            Directory.CreateDirectory(pythonService.AppStateFolder);
+            Directory.CreateDirectory(backendService.AppStateFolder);
 
             // The default state ships next to the app; the working directory is wherever the app was
             // launched from.
             var defaultStatePath = NewtonsoftJsonSuspensionDriver.DefaultStatePath;
-            if (!File.Exists(pythonService.AppStatePath) && File.Exists(defaultStatePath)
-                && !string.Equals(Path.GetFullPath(pythonService.AppStatePath), Path.GetFullPath(defaultStatePath), System.StringComparison.OrdinalIgnoreCase))
+            if (!File.Exists(backendService.AppStatePath) && File.Exists(defaultStatePath)
+                && !string.Equals(Path.GetFullPath(backendService.AppStatePath), Path.GetFullPath(defaultStatePath), System.StringComparison.OrdinalIgnoreCase))
             {
-                File.Copy(defaultStatePath, pythonService.AppStatePath);
+                File.Copy(defaultStatePath, backendService.AppStatePath);
             }
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime!);
@@ -81,6 +81,7 @@ namespace MangaJaNaiConverterGui
                 foreach (var chain in wf.Chains)
                 {
                     chain.Vm = state;
+                    chain.Migrate();
                 }
             }
 

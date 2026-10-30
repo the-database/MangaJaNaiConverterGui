@@ -149,7 +149,7 @@ async Task<int> ApplyAsync(bool noRelaunch)
             Console.WriteLine($"Updating from v{local} to v{release.Tag}...");
             string root = ReadStaged(release.Tag) ?? await StageAsync(release);
 
-            Console.WriteLine("Applying update (your settings, Python backend and models are kept)...");
+            Console.WriteLine("Applying update (your settings, models and engines are kept)...");
             ApplyOver(root, installDir);
 
             TryDelete(() => Directory.Delete(stagingRoot, true));
