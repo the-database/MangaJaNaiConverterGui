@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/the-database/traiNNer-redux/refs/heads/master/schemas/redux-config.schema.json
+# MangaJaNai 2.0 ONNX export: SPAN_S, fp16. For TensorRT 11 and ONNX Runtime DirectML.
+name: 2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16
+scale: 2
+num_gpu: auto
+
+network_g:
+  type: "span_s"
+
+path:
+  pretrain_network_g: "path/to/2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16.safetensors"
+
+onnx:
+  dynamo: false
+  dtype: fp16
+  opset: 17
+  shape: 1x3xHxW
+  verify: true
+  optimize: false
