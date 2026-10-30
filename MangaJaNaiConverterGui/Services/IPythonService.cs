@@ -8,7 +8,6 @@ namespace MangaJaNaiConverterGui.Services
     {
         bool IsPythonInstalled();
 
-        Task<bool> IsPythonUpdated();
         Task<bool> IsBackendUpdated();
         bool AreModelsInstalled();
         string BackendUrl { get; }
@@ -20,13 +19,10 @@ namespace MangaJaNaiConverterGui.Services
         string AppStateFolder { get; }
         string AppStatePath { get; }
         string AppStateFilename { get; }
-        string InstallUpdatePythonDependenciesCommand { get; }
         string PythonBackendVersionPath { get; }
         Version BackendVersion { get; }
-        void ExtractTgz(string gzArchiveName, string destFolder);
         void ExtractZip(string archivePath, string outFolder, ProgressChanged progressChanged);
         void Extract7z(string archivePath, string outFolder);
-        void AddPythonPth(string destFolder);
         AvaloniaList<string> AllModels { get; }
     }
 }
