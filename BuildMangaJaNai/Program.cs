@@ -56,10 +56,12 @@ const string OrtDmlVersion     = "1.24.4";                // Microsoft.ML.OnnxRu
 const string DirectMLVersion   = "1.15.4";                // Microsoft.AI.DirectML (NuGet)
 
 // The upscaling backend (yosh repo, crates/mangajanai-cli): mangajanai_upscale.exe, built on
-// yosh-engine + libaji. Empty until its first release; local builds use MANGAJANAI_CLI_LOCAL.
+// yosh-image + libaji, released on its own mangajanai-cli-v* tags. MANGAJANAI_CLI_LOCAL overrides it
+// with a local build.
 const string CliRepo           = "the-database/yosh";
-const string CliVersion        = "";
+const string CliVersion        = "mangajanai-cli-v0.1.0";
 const string CliAsset          = "mangajanai-cli-windows-x64.zip";
+const string CliSha256         = "1f43f8e953c300971785ce4388208dee50973146e9f70739477a67f1d45f4a6d";
 
 // The default ONNX models (opset 17, fp16 where the model allows: one set for TensorRT and DirectML),
 // published as an archive on each model's MangaJaNai release. Local builds can use
@@ -345,6 +347,7 @@ async Task InstallBackendCli()
         archive = Path.Combine(workDirectory, CliAsset);
         await DownloadFileAsync($"https://github.com/{CliRepo}/releases/download/{CliVersion}/{CliAsset}",
             archive, p => Console.WriteLine($"Downloading {CliAsset} ({p}%)..."));
+        VerifySha256(archive, CliSha256);
     }
     if (archive is null)
     {
