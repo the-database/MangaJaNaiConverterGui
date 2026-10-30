@@ -1357,9 +1357,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
             }
 
+            var labels = BackendDevice.Labels(devices);
             var savedId = SelectedDeviceId;
             var savedName = SelectedDeviceName;
             var selected = devices.FindIndex(d => d.Id == savedId);
+            if (selected < 0)
+            {
+                selected = Array.IndexOf(labels, savedName);
+            }
             if (selected < 0)
             {
                 selected = devices.FindIndex(d => d.Name == savedName);
@@ -1373,7 +1378,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             // Replacing the items clears the ComboBox's selection; select after, as a real change,
             // so the ComboBox picks it up even when the index is the same as before.
             _selectedDeviceIndex = -1;
-            DeviceList = devices.Select(d => d.Name).ToArray();
+            DeviceList = labels;
             if (devices.Count > 0)
             {
                 SelectedDeviceIndex = selected;
@@ -3016,5 +3021,26 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         [JsonProperty("vram")]
         public long Vram { get; set; }
+
+        // The device list shows every device the backend lists. Devices that share a name (two of the
+        // same card) get the end of their id, just long enough to tell them apart: "RTX 5090 (#2600)".
+        public static string[] Labels(IReadOnlyList<BackendDevice> devices) =>
+            devices.Select(d =>
+            {
+                var twins = devices.Where(o => o.Name == d.Name).ToList();
+                if (twins.Count < 2)
+                {
+                    return d.Name;
+                }
+                var longest = twins.Max(o => o.Id.Length);
+                var n = Math.Min(4, longest);
+                while (n < longest && twins.Select(o => Tail(o.Id, n)).Distinct().Count() < twins.Count)
+                {
+                    n++;
+                }
+                return $"{d.Name} (#{Tail(d.Id, n)})";
+            }).ToArray();
+
+        private static string Tail(string id, int n) => id.Length <= n ? id : id[^n..];
     }
 }
