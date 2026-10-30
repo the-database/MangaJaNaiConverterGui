@@ -11,6 +11,7 @@ using FluentAvalonia.UI.Windowing;
 using MangaJaNaiConverterGui.ViewModels;
 using Material.Icons.Avalonia;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +20,8 @@ namespace MangaJaNaiConverterGui.Views
 {
     public partial class MainWindow : FAAppWindow
     {
-        private bool _autoScrollConsole = true;
+        // Consoles the user scrolled up in; the others follow new output.
+        private readonly HashSet<ScrollViewer> _scrolledUpConsoles = [];
         private bool _userWantsToQuit = false;
 
         public MainWindow()
@@ -101,30 +103,35 @@ namespace MangaJaNaiConverterGui.Views
 
         private void ConsoleScrollViewer_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property.Name == "Offset" && sender is ScrollViewer consoleScrollViewer)
+            if (e.Property.Name == "Offset" && sender is ScrollViewer consoleScrollViewer && e.NewValue is Vector newVector)
             {
-                if (e.NewValue is Vector newVector)
+                if (newVector.Y >= consoleScrollViewer.ScrollBarMaximum.Y)
                 {
-                    _autoScrollConsole = newVector.Y == consoleScrollViewer?.ScrollBarMaximum.Y;
+                    _scrolledUpConsoles.Remove(consoleScrollViewer);
+                }
+                else
+                {
+                    _scrolledUpConsoles.Add(consoleScrollViewer);
                 }
             }
-
         }
 
         private void ConsoleTextBlock_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property.Name == "Text" && sender is TextBlock textBlock)
+            if (e.Property.Name == "Text" && sender is TextBlock textBlock && textBlock.Parent is ScrollViewer consoleScrollViewer
+                && !_scrolledUpConsoles.Contains(consoleScrollViewer))
             {
-                if (textBlock.Parent is ScrollViewer consoleScrollViewer)
-                {
-                    if (consoleScrollViewer != null)
-                    {
-                        if (_autoScrollConsole)
-                        {
-                            consoleScrollViewer.ScrollToEnd();
-                        }
-                    }
-                }
+                consoleScrollViewer.ScrollToEnd();
+            }
+        }
+
+        // Dragging the handle above the console resizes it; the height is remembered.
+        private void ConsoleResizeDragDelta(object? sender, VectorEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                var max = Math.Max(100, Bounds.Height - 250);
+                vm.ConsoleHeight = Math.Clamp(vm.ConsoleHeight - e.Vector.Y, 100, max);
             }
         }
 

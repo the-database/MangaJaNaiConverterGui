@@ -201,6 +201,14 @@
           </StackPanel>
 
           <StackPanel IsVisible="{Binding ShowConsole}" >
+            <!-- drag to resize the console; the height is remembered -->
+            <Thumb Height="5" Cursor="SizeNorthSouth" Background="Transparent" DragDelta="ConsoleResizeDragDelta">
+              <Thumb.Template>
+                <ControlTemplate>
+                  <Border Background="{TemplateBinding Background}" />
+                </ControlTemplate>
+              </Thumb.Template>
+            </Thumb>
             <DockPanel>
               <TextBlock DockPanel.Dock="Left" Margin="20,10,0,0" FontWeight="Bold" Text="Console"></TextBlock>
               <ToggleButton DockPanel.Dock="Right" Margin="0,0,20,0" IsChecked="{Binding !ShowConsole}">
@@ -209,96 +217,95 @@
               <Rectangle/>
             </DockPanel>
 
-            <ScrollViewer Margin="0,10,0,0" Background="#111111" Height="450" HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+            <ScrollViewer Margin="0,10,0,0" Background="#111111" Height="{Binding ConsoleHeight}" HorizontalAlignment="Stretch" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
               <SelectableTextBlock Margin="20" Text="{Binding ConsoleText}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
             </ScrollViewer>
           </StackPanel>
 
+          <!-- Status bar: the console toggle and progress keep their space; the status and time
+               estimates trim when the window is narrow. -->
           <DockPanel Margin="0" Height="30" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch">
-
-            <TextBlock Margin="10,10,10,0" DockPanel.Dock="Left" FontSize="10" Text="{Binding LeftStatus}" VerticalAlignment="Center" />
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-
-              <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowEstimates}">
-                <TextBlock TextAlignment="Center" Width="140" FontSize="10" Margin="5,10,10,0" Text="{Binding ElapsedTime, StringFormat={}Elapsed Time: {0}}" />
-                <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowArchiveProgressBar}">
-                  <TextBlock TextAlignment="Center" Width="220" FontSize="10" Margin="5,10,10,0" Text="{Binding ArchiveEtr, StringFormat=Remaining Time (Current Archive): {0:hh\\:mm\\:ss}}" />
-                </StackPanel>
-                <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="5,10,10,0" Text="{Binding TotalEtr, StringFormat=Remaining Time (Total): {0:hh\\:mm\\:ss}}" />
-                <TextBlock TextAlignment="Center" Width="180" FontSize="10" Margin="5,10,10,0" Text="{Binding TotalEta, StringFormat={}Estimated Finish Time: {0}}" />
+            <ToggleButton DockPanel.Dock="Right" IsChecked="{Binding ShowConsole}" FontSize="10" Margin="5,0,5,0">
+              <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="Console" VerticalAlignment="Center" />
+                <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">Console</TextBlock>
               </StackPanel>
+            </ToggleButton>
 
-              <!-- progress within current archive -->
-              <ProgressBar  Margin="5,0,0,0" Height="20"
-                            Minimum="0"
-                            Maximum="{Binding ProgressTotalFilesInCurrentArchive}"
-                            Value="{Binding ProgressCurrentFileInArchive}"
-                            ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
-                            FontSize="10"
-                            ShowProgressText="True"
-                            MinWidth="50"
-                            Width="50"
-                            MaxWidth="50"
-                            IsVisible="{Binding ShowArchiveProgressBar}" />
+            <!-- total progress across all files -->
+            <ProgressBar DockPanel.Dock="Right" Margin="5,0,5,0" Height="20"
+                         Minimum="0"
+                         Maximum="{Binding ProgressTotalFiles}"
+                         Value="{Binding ProgressCurrentFile}"
+                         ProgressTextFormat="{}{0:0} / {3:0} total files"
+                         FontSize="10"
+                         Width="160"
+                         IsVisible="{Binding ShowEstimates}"
+                         ShowProgressText="True"/>
 
-              <!-- total progress across all files -->
-              <ProgressBar  Margin="5,0,5,0" Height="20"
-                            Minimum="0"
-                            Maximum="{Binding ProgressTotalFiles}"
-                            Value="{Binding ProgressCurrentFile}"
-                            ProgressTextFormat="{}{0:0} / {3:0} total files"
-                            FontSize="10"
-                            MinWidth="50"
-                            Width="50"
-                            MaxWidth="50"
-                            ShowProgressText="True"/>
+            <!-- progress within current archive -->
+            <ProgressBar DockPanel.Dock="Right" Margin="5,0,0,0" Height="20"
+                         Minimum="0"
+                         Maximum="{Binding ProgressTotalFilesInCurrentArchive}"
+                         Value="{Binding ProgressCurrentFileInArchive}"
+                         ProgressTextFormat="{}{0:0} / {3:0} images in current archive"
+                         FontSize="10"
+                         ShowProgressText="True"
+                         Width="220"
+                         IsVisible="{Binding ShowArchiveProgressBar}" />
 
-              <ToggleButton IsChecked="{Binding ShowConsole}" FontSize="10" Margin="5,0,5,0">
-                <StackPanel Orientation="Horizontal">
-                  <materialIcons:MaterialIcon Kind="Console" VerticalAlignment="Center" />
-                  <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">Console</TextBlock>
-                </StackPanel>
-              </ToggleButton>
+            <TextBlock Margin="10,0,10,0" DockPanel.Dock="Left" FontSize="10" TextTrimming="CharacterEllipsis" MaxWidth="400" Text="{Binding LeftStatus}" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" ClipToBounds="True" Spacing="20" Margin="5,0,10,0" IsVisible="{Binding ShowEstimates}">
+              <TextBlock FontSize="10" Text="{Binding ElapsedTime, StringFormat={}Elapsed Time: {0}}" />
+              <TextBlock FontSize="10" IsVisible="{Binding ShowArchiveProgressBar}" Text="{Binding ArchiveEtr, StringFormat=Remaining Time (Current Archive): {0:hh\\:mm\\:ss}}" />
+              <TextBlock FontSize="10" Text="{Binding TotalEtr, StringFormat=Remaining Time (Total): {0:hh\\:mm\\:ss}}" />
+              <TextBlock FontSize="10" Text="{Binding TotalEta, StringFormat={}Estimated Finish Time: {0}}" />
             </StackPanel>
-
-            <Rectangle />
           </DockPanel>
         </StackPanel>
 
         <ScrollViewer HorizontalScrollBarVisibility="Disabled">
           <!-- Main Form -->
           <StackPanel Margin="20">
-            <Grid>
-              <StackPanel Orientation="Horizontal" Margin="0,10,0,10" Grid.Column="0">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Workflow Name</TextBlock>
-                <TextBox Width="500" Margin="0,0,5,0" Text="{Binding CurrentWorkflow.WorkflowName}"/>
+            <!-- Workflow: name, expand/collapse all sections, and import/export/reset (short labels
+                 and icon-only buttons, so they fit beside the name at the minimum window width) -->
+            <DockPanel Margin="0,0,0,10">
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" Margin="10,0,0,0">
+                <Button Command="{Binding CurrentWorkflow.ExpandAllSections}" ToolTip.Tip="Expand all sections">
+                  <materialIcons:MaterialIcon Kind="ExpandAll" VerticalAlignment="Center" />
+                </Button>
+                <Button Command="{Binding CurrentWorkflow.CollapseAllSections}" ToolTip.Tip="Collapse all sections">
+                  <materialIcons:MaterialIcon Kind="CollapseAll" VerticalAlignment="Center" />
+                </Button>
+                <Button Click="ImportCurrentWorkflowButtonClick" ToolTip.Tip="Import Workflow">
+                  <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="Import" VerticalAlignment="Center" />
+                    <TextBlock Margin="8,0,4,0" VerticalAlignment="Center" Text="Import" />
+                  </StackPanel>
+                </Button>
+                <Button Click="ExportCurrentWorkflowButtonClick" ToolTip.Tip="Export Workflow">
+                  <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="Export" VerticalAlignment="Center" />
+                    <TextBlock Margin="8,0,4,0" VerticalAlignment="Center" Text="Export" />
+                  </StackPanel>
+                </Button>
+                <Button Click="ResetWorkflow" ToolTip.Tip="Reset Workflow">
+                  <StackPanel Orientation="Horizontal">
+                    <materialIcons:MaterialIcon Kind="Refresh" VerticalAlignment="Center" />
+                    <TextBlock Margin="8,0,4,0" VerticalAlignment="Center" Text="Reset" />
+                  </StackPanel>
+                </Button>
               </StackPanel>
-
-              <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                <StackPanel Margin="0,10,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
-
-                  <Button Margin="10,0,10,0" Click="ImportCurrentWorkflowButtonClick">
-                    <StackPanel Orientation="Horizontal">
-                      <materialIcons:MaterialIcon Kind="Import" VerticalAlignment="Center" />
-                      <TextBlock Margin="10,0,10,0" VerticalAlignment="Center">Import Workflow</TextBlock>
-                    </StackPanel>
-                  </Button>
-                  <Button Margin="10,0,10,0" Click="ExportCurrentWorkflowButtonClick">
-                    <StackPanel Orientation="Horizontal">
-                      <materialIcons:MaterialIcon Kind="Export" VerticalAlignment="Center" />
-                      <TextBlock Margin="10,0,10,0" VerticalAlignment="Center">Export Workflow</TextBlock>
-                    </StackPanel>
-                  </Button>
-                  <Button Margin="10,0,0,0" Click="ResetWorkflow">
-                    <StackPanel Orientation="Horizontal">
-                      <materialIcons:MaterialIcon Kind="Refresh" VerticalAlignment="Center" />
-                      <TextBlock Margin="10,0,10,0" VerticalAlignment="Center">Reset Workflow</TextBlock>
-                    </StackPanel>
-                  </Button>
-                </StackPanel>
-              </StackPanel>
-
-            </Grid>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" MaxWidth="500" />
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center" Margin="0,0,5,0" Text="Workflow Name" />
+                <TextBox Grid.Column="1" Text="{Binding CurrentWorkflow.WorkflowName}"/>
+              </Grid>
+            </DockPanel>
 
             <!-- The sections follow the pipeline: input, upscaling, the model chains that pick the
                  model for each image, output. Collapsed, each shows a one-line summary. -->
@@ -650,107 +657,77 @@
 
 
       <!-- Settings Overlay -->
-      <ScrollViewer IsVisible="{Binding ShowAppSettings}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,30" Grid.Column="2">
-      <StackPanel >
-        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
-          <DockPanel>
-            <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="App Settings"></TextBlock>
+      <ScrollViewer IsVisible="{Binding ShowAppSettings}" HorizontalScrollBarVisibility="Disabled" Grid.Column="2">
+        <StackPanel Margin="20" Spacing="8">
+          <DockPanel Margin="0,0,0,10">
+            <Button DockPanel.Dock="Right" Command="{Binding CloseAppSettings}">
+              <StackPanel Orientation="Horizontal">
+                <materialIcons:MaterialIcon Kind="ArrowBackCircle" />
+                <TextBlock Margin="5,0,0,0" Text="Back to Workflow" />
+              </StackPanel>
+            </Button>
+            <TextBlock Classes="sectionTitle" Text="App Settings" />
           </DockPanel>
 
-          <!-- App Settings -->
+          <!-- Updates -->
           <Border Classes="border">
-            <StackPanel>
-              <StackPanel IsVisible="{Binding IsInstalled}">
-                <StackPanel>
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                    <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" TextWrapping="Wrap">
-                      Download updates in the background and install them when MangaJaNaiConverterGui is closed. Updates are always checked for and shown here.
-                    </TextBlock>
-                  </StackPanel>
+            <StackPanel Spacing="12">
+              <TextBlock FontWeight="Bold" Text="Updates" />
+              <StackPanel Spacing="12" IsVisible="{Binding IsInstalled}">
+                <ContentControl Classes="hint" HorizontalAlignment="Left"
+                                ToolTip.Tip="Download updates in the background and install them when MangaJaNaiConverterGui is closed. Updates are always checked for and shown here.">
+                  <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
+                </ContentControl>
 
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                    <TextBlock Text="Current Version" VerticalAlignment="Center"></TextBlock>
-                    <TextBlock VerticalAlignment="Center" FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0"></TextBlock>
-                    <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
-                  </StackPanel>
-
-                  <TextBlock Margin="10,10,0,10" TextWrapping="Wrap" Text="{Binding UpdateStatusText}" />
-
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowCheckUpdateButton}">
-                    <Button Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
-                  </StackPanel>
-
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowApplyButton}">
-                    <Button Command="{Binding ApplyUpdate}" IsEnabled="{Binding !Upscaling}" ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNaiConverterGui</Button>
-                  </StackPanel>
+                <StackPanel Classes="row">
+                  <TextBlock Text="Current Version" />
+                  <TextBlock FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0" />
+                  <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
                 </StackPanel>
+
+                <TextBlock TextWrapping="Wrap" Text="{Binding UpdateStatusText}" />
+
+                <Button IsVisible="{Binding ShowCheckUpdateButton}" Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
+                <Button IsVisible="{Binding ShowApplyButton}" Command="{Binding ApplyUpdate}" IsEnabled="{Binding !Upscaling}"
+                        ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNaiConverterGui</Button>
               </StackPanel>
-              <StackPanel IsVisible="{Binding !IsInstalled}">
-                <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                  <TextBlock>App is not installed; auto update settings unavailable.</TextBlock>
-                </StackPanel>
-              </StackPanel>
+              <TextBlock IsVisible="{Binding !IsInstalled}" Text="App is not installed; auto update settings unavailable." />
             </StackPanel>
           </Border>
 
           <!-- Upscale Settings -->
-          <DockPanel Margin="0,10,0,0">
-            <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Upscale Settings"></TextBlock>
-          </DockPanel>
           <Border Classes="border">
-            <StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">Device</TextBlock>
-                <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}"  />
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Which device to use for upscaling with PyTorch. CPU is much slower than GPU and should be avoided unless no GPU is available.
-                </TextBlock>
+            <StackPanel Spacing="12">
+              <TextBlock FontWeight="Bold" Text="Upscale Settings" />
+              <StackPanel Classes="row">
+                <ContentControl Classes="hint" Content="Device"
+                                ToolTip.Tip="Which device to use for upscaling with PyTorch. CPU is much slower than GPU and should be avoided unless no GPU is available." />
+                <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}" />
               </StackPanel>
-
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+              <ContentControl Classes="hint" HorizontalAlignment="Left"
+                              ToolTip.Tip="Runs PyTorch upscaling in FP16 mode for less VRAM usage and speedup on RTX GPUs.">
                 <CheckBox IsChecked="{Binding UseFp16}">FP16 Mode</CheckBox>
-                <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Runs PyTorch upscaling in FP16 mode for less VRAM usage and speedup on RTX GPUs.
-                </TextBlock>
-              </StackPanel>
+              </ContentControl>
             </StackPanel>
           </Border>
 
           <!-- Python Environment -->
-          <DockPanel Margin="0,10,0,0">
-            <TextBlock DockPanel.Dock="Left" FontWeight="Bold" Text="Python Environment"></TextBlock>
-          </DockPanel>
           <Border Classes="border">
-            <StackPanel>
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                <SelectableTextBlock FontFamily="Consolas" Margin="0,0,5,0" VerticalAlignment="Center" Text="{Binding PythonPath}" />
-              </StackPanel>
+            <StackPanel Spacing="12">
+              <TextBlock FontWeight="Bold" Text="Python Environment" />
+              <SelectableTextBlock FontFamily="Consolas" TextWrapping="Wrap" Text="{Binding PythonPath}" />
 
-              <ScrollViewer Margin="0,10,0,0" Background="#111111" Height="450" HorizontalScrollBarVisibility="Auto" Foreground="Gray"  PropertyChanged="ConsoleScrollViewer_PropertyChanged">
+              <ScrollViewer Background="#111111" Height="300" HorizontalScrollBarVisibility="Auto" Foreground="Gray" PropertyChanged="ConsoleScrollViewer_PropertyChanged">
                 <SelectableTextBlock Margin="20" Text="{Binding PythonPipList}" FontFamily="Consolas" PropertyChanged="ConsoleTextBlock_PropertyChanged" />
               </ScrollViewer>
 
-              <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
+              <ContentControl Classes="hint" HorizontalAlignment="Left"
+                              ToolTip.Tip="Reinstall the Python environment. Try this if you are having any problems getting upscales to work. This process may take several minutes.">
                 <Button FontWeight="Bold" Background="Red" Content="Reinstall Python Environment" Click="ReinstallBackendClick" />
-                <TextBlock Foreground="Gray" Width="400" TextWrapping="WrapWithOverflow" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                  Reinstall the Python environment. Try this if you are having any problems getting upscales to work. This process may take several minutes.
-                </TextBlock>
-              </StackPanel>
-
+              </ContentControl>
             </StackPanel>
           </Border>
-
-          <Border Classes="border">
-            <ToggleButton DockPanel.Dock="Right" Margin="10,10,0,10" IsChecked="{Binding !RequestShowAppSettings}">
-              <StackPanel Orientation="Horizontal">
-                <materialIcons:MaterialIcon Kind="ArrowBackCircle" />
-                <TextBlock Margin="5,0,0,0">Return</TextBlock>
-              </StackPanel>
-            </ToggleButton>
-          </Border>
         </StackPanel>
-      </StackPanel>
       </ScrollViewer>
     </Grid>
 
