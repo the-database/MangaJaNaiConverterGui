@@ -1,6 +1,6 @@
 ; MangaJaNaiConverterGui setup installer (Inno Setup 6).
 ;
-; Wraps the install tree that build-package.ps1 produces into a per-user Windows installer.
+; Wraps the slim install tree that BuildMangaJaNai produces into a per-user Windows installer.
 ; Built in CI by deploy.yml:
 ;   ISCC.exe installer\mangajanaiconvertergui.iss /DAppVersion=<ver> /DSourceDir=<tree>
 ;
