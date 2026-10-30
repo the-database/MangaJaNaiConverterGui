@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/the-database/traiNNer-redux/refs/heads/master/schemas/redux-config.schema.json
+# MangaJaNai 2.0 ONNX export: ESRGAN, fp16. For TensorRT 11 and ONNX Runtime DirectML.
+name: 4x_MangaJaNai_1400p_V1_ESRGAN_105k
+scale: 4
+num_gpu: auto
+
+network_g:
+  type: "esrgan"
+
+path:
+  pretrain_network_g: "path/to/4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth"
+
+onnx:
+  dynamo: false
+  dtype: fp16
+  opset: 17
+  shape: 1x3xHxW
+  verify: true
+  optimize: false
