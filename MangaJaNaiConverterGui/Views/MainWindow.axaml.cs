@@ -44,7 +44,33 @@ namespace MangaJaNaiConverterGui.Views
         {
             if (DataContext is MainWindowViewModel vm)
             {
+                var sidebar = this.FindControl<Grid>("MainGrid")?.ColumnDefinitions[0];
+                if (sidebar != null && vm.SidebarWidth > 0)
+                {
+                    sidebar.Width = new GridLength(Math.Clamp(vm.SidebarWidth, sidebar.MinWidth, sidebar.MaxWidth));
+                }
+
                 vm.CheckAndExtractBackend();
+            }
+        }
+
+        private void SidebarSplitterDragCompleted(object? sender, VectorEventArgs e)
+        {
+            var sidebar = this.FindControl<Grid>("MainGrid")?.ColumnDefinitions[0];
+            if (DataContext is MainWindowViewModel vm && sidebar != null)
+            {
+                vm.SidebarWidth = sidebar.ActualWidth;
+            }
+        }
+
+        // Narrower than this, the sidebar shows only icons.
+        private const double CompactSidebarWidth = 120;
+
+        private void SidebarSizeChanged(object? sender, SizeChangedEventArgs e)
+        {
+            if (sender is Control sidebar)
+            {
+                sidebar.Classes.Set("compact", e.NewSize.Width < CompactSidebarWidth);
             }
         }
 

@@ -8,6 +8,8 @@
         xmlns:hypertext="clr-namespace:HyperText.Avalonia.Controls;assembly=HyperText.Avalonia"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:uip="using:FluentAvalonia.UI.Controls.Primitives"
+        WindowStartupLocation="CenterScreen"
+        MinWidth="900" MinHeight="600"
         x:Class="MangaJaNaiConverterGui.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/logo.ico"
@@ -41,6 +43,30 @@
         </Style>
       </Style>
     </Style>
+    <Style Selector="GridSplitter:pointerover, GridSplitter:pressed">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+    </Style>
+    <!-- Dragged narrow, the sidebar shows only icons; the names move to tooltips. -->
+    <Style Selector="DockPanel.compact TextBlock.sidebarLabel">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="Button.sidebarItem">
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Padding" Value="10"/>
+      <!-- beside the button, never under the pointer where it would eat the click -->
+      <Setter Property="ToolTip.Placement" Value="Right"/>
+    </Style>
+    <Style Selector="DockPanel.compact Button.sidebarItem">
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="DockPanel.compact StackPanel.sidebarHeader">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="DockPanel:not(.compact) Button.sidebarItem">
+      <Setter Property="ToolTip.ServiceEnabled" Value="False"/>
+    </Style>
   </Window.Styles>
   
     <Design.DataContext>
@@ -51,56 +77,55 @@
 
   <Grid>
     <!-- Main Content -->
-    <Grid ColumnDefinitions="300,*" RowDefinitions="*" IsVisible="{Binding !IsExtractingBackend}">
-      <DockPanel Grid.Column="0" Background="#33000000">
+    <Grid x:Name="MainGrid" RowDefinitions="*" IsVisible="{Binding !IsExtractingBackend}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="220" MinWidth="36" MaxWidth="400" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <DockPanel x:Name="Sidebar" Grid.Column="0" Background="#33000000" SizeChanged="SidebarSizeChanged">
 
         <StackPanel DockPanel.Dock="Bottom">
-          <TextBlock Margin="0">
-
-          </TextBlock>
-          <Button FontSize="13" Padding="10" Classes.active="{Binding ShowAppSettings}" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleAppSettingsSelected}">
-            <StackPanel Orientation="Horizontal">
+          <Button Classes="sidebarItem" Classes.active="{Binding ShowAppSettings}" ToolTip.Tip="App Settings" Command="{Binding HandleAppSettingsSelected}">
+            <DockPanel>
               <materialIcons:MaterialIcon Kind="Gear" VerticalAlignment="Center" />
-              <TextBlock Margin="5,0,5,0" VerticalAlignment="Center">App Settings</TextBlock>
-            </StackPanel>
+              <TextBlock Classes="sidebarLabel" Margin="5,0,5,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="App Settings" />
+            </DockPanel>
           </Button>
         </StackPanel>
 
         <StackPanel>
-          <TextBlock Margin="10">
-            Default Workflows
-          </TextBlock>
+          <StackPanel Classes="sidebarHeader" Margin="10">
+            <TextBlock Classes="sidebarLabel" TextTrimming="CharacterEllipsis" Text="Default Workflows" />
+          </StackPanel>
 
-          <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left" Command="{Binding HandleWorkflowSelected}" CommandParameter="0"
+          <Button Classes="sidebarItem" Command="{Binding HandleWorkflowSelected}" CommandParameter="0"
+                  ToolTip.Tip="{Binding Workflows[0].WorkflowName}"
                   Classes.active="{Binding Workflows[0].ActiveWorkflow}">
-            <StackPanel Orientation="Horizontal">
+            <DockPanel>
               <materialIcons:MaterialIcon Kind="Book" VerticalAlignment="Center" />
-              <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding Workflows[0].WorkflowName}" />
-            </StackPanel>
+              <TextBlock Classes="sidebarLabel" Margin="5,0,5,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Workflows[0].WorkflowName}" />
+            </DockPanel>
           </Button>
 
-          <StackPanel Orientation="Horizontal" Margin="10" ToolTip.Tip="Custom workflows provide convenient access to save and load preset settings for upscaling." ToolTip.ShowDelay="200">
-            <TextBlock Margin="0,0,5,0" VerticalAlignment="Center">
-              Custom Workflows
-            </TextBlock>
+          <StackPanel Classes="sidebarHeader" Orientation="Horizontal" Margin="10" ToolTip.Tip="Custom workflows provide convenient access to save and load preset settings for upscaling." ToolTip.ShowDelay="200">
+            <TextBlock Classes="sidebarLabel" Margin="0,0,5,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="Custom Workflows" />
             <materialIcons:MaterialIcon Kind="QuestionMarkCircle" VerticalAlignment="Center" Opacity="0.5" />
           </StackPanel>
 
           <ItemsControl ItemsSource="{Binding CustomWorkflows}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:UpscaleWorkflow">
-                <StackPanel>
-                  <Button FontSize="13" Padding="10" Width="300" HorizontalContentAlignment="Left"
-                          ClickMode="Press"
-                          Classes.active="{Binding ActiveWorkflow}"
-                          Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).HandleWorkflowSelected}"
-                          CommandParameter="{Binding WorkflowIndex}">
-                    <StackPanel Orientation="Horizontal">
-                      <materialIcons:MaterialIcon Kind="{Binding WorkflowIcon}" VerticalAlignment="Center" />
-                      <TextBlock Margin="5,0,5,0" VerticalAlignment="Center" Text="{Binding WorkflowName}" />
-                    </StackPanel>
-                  </Button>
-                </StackPanel>
+                <Button Classes="sidebarItem" ClickMode="Press" ToolTip.Tip="{Binding WorkflowName}"
+                        Classes.active="{Binding ActiveWorkflow}"
+                        Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).HandleWorkflowSelected}"
+                        CommandParameter="{Binding WorkflowIndex}">
+                  <DockPanel>
+                    <materialIcons:MaterialIcon Kind="{Binding WorkflowIcon}" VerticalAlignment="Center" />
+                    <TextBlock Classes="sidebarLabel" Margin="5,0,5,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding WorkflowName}" />
+                  </DockPanel>
+                </Button>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
@@ -108,7 +133,10 @@
 
       </DockPanel>
 
-      <DockPanel IsVisible="{Binding ShowMainForm}" Grid.Column="1">
+      <!-- drag to resize the sidebar; the width is remembered -->
+      <GridSplitter Grid.Column="1" Width="5" Background="Transparent" ResizeDirection="Columns" DragCompleted="SidebarSplitterDragCompleted" />
+
+      <DockPanel IsVisible="{Binding ShowMainForm}" Grid.Column="2">
 
         <StackPanel DockPanel.Dock="Bottom">
           <StackPanel Orientation="Horizontal">
@@ -599,7 +627,7 @@
 
 
       <!-- Settings Overlay -->
-      <ScrollViewer IsVisible="{Binding ShowAppSettings}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,30" Grid.Column="1">
+      <ScrollViewer IsVisible="{Binding ShowAppSettings}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,30" Grid.Column="2">
       <StackPanel >
         <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20">
           <DockPanel>
