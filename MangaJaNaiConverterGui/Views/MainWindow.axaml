@@ -715,6 +715,42 @@
             </StackPanel>
           </Border>
 
+          <!-- Components -->
+          <Border Classes="border" IsVisible="{Binding IsInstalled}">
+            <StackPanel Spacing="12">
+              <TextBlock FontWeight="Bold" Text="Components" />
+              <StackPanel Classes="row">
+                <TextBlock Text="GPU:" />
+                <TextBlock FontFamily="Consolas" Margin="8,0,0,0" TextWrapping="Wrap" Text="{Binding GpuStatusText}" />
+                <Button Margin="20,0,0,0" Content="Refresh" Command="{Binding RefreshComponents}" IsEnabled="{Binding AllowComponentChanges}" />
+              </StackPanel>
+
+              <ItemsControl x:Name="ComponentsList" ItemsSource="{Binding Components}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ComponentItem">
+                    <Grid ColumnDefinitions="*,80,100,Auto" Margin="0,4,0,4">
+                      <ContentControl Classes="hint" HorizontalAlignment="Left" Content="{Binding Title}" ToolTip.Tip="{Binding Description}" />
+                      <TextBlock Grid.Column="1" Foreground="Gray" Text="{Binding SizeText}" />
+                      <TextBlock Grid.Column="2" Foreground="Gray" Text="{Binding StateText}" />
+                      <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <Button Content="Install" IsVisible="{Binding CanInstall}"
+                                IsEnabled="{Binding #ComponentsList.((vm:MainWindowViewModel)DataContext).AllowComponentChanges}"
+                                Command="{Binding #ComponentsList.((vm:MainWindowViewModel)DataContext).InstallComponent}"
+                                CommandParameter="{Binding}" />
+                        <Button Content="Remove" IsVisible="{Binding CanRemove}"
+                                IsEnabled="{Binding #ComponentsList.((vm:MainWindowViewModel)DataContext).AllowComponentChanges}"
+                                Command="{Binding #ComponentsList.((vm:MainWindowViewModel)DataContext).RemoveComponent}"
+                                CommandParameter="{Binding}" />
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock Foreground="Gray" FontFamily="Consolas" TextWrapping="Wrap" Text="{Binding ComponentStatusText}" />
+            </StackPanel>
+          </Border>
+
           <!-- Upscale Settings -->
           <Border Classes="border">
             <StackPanel Spacing="12">

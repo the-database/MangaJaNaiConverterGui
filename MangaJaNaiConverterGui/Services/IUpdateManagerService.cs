@@ -25,5 +25,11 @@ namespace MangaJaNaiConverterGui.Services
         Task<string?> DownloadUpdateAsync(Action<string>? onLine, CancellationToken ct);
         void ApplyUpdateOnExit();
         string? TakeLastUpdateError();
+
+        // Component manager: shells the bundled updater. GetComponentsJsonAsync runs
+        // --components --json; RunUpdaterStreamingAsync runs --auto/--install/--remove with each
+        // stdout/stderr line delivered to onLine, returning the exit code.
+        Task<string> GetComponentsJsonAsync();
+        Task<int> RunUpdaterStreamingAsync(string arguments, Action<string>? onLine, CancellationToken ct = default);
     }
 }

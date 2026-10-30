@@ -120,7 +120,12 @@ namespace MangaJaNaiConverterGui.Services
             }
         }
 
-        private async Task<int> RunUpdaterStreamingAsync(string arguments, Action<string>? onLine, CancellationToken ct = default)
+        public async Task<string> GetComponentsJsonAsync()
+        {
+            return IsInstalled ? await RunUpdaterAsync("--components --json") : "";
+        }
+
+        public async Task<int> RunUpdaterStreamingAsync(string arguments, Action<string>? onLine, CancellationToken ct = default)
         {
             if (!IsInstalled)
             {
