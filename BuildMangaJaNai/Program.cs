@@ -47,8 +47,10 @@ const string TrtSha256Win      = "b6fd86301ad803492adf7a06de29ce45e3968d29637a14
 const string CudartVersion     = "13.4.49";
 const string CudartSha256Win   = "e6663f3d3e8949eedc2d5ab92c7c5b9fa3f2a222086d91c42bfc5a38bf2b0225";
 
-// the-database/animejanai-inference. v0.18.0 adds the still-image ABI (aji_image.h) the backend uses.
-const string AjiVersion        = "v0.18.0";
+// the-database/animejanai-inference. v0.18.0 added the still-image ABI (aji_image.h) the backend uses;
+// v0.18.2 makes DirectML device ids the card's PCI address, so they match TensorRT's and survive reboots.
+const string AjiVersion        = "v0.18.2";
+const string AjiSha256Win      = "e0c9c08335c234682f2f3583f1775d0274fc2516dfb28aeb70b668aed38ed481";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
 // DirectML backend runtime (aji_dml.dll loads both from its own directory). The last DirectML-flavored
 // ORT releases (DML is in sustained engineering); same pins as VideoJaNai.
@@ -238,6 +240,7 @@ async Task InstallAji()
         targetPath = Path.Combine(workDirectory, asset);
         await DownloadFileAsync($"https://github.com/the-database/animejanai-inference/releases/download/{AjiVersion}/{asset}",
             targetPath, p => Console.WriteLine($"Downloading {asset} ({p}%)..."));
+        VerifySha256(targetPath, AjiSha256Win);
     }
     // Only the libraries: the video tools (aji_encode, harnesses) aren't used by the image backend.
     ExtractZipFiltered(targetPath, entry =>
