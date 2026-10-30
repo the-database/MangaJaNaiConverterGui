@@ -559,10 +559,10 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        // The selected device's id. TensorRT's is the card's PCI address, stable across runs;
-        // DirectML's is Windows' adapter id until animejanai-inference moves it to the PCI address
-        // too, and changes on a reboot or driver restart. A saved id that's gone falls back to
-        // SelectedDeviceName and SelectedDeviceIndex.
+        // The selected device's id: the card's PCI address (animejanai-inference 0.18.2+), the same on
+        // both backends and across reboots. It changes only when the card moves slot, and older
+        // releases' DirectML ids changed every boot: a saved id that's gone falls back to
+        // SelectedDeviceIndex and SelectedDeviceName.
         private string? _selectedDeviceId;
         [DataMember]
         public string? SelectedDeviceId
