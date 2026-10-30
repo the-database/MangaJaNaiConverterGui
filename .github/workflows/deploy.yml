@@ -1,28 +1,73 @@
-name: Deploy to GitHub Releases
+name: Deploy
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number for the release'
+        description: 'Release version (used as the git tag and the package version)'
         required: true
-        default: ''
 
+# Builds the Inno-installer distribution and publishes a draft GitHub release:
+#   - MangaJaNaiConverterGui-Setup-<ver>.exe              per-user setup installer
+#   - MangaJaNaiConverterGui-full-package-<ver>.zip       the install tree (what MangaJaNaiUpdater downloads)
+#   - manifest.json                                       the package's version and file list
+# The Python backend and models are not in the package; the app downloads them on first launch.
+# MangaJaNaiUpdater only sees published releases (releases/latest skips drafts), so installed apps
+# update once the draft is published.
 jobs:
-  deploy-to-github-releases:
+  deploy:
     runs-on: windows-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Install .NET
-        uses: actions/setup-dotnet@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.x
-      - name: Publish Application
-        run: dotnet publish MangaJaNaiConverterGui/MangaJaNaiConverterGui.csproj -c Release -o publish -r win-x64
-      - name: Create Velopack Release
+          dotnet-version: '10.x'  # Must match <TargetFramework> across the projects
+
+      # Self-contained: it forms the install root and must run without a separately installed runtime.
+      - name: Publish app
+        run: dotnet publish MangaJaNaiConverterGui/MangaJaNaiConverterGui.csproj -c Release -r win-x64 --self-contained -o app-publish
+
+      # Single-file self-contained updater (set in its csproj).
+      - name: Publish updater
+        run: dotnet publish MangaJaNaiUpdater/MangaJaNaiUpdater.csproj -c Release -o updater-publish
+
+      - name: Assemble package
+        shell: pwsh
+        run: ./installer/build-package.ps1 -Version "${{ github.event.inputs.version }}" -AppDir app-publish -UpdaterExe updater-publish/MangaJaNaiUpdater.exe -OutDir publish
+
+      - name: Build setup installer
+        shell: pwsh
         run: |
-          dotnet tool install -g vpk --prerelease
-          vpk download github --repoUrl https://github.com/the-database/MangaJaNaiConverterGui
-          vpk pack -u MangaJaNaiConverterGui -v ${{ github.event.inputs.version }} -p publish  -i ./MangaJaNaiConverterGui/assets/logo.ico -e MangaJaNaiConverterGui.exe
-          vpk upload github --repoUrl https://github.com/the-database/MangaJaNaiConverterGui --releaseName "${{ github.event.inputs.version }}" --tag ${{ github.event.inputs.version }} --token ${{ secrets.GITHUB_TOKEN }}
+          choco install innosetup -y
+          $ver = "${{ github.event.inputs.version }}"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=$ver" `
+            "/DSourceDir=$(Resolve-Path "publish/MangaJaNaiConverterGui-v$ver")" `
+            "/O$(Get-Location)" `
+            installer/mangajanaiconvertergui.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Stage manifest
+        shell: pwsh
+        run: Copy-Item "publish/MangaJaNaiConverterGui-v${{ github.event.inputs.version }}/manifest.json" manifest.json
+
+      # allowUpdates + updateOnlyUnreleased: re-running the workflow refreshes the assets of a draft
+      # release instead of failing on the existing tag, and never touches a published release.
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.version }}
+          commit: ${{ github.sha }}
+          draft: true
+          prerelease: false
+          allowUpdates: true
+          updateOnlyUnreleased: true
+          artifacts: >-
+            MangaJaNaiConverterGui-Setup-${{ github.event.inputs.version }}.exe,
+            publish/MangaJaNaiConverterGui-full-package-${{ github.event.inputs.version }}.zip,
+            manifest.json
+          token: ${{ secrets.GITHUB_TOKEN }}
