@@ -16,9 +16,9 @@ using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Velopack;
 using File = System.IO.File;
 using Path = System.IO.Path;
 
@@ -33,7 +33,16 @@ namespace MangaJaNaiConverterGui.ViewModels
         private readonly DispatcherTimer _timer = new();
         private static readonly HttpClient client = new();
 
-        private UpdateInfo? _update = null;
+        // Auto update state: the latest release's version, the version staged by the background
+        // download (installed when the app closes), and the download in flight.
+        private string? _availableUpdateVersion;
+        private string? _readyUpdateVersion;
+        private CancellationTokenSource? _updateDownloadCts;
+        private string _updateDownloadProgress = "";
+        private string? _installError;
+        private string? _downloadError;
+        private bool _updateChecksStarted;
+        private static readonly TimeSpan UpdateCheckInterval = TimeSpan.FromHours(6);
 
         private readonly IPythonService _pythonService;
         private readonly IUpdateManagerService _updateManagerService;
@@ -407,17 +416,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _showCheckUpdateButton, value);
         }
 
-        private bool _showDownloadButton = false;
-        public bool ShowDownloadButton
-        {
-            get => _showDownloadButton;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _showDownloadButton, value);
-                this.RaisePropertyChanged(nameof(ShowCheckUpdateButton));
-            }
-        }
-
         private bool _showApplyButton = false;
         public bool ShowApplyButton
         {
@@ -485,7 +483,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _displayDeviceMap, value);
         }
 
-        private bool _autoUpdate;
+        private bool _autoUpdate = true;
         [DataMember]
         public bool AutoUpdateEnabled
         {
@@ -1547,23 +1545,58 @@ namespace MangaJaNaiConverterGui.ViewModels
             return [];
         }
 
+        // Called once for the app's state (not every view model instance): check now, then
+        // periodically, downloading in the background while Auto Update is on.
+        public void StartUpdateChecks()
+        {
+            if (_updateChecksStarted || !_updateManagerService.IsInstalled)
+            {
+                return;
+            }
+            _updateChecksStarted = true;
+            if (_updateManagerService.TakeLastUpdateError() is string error)
+            {
+                _installError = $"The last update failed to install: {error}";
+            }
+            bool autoUpdate = AutoUpdateEnabled;
+            this.WhenAnyValue(x => x.AutoUpdateEnabled).Subscribe(on =>
+            {
+                if (on == autoUpdate)
+                {
+                    return; // the current value, delivered on subscribe
+                }
+                autoUpdate = on;
+                if (on)
+                {
+                    StartUpdateDownload();
+                }
+                else
+                {
+                    CancelUpdateDownload();
+                }
+                UpdateStatus();
+            });
+            DispatcherTimer.Run(() =>
+            {
+                _ = CheckForUpdates();
+                return true;
+            }, UpdateCheckInterval);
+            _ = CheckForUpdates();
+        }
+
         public async Task CheckForUpdates()
         {
             try
             {
                 if (_updateManagerService.IsInstalled)
                 {
-                    await Task.Run(async () =>
+                    _availableUpdateVersion = await _updateManagerService.CheckForUpdateAsync().ConfigureAwait(true);
+                    if (_readyUpdateVersion != _availableUpdateVersion)
                     {
-                        _update = await _updateManagerService.CheckForUpdatesAsync().ConfigureAwait(true);
-                    });
-
-                    UpdateStatus();
-
-                    if (AutoUpdateEnabled)
-                    {
-                        await DownloadUpdate();
+                        _readyUpdateVersion = null; // a newer release replaced the staged one
                     }
+                    UpdateStatus();
+                    StartUpdateDownload();
                 }
             }
             catch (Exception ex)
@@ -1572,66 +1605,127 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public async Task DownloadUpdate()
+        private void StartUpdateDownload()
         {
-            try
+            if (!AutoUpdateEnabled || _availableUpdateVersion is null || _readyUpdateVersion == _availableUpdateVersion ||
+                _updateDownloadCts != null)
             {
-                if (_update != null)
+                return;
+            }
+            var cts = _updateDownloadCts = new CancellationTokenSource();
+            _updateDownloadProgress = "";
+            UpdateStatus();
+            _ = Task.Run(async () =>
+            {
+                string? ready = null;
+                string? failure = null;
+                string lastLine = "";
+                try
                 {
-                    ShowDownloadButton = false;
-                    await _updateManagerService.DownloadUpdatesAsync(_update, Progress).ConfigureAwait(true);
-                    UpdateStatus();
+                    ready = await _updateManagerService.DownloadUpdateAsync(line =>
+                    {
+                        lastLine = line;
+                        var percent = Regex.Match(line, @"(\d+)%$");
+                        var progress = percent.Success ? $"{percent.Groups[1].Value}%"
+                            : line.StartsWith("Extracting") ? "unpacking" : null;
+                        if (progress != null)
+                        {
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                _updateDownloadProgress = progress;
+                                UpdateStatus();
+                            });
+                        }
+                    }, cts.Token);
+                    if (ready is null)
+                    {
+                        failure = lastLine;
+                    }
                 }
-            }
-            catch
-            {
-
-            }
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    failure = ex.Message;
+                }
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_updateDownloadCts == cts)
+                    {
+                        _updateDownloadCts = null;
+                    }
+                    cts.Dispose();
+                    if (ready != null)
+                    {
+                        _readyUpdateVersion = ready;
+                        _downloadError = null;
+                    }
+                    else if (failure != null)
+                    {
+                        _downloadError = $"Downloading the update failed: {failure}";
+                    }
+                    UpdateStatus();
+                });
+            });
         }
 
+        private void CancelUpdateDownload()
+        {
+            _updateDownloadCts?.Cancel();
+            _updateDownloadCts = null;
+        }
+
+        // The bundled updater downloads (unless already staged) + applies in one step, then relaunches.
+        // Save the settings, launch it and exit so it can replace files.
         public void ApplyUpdate()
         {
-            if (_update != null)
+            if (Upscaling)
             {
-                ShowApplyButton = false;
-                _updateManagerService.ApplyUpdatesAndRestart(_update);
+                return;
+            }
+            CancelUpdateDownload();
+            ShowApplyButton = false;
+            UpdateStatusText = "Updating and restarting...";
+            // Environment.Exit skips the save a normal exit does.
+            _suspensionDriverService.SuspensionDriver.SaveState(this);
+            _updateManagerService.ApplyUpdateAndRestart();
+            Environment.Exit(0);
+        }
+
+        // On close: install an update the background download has staged.
+        public void OnAppExit()
+        {
+            CancelUpdateDownload();
+            if (AutoUpdateEnabled && _readyUpdateVersion != null)
+            {
+                _updateManagerService.ApplyUpdateOnExit();
             }
         }
 
         private void UpdateStatus()
         {
-            ShowDownloadButton = false;
-            ShowApplyButton = false;
-            ShowCheckUpdateButton = true;
-
-            if (_update != null)
+            string status;
+            if (string.IsNullOrEmpty(_availableUpdateVersion))
             {
-                UpdateStatusText = $"Update is available: {_update.TargetFullRelease.Version}";
-                ShowDownloadButton = true;
-                ShowCheckUpdateButton = false;
-
-                if (_updateManagerService.IsUpdatePendingRestart)
-                {
-                    UpdateStatusText = $"Update ready, pending restart to install version: {_update.TargetFullRelease.Version}";
-                    ShowDownloadButton = false;
-                    ShowApplyButton = true;
-                    ShowCheckUpdateButton = false;
-                }
-                else
-                {
-                }
+                status = "No updates found";
+            }
+            else if (_updateDownloadCts != null)
+            {
+                status = string.IsNullOrEmpty(_updateDownloadProgress)
+                    ? $"Downloading update {_availableUpdateVersion}..."
+                    : $"Downloading update {_availableUpdateVersion} ({_updateDownloadProgress})...";
+            }
+            else if (_readyUpdateVersion == _availableUpdateVersion && AutoUpdateEnabled)
+            {
+                status = $"Version {_availableUpdateVersion} is ready and will install when you close MangaJaNaiConverterGui.";
             }
             else
             {
-                UpdateStatusText = "No updates found";
+                status = $"Update available: {_availableUpdateVersion}";
             }
+            UpdateStatusText = string.Join("\n", new[] { _installError, _downloadError, status }.Where(x => x != null));
+            ShowApplyButton = !string.IsNullOrEmpty(_availableUpdateVersion);
+            ShowCheckUpdateButton = !ShowApplyButton;
         }
-
-        private void Progress(int percent)
-        {
-            UpdateStatusText = $"Downloading update {_update?.TargetFullRelease.Version} ({percent}%)...";
-        }
-
 
         public async void OpenModelsDirectory()
         {

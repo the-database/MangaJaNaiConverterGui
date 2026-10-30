@@ -613,8 +613,8 @@
                 <StackPanel>
                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
                     <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
-                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0">
-                      Whether to automatically check for and install app updates.
+                    <TextBlock Foreground="Gray" FontSize="12" VerticalAlignment="Center" Margin="20,0,0,0" TextWrapping="Wrap">
+                      Download updates in the background and install them when MangaJaNaiConverterGui is closed. Updates are always checked for and shown here.
                     </TextBlock>
                   </StackPanel>
 
@@ -624,20 +624,14 @@
                     <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
                   </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10">
-                    <TextBlock VerticalAlignment="Center" Text="{Binding UpdateStatusText}" Margin="0,0,0,0"></TextBlock>
-                  </StackPanel>
+                  <TextBlock Margin="10,10,0,10" TextWrapping="Wrap" Text="{Binding UpdateStatusText}" />
 
                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowCheckUpdateButton}">
                     <Button Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
                   </StackPanel>
 
-                  <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowDownloadButton}">
-                    <Button Command="{Binding DownloadUpdate}">Download Update</Button>
-                  </StackPanel>
-
                   <StackPanel Orientation="Horizontal" Margin="10,10,0,10" IsVisible="{Binding ShowApplyButton}">
-                    <Button Command="{Binding ApplyUpdate}">Restart to Update MangaJaNaiConverterGui</Button>
+                    <Button Command="{Binding ApplyUpdate}" IsEnabled="{Binding !Upscaling}" ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNaiConverterGui</Button>
                   </StackPanel>
                 </StackPanel>
               </StackPanel>

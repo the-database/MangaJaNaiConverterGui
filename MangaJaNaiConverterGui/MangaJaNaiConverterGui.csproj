@@ -47,7 +47,6 @@
     <!-- Must match the Splat major that ReactiveUI pulls in: 21.0.0 for ReactiveUI 26.0.1 (via ReactiveUI.Avalonia 12.1.6).
          A Splat.Autofac on another major pulls a binary-incompatible Splat.Core and crashes at startup. -->
     <PackageReference Include="Splat.Autofac" Version="21.0.0" />
-    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
 

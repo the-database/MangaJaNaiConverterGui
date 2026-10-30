@@ -43,7 +43,11 @@ namespace MangaJaNaiConverterGui.Services
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
         }
 
-        public string BackendDirectory => (_updateManagerService?.IsInstalled ?? false) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui") : Path.GetFullPath(@".\backend");
+        // An install keeps settings, the Python backend and models in %APPDATA% (where 1.x kept them
+        // too, so they carry over); a dev build keeps them next to the working directory.
+        private string InstalledDataFolder => Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), @"MangaJaNaiConverterGui");
+
+        public string BackendDirectory => (_updateManagerService?.IsInstalled ?? false) ? InstalledDataFolder : Path.GetFullPath(@".\backend");
 
         public string LogsDirectory => Path.Combine(BackendDirectory, "logs");
         public string ModelsDirectory => Path.Combine(BackendDirectory, "models");
@@ -56,9 +60,7 @@ namespace MangaJaNaiConverterGui.Services
         public string AppStateFolder =>
             Environment.GetEnvironmentVariable("MANGAJANAI_STATE_DIR") is { Length: > 0 } stateDir
                 ? stateDir
-                : ((_updateManagerService?.IsInstalled ?? false) && !(_updateManagerService?.IsPortable ?? false))
-                    ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), @"MangaJaNaiConverterGui")
-                    : Path.GetFullPath(@".");
+                : (_updateManagerService?.IsInstalled ?? false) ? InstalledDataFolder : Path.GetFullPath(@".");
 
         public string AppStateFilename => "appstate2.json";
         public string AppStatePath => Path.Join(AppStateFolder, AppStateFilename);

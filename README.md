@@ -8,7 +8,12 @@ This project provides a Windows GUI for upscaling manga images and archives with
 
 
 ## Instructions
-Simply download  [MangaJaNaiConverterGui-win-Setup.exe](https://github.com/the-database/MangaJaNaiConverterGui/releases/latest/download/MangaJaNaiConverterGui-win-Setup.exe) (if you want to install the app) or [MangaJaNaiConverterGui-win-Portable.zip](https://github.com/the-database/MangaJaNaiConverterGui/releases/latest/download/MangaJaNaiConverterGui-win-Portable.zip) (if you want a portable version of the app that isn't installed) from the [latest release](https://github.com/the-database/MangaJaNaiConverterGui/releases). Select your input file or folder, choose your upscale settings, and click Upscale. 
+Download and run `MangaJaNaiConverterGui-Setup-<version>.exe` from the [latest release](https://github.com/the-database/MangaJaNaiConverterGui/releases/latest). It installs for your user only, so no administrator rights are needed. The first launch downloads the Python backend and models. Then select your input file or folder, choose your upscale settings, and click Upscale.
+
+With **Auto Update** on (App Settings), updates download in the background and install when you close the app.
+
+### Upgrading from 1.x
+Version 2.0 uses a new installer and doesn't update itself from 1.x. Install 2.0 with the setup above: it removes the 1.x install and keeps your workflows, the Python backend and your models. Don't uninstall 1.x first; its uninstaller deletes the Python backend and the models folder, including any models you added.
 
 ### Important Note for NVIDIA Users
 

@@ -27,6 +27,8 @@ namespace MangaJaNaiConverterGui.Views
             AvaloniaXamlLoader.Load(this);
 
             Closing += MainWindow_Closing;
+            // Installs a staged update once the app has exited.
+            Closed += (_, _) => (DataContext as MainWindowViewModel)?.OnAppExit();
             Opened += MainWindow_Opened;
 
             var inputFileNameTextBox = this.FindControl<TextBox>("InputFileNameTextBox");

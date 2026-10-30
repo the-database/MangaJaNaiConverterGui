@@ -86,7 +86,7 @@ namespace MangaJaNaiConverterGui
 
             state.CurrentWorkflow?.Validate();
             state.CheckAndDoBackup();
-            _ = state.CheckForUpdates();
+            state.StartUpdateChecks();
 
             new MainWindow { DataContext = state }.Show();
             NewtonsoftJsonSuspensionDriver.StartupComplete = true;
