@@ -61,11 +61,19 @@ const string CliRepo           = "the-database/yosh";
 const string CliVersion        = "";
 const string CliAsset          = "mangajanai-cli-windows-x64.zip";
 
-// The default ONNX models (fp16, opset 17: one set for TensorRT and DirectML), published as two
-// archives on a MangaJaNai release. Empty until published; local builds use MANGAJANAI_MODELS_DIR.
+// The default ONNX models (opset 17, fp16 where the model allows: one set for TensorRT and DirectML),
+// published as an archive on each model's MangaJaNai release. Local builds can use
+// MANGAJANAI_MODELS_DIR instead.
 const string ModelsRepo        = "the-database/MangaJaNai";
-const string ModelsVersion     = "";
-string[] modelArchives = ["models-mangajanai.7z", "models-illustrationjanai.7z"];
+const string MangaJaNaiModelsTag        = "1.0.0";
+const string MangaJaNaiModelsAsset      = "MangaJaNai_V1_ONNX.7z";
+const string IllustrationJaNaiModelsTag   = "3.0.0";
+const string IllustrationJaNaiModelsAsset = "IllustrationJaNai_V3_ONNX.7z";
+(string Tag, string Asset)[] modelArchives =
+[
+    (MangaJaNaiModelsTag, MangaJaNaiModelsAsset),
+    (IllustrationJaNaiModelsTag, IllustrationJaNaiModelsAsset),
+];
 
 const string AppName = "MangaJaNaiConverterGui";
 
@@ -365,25 +373,21 @@ async Task InstallModels()
         {
             File.Copy(onnx, Path.Combine(modelsPath, Path.GetFileName(onnx)), true);
         }
-        archives.AddRange(modelArchives.Select(a => Path.Combine(local, a)).Where(File.Exists));
+        archives.AddRange(modelArchives.Select(a => Path.Combine(local, a.Asset)).Where(File.Exists));
     }
-    else if (ModelsVersion.Length > 0)
+    else
     {
-        foreach (var asset in modelArchives)
+        foreach (var (tag, asset) in modelArchives)
         {
-            Console.WriteLine($"Downloading {asset} ({ModelsVersion})...");
+            Console.WriteLine($"Downloading {asset} ({tag})...");
             var targetPath = Path.Combine(workDirectory, asset);
             double lastProgress = -1;
-            await DownloadFileAsync($"https://github.com/{ModelsRepo}/releases/download/{ModelsVersion}/{asset}", targetPath, p =>
+            await DownloadFileAsync($"https://github.com/{ModelsRepo}/releases/download/{tag}/{asset}", targetPath, p =>
             {
                 if (p >= lastProgress + 10) { Console.WriteLine($"Downloading {asset} ({p}%)..."); lastProgress = p; }
             });
             archives.Add(targetPath);
         }
-    }
-    else
-    {
-        Console.WriteLine("WARNING: no model release pinned and MANGAJANAI_MODELS_DIR unset; no models bundled.");
     }
     foreach (var archive in archives)
     {
@@ -450,7 +454,9 @@ void WriteVersionAndManifest()
             inference_runtime = $"trt-{TrtVersion}",
             ort_dml = $"{OrtDmlVersion}+{DirectMLVersion}",
             backend = CliVersion,
-            models = ModelsVersion,
+            // a pack's content changes only when its archive does
+            models_mangajanai = $"{MangaJaNaiModelsAsset}@{MangaJaNaiModelsTag}",
+            models_illustrationjanai = $"{IllustrationJaNaiModelsAsset}@{IllustrationJaNaiModelsTag}",
             sevenzip = SevenZipVersion,
         },
         // Runtime-created data in the install folder that an update must never touch.
@@ -559,8 +565,8 @@ async Task<List<string>> EmitComponentPacks()
                            n is "CUDA_LICENSE.txt" or "TensorRT_Acknowledgements.txt";
             return runtime && !builderResource;
         }))),
-        ("models-mangajanai", "models", ModelFiles("MangaJaNai_")),
-        ("models-illustrationjanai", "models", ModelFiles("IllustrationJaNai_")),
+        ("models-mangajanai", "models_mangajanai", ModelFiles("MangaJaNai_")),
+        ("models-illustrationjanai", "models_illustrationjanai", ModelFiles("IllustrationJaNai_")),
     };
     foreach (var f in Directory.GetFiles(inferencePath, "*builder_resource_*"))
     {
