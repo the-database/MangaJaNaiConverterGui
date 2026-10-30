@@ -483,6 +483,15 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _displayDeviceMap, value);
         }
 
+        // The workflow sidebar's width, dragged with its splitter (app-wide, not per workflow).
+        private double _sidebarWidth = 220;
+        [DataMember]
+        public double SidebarWidth
+        {
+            get => _sidebarWidth;
+            set => this.RaiseAndSetIfChanged(ref _sidebarWidth, value);
+        }
+
         private bool _autoUpdate = true;
         [DataMember]
         public bool AutoUpdateEnabled
