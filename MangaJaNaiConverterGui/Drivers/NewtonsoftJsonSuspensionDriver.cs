@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
 using ReactiveUI;
+using ReactiveUI.Primitives;
+using ReactiveUI.Primitives.Signals;
 using System;
 using System.IO;
-using System.Reactive;
-using System.Reactive.Linq;
+using System.Text.Json.Serialization.Metadata;
 
 namespace MangaJaNaiConverterGui.Drivers
 {
@@ -18,25 +19,40 @@ namespace MangaJaNaiConverterGui.Drivers
 
         public NewtonsoftJsonSuspensionDriver(string file) => _file = file;
 
-        public IObservable<Unit> InvalidateState()
+        public IObservable<RxVoid> InvalidateState()
         {
             if (File.Exists(_file))
                 File.Delete(_file);
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
         }
 
         public IObservable<object> LoadState()
         {
             var lines = File.ReadAllText(_file);
             var state = JsonConvert.DeserializeObject<object>(lines, Settings)!;
-            return Observable.Return(state);
+            return Signal.Return(state);
         }
 
-        public IObservable<Unit> SaveState(object state)
+        public IObservable<RxVoid> SaveState(object state)
         {
             var lines = JsonConvert.SerializeObject(state, Settings);
             File.WriteAllText(_file, lines);
-            return Observable.Return(Unit.Default);
+            return Signal.Return(RxVoid.Default);
+        }
+
+        // ReactiveUI 23 added AOT/source-gen-friendly generic overloads to ISuspensionDriver (and 26
+        // moved it off System.Reactive: RxVoid/Signal instead of Unit/Observable).
+        // We keep using Newtonsoft (with TypeNameHandling.All) for polymorphic state, so the
+        // JsonTypeInfo<T> metadata argument is ignored.
+        public IObservable<RxVoid> SaveState<T>(T state) => SaveState((object)state!);
+
+        public IObservable<RxVoid> SaveState<T>(T state, JsonTypeInfo<T> typeInfo) => SaveState((object)state!);
+
+        public IObservable<T?> LoadState<T>(JsonTypeInfo<T> typeInfo)
+        {
+            var lines = File.ReadAllText(_file);
+            var state = JsonConvert.DeserializeObject<T>(lines, Settings);
+            return Signal.Return(state);
         }
     }
 }

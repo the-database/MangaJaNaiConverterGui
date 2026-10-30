@@ -4,6 +4,7 @@ using MangaJaNaiConverterGui.Drivers;
 using MangaJaNaiConverterGui.Services;
 using Newtonsoft.Json;
 using ReactiveUI;
+using ReactiveUI.Primitives;
 using Splat;
 using System;
 using System.Collections.Concurrent;
@@ -12,7 +13,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -747,7 +747,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             var task = Task.Run(async () =>
             {
-                await _suspensionDriverService.SuspensionDriver.SaveState(this);
+                // The backend reads its settings from the saved state file.
+                _suspensionDriverService.SuspensionDriver.SaveState(this);
                 ElapsedTime = TimeSpan.FromSeconds(0);
                 ShowEstimates = true;
                 _archiveEtaCalculator.Reset();
@@ -1241,9 +1242,30 @@ namespace MangaJaNaiConverterGui.ViewModels
             if (workflow != null && CurrentWorkflow != null)
             {
                 workflow.WorkflowIndex = CurrentWorkflow.WorkflowIndex;
-                workflow.Vm = CurrentWorkflow.Vm;
-                CurrentWorkflow = workflow;
+                ReplaceCurrentWorkflow(workflow);
             }
+        }
+
+        // Wire up the new workflow and detach the replaced one so its subscriptions on this view model are disposed.
+        private void ReplaceCurrentWorkflow(UpscaleWorkflow workflow)
+        {
+            workflow.Vm = this;
+            foreach (var chain in workflow.Chains)
+            {
+                chain.Vm = this;
+            }
+
+            var old = CurrentWorkflow;
+            CurrentWorkflow = workflow;
+            if (old != null)
+            {
+                old.Vm = null;
+                foreach (var chain in old.Chains)
+                {
+                    chain.Vm = null;
+                }
+            }
+            workflow.Validate();
         }
 
         public void WriteCurrentWorkflowToFile(string fullPath)
@@ -1513,23 +1535,18 @@ namespace MangaJaNaiConverterGui.ViewModels
 
                 if (workflow != null)
                 {
-                    var defaultWorkflow = new UpscaleWorkflow
+                    ReplaceCurrentWorkflow(new UpscaleWorkflow
                     {
-                        Vm = this,
                         WorkflowIndex = workflowIndex,
                         WorkflowName = workflowName,
                         Chains = workflow.Chains
-                    };
-
-                    foreach (var chain in defaultWorkflow.Chains)
-                    {
-                        chain.Vm = this;
-                    }
-
-                    CurrentWorkflow = defaultWorkflow;
+                    });
                 }
             }
         }
+
+        // Avalonia 12 compiled bindings only convert zero/one-parameter methods to delegates.
+        public Func<string?, CancellationToken, Task<IEnumerable<object>>> DevicesPopulator => PopulateDevicesAsync;
 
         public async Task<IEnumerable<object>> PopulateDevicesAsync(string? searchText, CancellationToken cancellationToken)
         {
@@ -1691,15 +1708,21 @@ namespace MangaJaNaiConverterGui.ViewModels
                 x => x.ResizeWidthAfterUpscale
             );
 
-            g1.CombineLatest(g2).CombineLatest(g3).Subscribe(x =>
-            {
-                Validate();
-            });
+            g1.Subscribe(x => Validate());
+            g2.Subscribe(x => Validate());
+            g3.Subscribe(x => Validate());
 
-            this.WhenAnyValue(x => x.Vm).Subscribe(x =>
+            this.WhenAnyValue(x => x.Vm).Subscribe(vm =>
             {
                 sub?.Dispose();
-                sub = Vm.WhenAnyValue(
+                sub = null;
+                // Vm is null until App wires it up after loading (and while deserializing);
+                // ReactiveUI 26's generated WhenAnyValue throws on a null source.
+                if (vm is null)
+                {
+                    return;
+                }
+                sub = vm.WhenAnyValue(
                     x => x.SelectedWorkflowIndex,
                     x => x.RequestShowAppSettings
                     ).Subscribe(x =>
@@ -2282,10 +2305,15 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
 
-            this.WhenAnyValue(x => x.Vm).Subscribe(x =>
+            this.WhenAnyValue(x => x.Vm).Subscribe(vm =>
             {
                 sub?.Dispose();
-                sub = Vm.WhenAnyValue(
+                sub = null;
+                if (vm is null)
+                {
+                    return;
+                }
+                sub = vm.WhenAnyValue(
                     x => x.IsExtractingBackend
                     ).Subscribe(x =>
                     {
