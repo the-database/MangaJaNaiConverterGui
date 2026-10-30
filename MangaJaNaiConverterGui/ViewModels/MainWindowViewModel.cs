@@ -1342,19 +1342,24 @@ namespace MangaJaNaiConverterGui.ViewModels
                 var savedIndex = SelectedDeviceIndex;
                 var savedName = SelectedDeviceName;
                 var names = deviceResponse.AllDevices.Select(d => d.Name).ToArray();
-                DeviceList = names;
+                int selected;
                 if (savedName != null && savedIndex >= 0 && savedIndex < names.Length && names[savedIndex] == savedName)
                 {
-                    SelectedDeviceIndex = savedIndex;
+                    selected = savedIndex;
                 }
                 else if (savedName != null && Array.IndexOf(names, savedName) is >= 0 and var index)
                 {
-                    SelectedDeviceIndex = index;
+                    selected = index;
                 }
                 else
                 {
-                    SelectedDeviceIndex = deviceResponse.BestDevice;
+                    selected = deviceResponse.BestDevice;
                 }
+                // Replacing the items clears the ComboBox's selection; select after, as a real change,
+                // so the ComboBox picks it up even when the index is the same as before.
+                _selectedDeviceIndex = -1;
+                DeviceList = names;
+                SelectedDeviceIndex = selected;
             }
             else
             {
