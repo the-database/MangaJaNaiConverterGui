@@ -541,6 +541,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         // The backend the device list belongs to (Auto resolves to the one it found devices on).
         private string _deviceBackend = "tensorrt";
         private string[] _deviceIds = [];
+        private string[] _deviceNames = [];
 
         private int _selectedDeviceIndex;
         [DataMember]
@@ -552,13 +553,16 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaiseAndSetIfChanged(ref _selectedDeviceIndex, value);
                 if (value >= 0 && value < DeviceList.Length)
                 {
-                    SelectedDeviceName = DeviceList[value];
+                    SelectedDeviceName = _deviceNames[value];
                     SelectedDeviceId = _deviceIds[value];
                 }
             }
         }
 
-        // The selected device's id (stable across runs: its PCI location or adapter LUID).
+        // The selected device's id. TensorRT's is the card's PCI address, stable across runs;
+        // DirectML's is Windows' adapter id until animejanai-inference moves it to the PCI address
+        // too, and changes on a reboot or driver restart. A saved id that's gone falls back to
+        // SelectedDeviceName and SelectedDeviceIndex.
         private string? _selectedDeviceId;
         [DataMember]
         public string? SelectedDeviceId
@@ -576,7 +580,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _lastRunVersion, value);
         }
 
-        // The selected device's name, so the choice survives the device list changing order.
+        // The selected device's name (as the backend lists it, without the label's id suffix).
         private string? _selectedDeviceName;
         [DataMember]
         public string? SelectedDeviceName
@@ -1357,28 +1361,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
             }
 
-            var labels = BackendDevice.Labels(devices);
-            var savedId = SelectedDeviceId;
-            var savedName = SelectedDeviceName;
-            var selected = devices.FindIndex(d => d.Id == savedId);
-            if (selected < 0)
-            {
-                selected = Array.IndexOf(labels, savedName);
-            }
-            if (selected < 0)
-            {
-                selected = devices.FindIndex(d => d.Name == savedName);
-            }
-            if (selected < 0)
-            {
-                selected = 0;
-            }
+            var selected = BackendDevice.Find(devices, SelectedDeviceId, SelectedDeviceName, SelectedDeviceIndex);
             _deviceBackend = backend;
             _deviceIds = devices.Select(d => d.Id).ToArray();
+            _deviceNames = devices.Select(d => d.Name).ToArray();
             // Replacing the items clears the ComboBox's selection; select after, as a real change,
             // so the ComboBox picks it up even when the index is the same as before.
             _selectedDeviceIndex = -1;
-            DeviceList = labels;
+            DeviceList = BackendDevice.Labels(devices);
             if (devices.Count > 0)
             {
                 SelectedDeviceIndex = selected;
@@ -3042,5 +3032,31 @@ namespace MangaJaNaiConverterGui.ViewModels
             }).ToArray();
 
         private static string Tail(string id, int n) => id.Length <= n ? id : id[^n..];
+
+        // The saved device in a fresh list: by id; if that's gone, the device at the saved position
+        // when it has the saved name (which tells identical cards apart), else the first with that
+        // name; else the first device.
+        public static int Find(IReadOnlyList<BackendDevice> devices, string? id, string? name, int index)
+        {
+            for (var i = 0; i < devices.Count; i++)
+            {
+                if (devices[i].Id == id)
+                {
+                    return i;
+                }
+            }
+            if (index >= 0 && index < devices.Count && devices[index].Name == name)
+            {
+                return index;
+            }
+            for (var i = 0; i < devices.Count; i++)
+            {
+                if (devices[i].Name == name)
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
     }
 }
