@@ -46,13 +46,13 @@ namespace MangaJaNaiConverterGui.ViewModels
         private bool _updateChecksStarted;
         private static readonly TimeSpan UpdateCheckInterval = TimeSpan.FromHours(6);
 
-        private readonly IPythonService _pythonService;
+        private readonly IBackendService _backendService;
         private readonly IUpdateManagerService _updateManagerService;
         private readonly ISuspensionDriverService _suspensionDriverService;
 
-        public MainWindowViewModel(IPythonService? pythonService = null, IUpdateManagerService? updateManagerService = null, ISuspensionDriverService? suspensionDriverService = null)
+        public MainWindowViewModel(IBackendService? backendService = null, IUpdateManagerService? updateManagerService = null, ISuspensionDriverService? suspensionDriverService = null)
         {
-            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
+            _backendService = backendService ?? Locator.Current.GetService<IBackendService>()!;
             _updateManagerService = updateManagerService ?? Locator.Current.GetService<IUpdateManagerService>()!;
             _suspensionDriverService = suspensionDriverService ?? Locator.Current.GetService<ISuspensionDriverService>()!;
 
@@ -138,7 +138,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.safetensors",
+        "ModelFilePath": "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,
@@ -154,7 +154,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": true,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.safetensors",
+        "ModelFilePath": "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": false,
         "ResizeHeightBeforeUpscale": 0,
@@ -170,7 +170,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
+        "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -186,7 +186,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.pth",
+        "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -202,7 +202,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
+        "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -218,7 +218,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.pth",
+        "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -234,7 +234,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.pth",
+        "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -250,7 +250,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.pth",
+        "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -266,7 +266,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.pth",
+        "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -282,7 +282,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.pth",
+        "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -298,7 +298,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.pth",
+        "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -314,7 +314,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.pth",
+        "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -330,7 +330,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.pth",
+        "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -346,7 +346,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.pth",
+        "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -362,7 +362,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.pth",
+        "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -378,7 +378,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.pth",
+        "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -416,8 +416,9 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string TotalEta => _totalEtaCalculator.ETAIsAvailable ? _totalEtaCalculator.ETA.ToString("t") : _archiveEtaCalculator.ETAIsAvailable ? DateTime.Now.Add(TotalEtr).ToString("t") : "please wait";
 
         public bool IsInstalled => _updateManagerService.IsInstalled;
+        // The user's models folder; the backend also looks in the bundled one.
         [DataMember]
-        public string ModelsDirectory => _pythonService.ModelsDirectory;
+        public string ModelsDirectory => _backendService.UserModelsDirectory;
 
         private bool _showCheckUpdateButton = true;
         public bool ShowCheckUpdateButton
@@ -446,19 +447,14 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _updateStatusText, value);
         }
 
+        // Each tile size is its own TensorRT engine (built once per model on first use), so only a few.
         private string[] _tileSizes = [
             "Auto (Estimate)",
-            "Maximum",
-            "No Tiling",
-            "128",
-            "192",
             "256",
             "384",
             "512",
             "768",
-            "1024",
-            "2048",
-            "4096"];
+            "1024"];
 
         public string[] TileSizes
         {
@@ -476,13 +472,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaiseAndSetIfChanged(ref _deviceList, value);
                 this.RaisePropertyChanged(nameof(SelectedDeviceIndex));
             }
-        }
-
-        private string _pythonPipList = string.Empty;
-        public string PythonPipList
-        {
-            get => _pythonPipList;
-            set => this.RaiseAndSetIfChanged(ref _pythonPipList, value);
         }
 
         private AvaloniaDictionary<string, ReaderDevice> _displayDeviceMap = [];
@@ -519,6 +508,40 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _autoUpdate, value);
         }
 
+        // Which inference backend upscales: Auto (TensorRT when it can run, else DirectML), TensorRT or
+        // DirectML.
+        private string _upscaleBackend = "Auto";
+        [DataMember]
+        public string UpscaleBackend
+        {
+            get => _upscaleBackend;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _upscaleBackend, value);
+                this.RaisePropertyChanged(nameof(AutoBackendSelected));
+                this.RaisePropertyChanged(nameof(TensorRtBackendSelected));
+                this.RaisePropertyChanged(nameof(DirectMlBackendSelected));
+            }
+        }
+
+        public bool AutoBackendSelected => UpscaleBackend != "TensorRT" && UpscaleBackend != "DirectML";
+        public bool TensorRtBackendSelected => UpscaleBackend == "TensorRT";
+        public bool DirectMlBackendSelected => UpscaleBackend == "DirectML";
+
+        public async Task SetBackendAuto() => await SetBackend("Auto");
+        public async Task SetBackendTensorRt() => await SetBackend("TensorRT");
+        public async Task SetBackendDirectMl() => await SetBackend("DirectML");
+
+        private async Task SetBackend(string backend)
+        {
+            UpscaleBackend = backend;
+            await RefreshDevices();
+        }
+
+        // The backend the device list belongs to (Auto resolves to the one it found devices on).
+        private string _deviceBackend = "tensorrt";
+        private string[] _deviceIds = [];
+
         private int _selectedDeviceIndex;
         [DataMember]
         public int SelectedDeviceIndex
@@ -530,8 +553,27 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (value >= 0 && value < DeviceList.Length)
                 {
                     SelectedDeviceName = DeviceList[value];
+                    SelectedDeviceId = _deviceIds[value];
                 }
             }
+        }
+
+        // The selected device's id (stable across runs: its PCI location or adapter LUID).
+        private string? _selectedDeviceId;
+        [DataMember]
+        public string? SelectedDeviceId
+        {
+            get => _selectedDeviceId;
+            set => this.RaiseAndSetIfChanged(ref _selectedDeviceId, value);
+        }
+
+        // The version this state was last used with, so an update can refresh components once.
+        private string? _lastRunVersion;
+        [DataMember]
+        public string? LastRunVersion
+        {
+            get => _lastRunVersion;
+            set => this.RaiseAndSetIfChanged(ref _lastRunVersion, value);
         }
 
         // The selected device's name, so the choice survives the device list changing order.
@@ -541,22 +583,6 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             get => _selectedDeviceName;
             set => this.RaiseAndSetIfChanged(ref _selectedDeviceName, value);
-        }
-
-        private bool _useCpu;
-        [DataMember]
-        public bool UseCpu
-        {
-            get => _useCpu;
-            set => this.RaiseAndSetIfChanged(ref _useCpu, value);
-        }
-
-        private bool _useFp16;
-        [DataMember]
-        public bool UseFp16
-        {
-            get => _useFp16;
-            set => this.RaiseAndSetIfChanged(ref _useFp16, value);
         }
 
 
@@ -644,8 +670,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public string PythonPath => _pythonService.PythonPath;
-
         private bool _isExtractingBackend = true;
         public bool IsExtractingBackend
         {
@@ -680,7 +704,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        public string LeftStatus => !CurrentWorkflow.Valid ? ValidationText.Replace("\n", " ") : $"{InputStatusText} selected for upscaling.";
+        public string LeftStatus =>
+            !string.IsNullOrEmpty(EngineStatusText) ? EngineStatusText :
+            !CurrentWorkflow.Valid ? ValidationText.Replace("\n", " ") : $"{InputStatusText} selected for upscaling.";
 
         private int _progressCurrentFile = 0;
         public int ProgressCurrentFile
@@ -883,7 +909,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             catch (Exception ex) { ComponentStatusText = ex.Message; }
             ComponentsBusy = false;
+            _backendService.RefreshModels();
             await RefreshComponents();
+            await RefreshDevices();
         }
 
 
@@ -909,9 +937,27 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ProgressCurrentFileInArchive = 0;
                 ShowArchiveProgressBar = false;
 
-                var cmd = $@".\python\python\python.exe ""{Path.GetFullPath(@".\backend\src\run_upscale.py")}"" --settings ""{_pythonService.AppStatePath}""";
-                ConsoleQueueEnqueue($"Upscaling with command: {cmd}");
-                await RunCommand($@" /C {cmd}");
+                if (!_backendService.IsBackendInstalled)
+                {
+                    ConsoleQueueEnqueue($"The upscaling engine is missing ({_backendService.BackendExePath}). Install it from App Settings > Components.");
+                    return;
+                }
+                Directory.CreateDirectory(_backendService.EngineCacheDirectory);
+                var args = new List<string>
+                {
+                    "--settings", _backendService.AppStatePath,
+                    "--aji-dir", _backendService.InferenceDirectory,
+                    "--backend", _deviceIds.Length > 0 ? _deviceBackend : "auto",
+                    "--cache-dir", _backendService.EngineCacheDirectory,
+                    "--models-dir", _backendService.UserModelsDirectory,
+                    "--models-dir", _backendService.BundledModelsDirectory,
+                };
+                if (_deviceIds.Length > 0 && !string.IsNullOrEmpty(SelectedDeviceId))
+                {
+                    args.AddRange(["--device", SelectedDeviceId]);
+                }
+                ConsoleQueueEnqueue($"Upscaling with: {_backendService.BackendExePath} {string.Join(' ', args.Select(a => a.Contains(' ') ? $"\"{a}\"" : a))}");
+                await RunCommand(args);
 
                 CurrentWorkflow.Valid = true;
             }, ct);
@@ -1038,8 +1084,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                         foreach (var inputImagePath in images)
                         {
                             var outputImagePath = Path.Join(
-                                                        Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
-                                                        CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))) + $"{CurrentWorkflow.ImageFormat}";
+                                                        OutputDirectoryFor(inputImagePath),
+                                                        CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputImagePath))) + $".{CurrentWorkflow.ImageFormat}";
                             // if out file exists, exist count ++
                             // if overwrite image OR out file doesn't exist, count image++
                             var fileExists = File.Exists(outputImagePath);
@@ -1070,7 +1116,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         foreach (var inputArchivePath in archives)
                         {
                             var outputArchivePath = Path.Join(
-                                                            Path.GetFullPath(CurrentWorkflow.OutputFolderPath),
+                                                            OutputDirectoryFor(inputArchivePath),
                                                             CurrentWorkflow.OutputFilename.Replace("%filename%", Path.GetFileNameWithoutExtension(inputArchivePath))) + ".cbz";
                             var fileExists = File.Exists(outputArchivePath);
 
@@ -1110,6 +1156,13 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
+        // A folder upscale mirrors the input's subfolders in the output folder.
+        private string OutputDirectoryFor(string inputPath)
+        {
+            var relative = Path.GetRelativePath(Path.GetFullPath(CurrentWorkflow.InputFolderPath), Path.GetDirectoryName(Path.GetFullPath(inputPath)) ?? "");
+            return Path.GetFullPath(Path.Join(CurrentWorkflow.OutputFolderPath, relative == "." ? "" : relative));
+        }
+
         public void AddChain()
         {
             CurrentWorkflow?.Chains.Add(new UpscaleChain
@@ -1144,24 +1197,26 @@ namespace MangaJaNaiConverterGui.ViewModels
 
 
 
-        public async Task RunCommand(string command)
+        public async Task RunCommand(IEnumerable<string> arguments)
         {
-            // Create a new process to run the CMD command
             using (var process = new Process())
             {
                 _runningProcess = process;
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = command;
+                process.StartInfo.FileName = _backendService.BackendExePath;
+                foreach (var a in arguments)
+                {
+                    process.StartInfo.ArgumentList.Add(a);
+                }
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
+                process.StartInfo.WorkingDirectory = _backendService.InferenceDirectory;
                 process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
-                // Create a StreamWriter to write the output to a log file
-                using (var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: false))
+                Directory.CreateDirectory(_backendService.LogsDirectory);
+                using (var outputFile = new StreamWriter(Path.Combine(_backendService.LogsDirectory, "upscale.log"), append: false))
                 {
                     process.ErrorDataReceived += (sender, e) =>
                     {
@@ -1203,6 +1258,15 @@ namespace MangaJaNaiConverterGui.ViewModels
                             }
                             else
                             {
+                                // A first-use TensorRT engine build takes minutes: say so in the status bar.
+                                if (e.Data.StartsWith("ENGINE_BUILD "))
+                                {
+                                    EngineStatusText = $"Building the TensorRT engine for {e.Data["ENGINE_BUILD ".Length..].Split(' ')[0]} (a few minutes, once per model)...";
+                                }
+                                else if (e.Data.StartsWith("ENGINE_READY "))
+                                {
+                                    EngineStatusText = string.Empty;
+                                }
                                 outputFile.WriteLine(e.Data); // Write the output to the log file
                                 ConsoleQueueEnqueue(e.Data);
                                 Debug.WriteLine(e.Data);
@@ -1214,121 +1278,116 @@ namespace MangaJaNaiConverterGui.ViewModels
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine(); // Start asynchronous reading of the output
                     await process.WaitForExitAsync();
+                    EngineStatusText = string.Empty;
                 }
 
             }
         }
 
-        public async Task<DeviceResponse?> InitializeDeviceList()
+        private string _engineStatusText = string.Empty;
+        public string EngineStatusText
         {
-            if (!File.Exists(@".\backend\src\device_list.py"))
+            get => _engineStatusText;
+            set
             {
-                return null;
+                this.RaiseAndSetIfChanged(ref _engineStatusText, value);
+                this.RaisePropertyChanged(nameof(LeftStatus));
             }
-
-            // Create a new process to run the CMD command
-            using (var process = new Process())
-            {
-                _runningProcess = process;
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C .\python\python\python.exe {Path.GetFullPath(@".\backend\src\device_list.py")}";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
-                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
-
-                var result = string.Empty;
-
-                // Create a StreamWriter to write the output to a log file
-                try
-                {
-                    using var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "upscale.log"), append: false);
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            //outputFile.WriteLine(e.Data); // Write the output to the log file
-                            //ConsoleQueueEnqueue(e.Data);
-                            Debug.WriteLine(e.Data);
-                        }
-                    };
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            result = e.Data;
-                            Debug.WriteLine(e.Data);
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
-                    await process.WaitForExitAsync();
-
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        return JsonConvert.DeserializeObject<DeviceResponse>(result);
-                    }
-                }
-                catch (IOException) { }
-            }
-
-            return null;
         }
 
-        public async Task<string> RunPythonPipList()
+        // Run the backend for a short query (e.g. --list-devices) and return its stdout.
+        private async Task<string> RunBackendQuery(params string[] arguments)
         {
-            List<string> result = [];
-
-            // Create a new process to run the CMD command
-            using (var process = new Process())
+            if (!_backendService.IsBackendInstalled)
             {
-                _runningProcess = process;
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C .\python\python\python.exe -m pip list";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
-                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
+                return string.Empty;
+            }
+            using var process = new Process();
+            process.StartInfo.FileName = _backendService.BackendExePath;
+            foreach (var a in arguments)
+            {
+                process.StartInfo.ArgumentList.Add(a);
+            }
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.WorkingDirectory = _backendService.InferenceDirectory;
+            process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+            process.Start();
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            _ = process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            return await stdout;
+        }
 
-                // Create a StreamWriter to write the output to a log file
-                try
+        private async Task<List<BackendDevice>> ListDevices(string backend)
+        {
+            try
+            {
+                var json = await RunBackendQuery("--list-devices", "--backend", backend, "--aji-dir", _backendService.InferenceDirectory);
+                return string.IsNullOrWhiteSpace(json) ? [] : JsonConvert.DeserializeObject<List<BackendDevice>>(json) ?? [];
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return [];
+            }
+        }
+
+        // Fill the device list for the chosen backend (Auto: TensorRT's devices if it can run here,
+        // else DirectML's), keeping the user's device while it's still there.
+        public async Task RefreshDevices()
+        {
+            var backends = UpscaleBackend switch
+            {
+                "TensorRT" => new[] { "tensorrt" },
+                "DirectML" => new[] { "directml" },
+                _ => new[] { "tensorrt", "directml" },
+            };
+            List<BackendDevice> devices = [];
+            var backend = backends[0];
+            foreach (var b in backends)
+            {
+                devices = await ListDevices(b);
+                backend = b;
+                if (devices.Count > 0)
                 {
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            //outputFile.WriteLine(e.Data); // Write the output to the log file
-                            //ConsoleQueueEnqueue(e.Data);
-                            Debug.WriteLine(e.Data);
-                        }
-                    };
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            result.Add(e.Data);
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
-                    await process.WaitForExitAsync();
+                    break;
                 }
-                catch (IOException) { }
             }
 
-            return string.Join("\n", result);
+            var savedId = SelectedDeviceId;
+            var savedName = SelectedDeviceName;
+            var selected = devices.FindIndex(d => d.Id == savedId);
+            if (selected < 0)
+            {
+                selected = devices.FindIndex(d => d.Name == savedName);
+            }
+            if (selected < 0)
+            {
+                selected = 0;
+            }
+            _deviceBackend = backend;
+            _deviceIds = devices.Select(d => d.Id).ToArray();
+            // Replacing the items clears the ComboBox's selection; select after, as a real change,
+            // so the ComboBox picks it up even when the index is the same as before.
+            _selectedDeviceIndex = -1;
+            DeviceList = devices.Select(d => d.Name).ToArray();
+            if (devices.Count > 0)
+            {
+                SelectedDeviceIndex = selected;
+            }
+            DeviceStatusText = devices.Count == 0
+                ? "No compatible GPU found. MangaJaNaiConverterGui needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
+                : $"Using {(backend == "tensorrt" ? "TensorRT" : "DirectML")}.";
+        }
+
+        private string _deviceStatusText = string.Empty;
+        public string DeviceStatusText
+        {
+            get => _deviceStatusText;
+            set => this.RaiseAndSetIfChanged(ref _deviceStatusText, value);
         }
 
         public async void ShowSettingsDialog()
@@ -1392,6 +1451,10 @@ namespace MangaJaNaiConverterGui.ViewModels
             if (workflow != null && CurrentWorkflow != null)
             {
                 workflow.WorkflowIndex = CurrentWorkflow.WorkflowIndex;
+                foreach (var chain in workflow.Chains)
+                {
+                    chain.Migrate();
+                }
                 ReplaceCurrentWorkflow(workflow);
             }
         }
@@ -1424,155 +1487,33 @@ namespace MangaJaNaiConverterGui.ViewModels
             File.WriteAllText(fullPath, lines);
         }
 
+        // On launch: an installed copy without its upscaling engine or models (a first run whose
+        // component download failed, or components removed), or just updated to a new version, runs
+        // the updater's --auto to install what this GPU needs. Then the models and devices are read.
         public async Task CheckAndExtractBackend()
         {
-            await Task.Run(async () =>
+            var version = _updateManagerService.AppVersion;
+            var updated = !string.IsNullOrEmpty(LastRunVersion) && LastRunVersion != version;
+            if (_updateManagerService.IsInstalled && (!_backendService.IsBackendInstalled || !_backendService.AreModelsInstalled || updated))
             {
                 IsExtractingBackend = true;
-
-                if (!Directory.Exists(_pythonService.LogsDirectory))
+                BackendSetupMainStatus = "Setting up the upscaling components for this GPU...";
+                try
                 {
-                    Directory.CreateDirectory(_pythonService.LogsDirectory);
+                    await Task.Run(() => _updateManagerService.RunUpdaterStreamingAsync("--auto", BackendSetupSubStatusQueueEnqueue));
                 }
-
-                if (!_pythonService.AreModelsInstalled())
+                catch (Exception ex)
                 {
-                    await DownloadModels();
+                    BackendSetupSubStatusQueueEnqueue(ex.Message);
                 }
-
-                if (!_pythonService.IsPythonInstalled() || !(await _pythonService.IsBackendUpdated()))
-                {
-                    // Download Python tgz
-                    BackendSetupMainStatus = "Downloading Python Backend...";
-                    var downloadUrl = _pythonService.BackendUrl;
-                    var targetPath = Path.Join(_pythonService.PythonDirectory, "backend.7z");
-                    if (Directory.Exists(_pythonService.PythonDirectory))
-                    {
-                        Directory.Delete(_pythonService.PythonDirectory, true);
-                    }
-                    Directory.CreateDirectory(_pythonService.PythonDirectory);
-                    await Downloader.DownloadFileAsync(downloadUrl, targetPath, (progress) =>
-                    {
-                        BackendSetupMainStatus = $"Downloading Python Backend ({progress}%)...";
-                    });
-
-                    // Extract Python 7z
-                    BackendSetupMainStatus = "Extracting Python Backend...";
-                    _pythonService.Extract7z(targetPath, _pythonService.PythonDirectory);
-
-                    Directory.Move(Path.Combine(_pythonService.PythonDirectory, "backend", "python"), Path.Combine(_pythonService.PythonDirectory, "python"));
-
-                    using (StreamWriter sw = File.CreateText(_pythonService.PythonBackendVersionPath))
-                    {
-                        sw.WriteLine(_pythonService.BackendVersion);
-                    }
-
-                    Directory.Delete(Path.Combine(_pythonService.PythonDirectory, "backend"));
-                    File.Delete(targetPath);
-                }
-
-                IsExtractingBackend = false;
-            });
-
-            var deviceResponse = await InitializeDeviceList();
-            if (deviceResponse != null)
-            {
-                // Keep the user's device if it's still there; otherwise use the best one.
-                var savedIndex = SelectedDeviceIndex;
-                var savedName = SelectedDeviceName;
-                var names = deviceResponse.AllDevices.Select(d => d.Name).ToArray();
-                int selected;
-                if (savedName != null && savedIndex >= 0 && savedIndex < names.Length && names[savedIndex] == savedName)
-                {
-                    selected = savedIndex;
-                }
-                else if (savedName != null && Array.IndexOf(names, savedName) is >= 0 and var index)
-                {
-                    selected = index;
-                }
-                else
-                {
-                    selected = deviceResponse.BestDevice;
-                }
-                // Replacing the items clears the ComboBox's selection; select after, as a real change,
-                // so the ComboBox picks it up even when the index is the same as before.
-                _selectedDeviceIndex = -1;
-                DeviceList = names;
-                SelectedDeviceIndex = selected;
             }
-            else
-            {
-                SelectedDeviceIndex = 1; // default to first non cpu device
-            }
+            LastRunVersion = version;
 
-            PythonPipList = await RunPythonPipList();
+            _backendService.RefreshModels();
+            IsExtractingBackend = false;
+            await RefreshDevices();
+            CurrentWorkflow?.Validate();
         }
-
-        public async Task ReinstallBackend()
-        {
-            if (Directory.Exists(_pythonService.ModelsDirectory))
-            {
-                Directory.Delete(_pythonService.ModelsDirectory, true);
-            }
-
-            if (Directory.Exists(_pythonService.PythonDirectory))
-            {
-                Directory.Delete(_pythonService.PythonDirectory, true);
-            }
-
-            await CheckAndExtractBackend();
-        }
-
-        public async Task DownloadModels()
-        {
-            BackendSetupMainStatus = "Downloading MangaJaNai Models...";
-            var download = "https://github.com/the-database/mangajanai/releases/download/1.0.0/MangaJaNai_V1_ModelsOnly.zip";
-            var targetPath = Path.Join(_pythonService.ModelsDirectory, "mangajanai.zip");
-            Directory.CreateDirectory(_pythonService.ModelsDirectory);
-            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
-            {
-                BackendSetupMainStatus = $"Downloading MangaJaNai Models ({progress}%)...";
-            });
-
-            BackendSetupMainStatus = "Extracting MangaJaNai Models...";
-            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
-            {
-                BackendSetupMainStatus = $"Extracting MangaJaNai Models ({progress}%)...";
-            });
-            File.Delete(targetPath);
-
-            BackendSetupMainStatus = "Downloading IllustrationJaNai V3denoise Models...";
-            download = "https://github.com/the-database/MangaJaNai/releases/download/3.0.0/IllustrationJaNai_V3denoise.zip";
-            targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
-            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
-            {
-                BackendSetupMainStatus = $"Downloading IllustrationJaNai V3denoise Models ({progress}%)...";
-            });
-
-            BackendSetupMainStatus = "Extracting IllustrationJaNai V3denoise Models...";
-            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
-            {
-                BackendSetupMainStatus = $"Extracting IllustrationJaNai V3denoise Models ({progress}%)...";
-            });
-            File.Delete(targetPath);
-
-            BackendSetupMainStatus = "Downloading IllustrationJaNai V3detail Models...";
-            download = "https://github.com/the-database/MangaJaNai/releases/download/3.0.0/IllustrationJaNai_V3detail.zip";
-            targetPath = Path.Join(_pythonService.ModelsDirectory, "illustrationjanai.zip");
-            await Downloader.DownloadFileAsync(download, targetPath, (progress) =>
-            {
-                BackendSetupMainStatus = $"Downloading IllustrationJaNai V3detail Models ({progress}%)...";
-            });
-
-            BackendSetupMainStatus = "Extracting IllustrationJaNai V3detail Models...";
-            _pythonService.ExtractZip(targetPath, _pythonService.ModelsDirectory, (double progress) =>
-            {
-                BackendSetupMainStatus = $"Extracting IllustrationJaNai V3detail Models ({progress}%)...";
-            });
-            File.Delete(targetPath);
-        }
-
-
 
         public void CheckAndDoBackup()
         {
@@ -1580,31 +1521,31 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 try
                 {
-                    if (!File.Exists(_pythonService.AppStatePath))
+                    if (!File.Exists(_backendService.AppStatePath))
                         return;
 
-                    var files = Directory.EnumerateFiles(_pythonService.AppStateFolder)
+                    var files = Directory.EnumerateFiles(_backendService.AppStateFolder)
                         .Where(f =>
                         {
                             var name = Path.GetFileName(f);
                             return name.StartsWith("autobackup_") &&
-                                   name.EndsWith(_pythonService.AppStateFilename);
+                                   name.EndsWith(_backendService.AppStateFilename);
                         })
                         .OrderByDescending(f => f)
                         .ToList();
 
                     var latestBackup = files.FirstOrDefault();
                     if (latestBackup is not null &&
-                        FilesAreEqual(_pythonService.AppStatePath, latestBackup))
+                        FilesAreEqual(_backendService.AppStatePath, latestBackup))
                     {
                         return;
                     }
 
                     var backupName =
-                        $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{_pythonService.AppStateFilename}";
-                    var backupPath = Path.Combine(_pythonService.AppStateFolder, backupName);
+                        $"autobackup_{DateTime.Now:yyyyMMdd-HHmmss}_{_backendService.AppStateFilename}";
+                    var backupPath = Path.Combine(_backendService.AppStateFolder, backupName);
 
-                    File.Copy(_pythonService.AppStatePath, backupPath);
+                    File.Copy(_backendService.AppStatePath, backupPath);
 
                     files.Insert(0, backupPath);
 
@@ -1875,7 +1816,8 @@ namespace MangaJaNaiConverterGui.ViewModels
         {
             await Task.Run(() =>
             {
-                Process.Start("explorer.exe", _pythonService.ModelsDirectory);
+                Directory.CreateDirectory(_backendService.UserModelsDirectory);
+                Process.Start("explorer.exe", _backendService.UserModelsDirectory);
             });
         }
     }
@@ -2669,6 +2611,15 @@ namespace MangaJaNaiConverterGui.ViewModels
                 validationText.Add("Tablet Device or Display is invalid. Please make a selection from the list of options.");
             }
 
+            foreach (var chain in Chains ?? [])
+            {
+                if (!chain.HasOnnxModel)
+                {
+                    valid = false;
+                    validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNaiConverterGui 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
+                }
+            }
+
             Valid = valid;
 
             if (Vm != null)
@@ -2688,11 +2639,11 @@ namespace MangaJaNaiConverterGui.ViewModels
     [DataContract]
     public class UpscaleChain : ReactiveObject
     {
-        IPythonService _pythonService;
+        IBackendService _backendService;
 
-        public UpscaleChain(IPythonService? pythonService = null)
+        public UpscaleChain(IBackendService? backendService = null)
         {
-            _pythonService = pythonService ?? Locator.Current.GetService<IPythonService>()!;
+            _backendService = backendService ?? Locator.Current.GetService<IBackendService>()!;
 
             this.WhenAnyValue(x => x.Vm).Subscribe(vm =>
             {
@@ -2961,7 +2912,45 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
-        public AvaloniaList<string> AllModels => _pythonService.AllModels;
+        public AvaloniaList<string> AllModels => _backendService.AllModels;
+
+        public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiConverterGui/tree/main/tools/onnx-export";
+
+        // 2.0 runs ONNX models; an empty model or "No Model" runs none.
+        public bool HasOnnxModel =>
+            string.IsNullOrWhiteSpace(ModelFilePath) || ModelFilePath == BackendService.NoModel ||
+            ModelFilePath.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase);
+
+        // 1.x's default models were PyTorch files (.pth / .safetensors); 2.0 ships their ONNX exports
+        // under the same names, so a saved or imported chain moves to the .onnx file.
+        // Bring a chain saved by 1.x up to 2.0: the ONNX default models, and a tile size from the
+        // shorter list.
+        public void Migrate()
+        {
+            ModelFilePath = MigrateModelName(ModelFilePath);
+            ModelTileSize = MigrateTileSize(ModelTileSize);
+        }
+
+        public static string MigrateTileSize(string tile) => tile switch
+        {
+            "Auto (Estimate)" or "256" or "384" or "512" or "768" or "1024" => tile,
+            "128" or "192" => "256",
+            "Maximum" or "No Tiling" or "2048" or "4096" => "1024",
+            _ => "Auto (Estimate)",
+        };
+
+        public static string MigrateModelName(string model)
+        {
+            if (string.IsNullOrWhiteSpace(model) || model.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase))
+            {
+                return model;
+            }
+            var ext = Path.GetExtension(model);
+            return Regex.IsMatch(Path.GetFileName(model), @"^\dx_(MangaJaNai|IllustrationJaNai)_", RegexOptions.IgnoreCase) &&
+                   (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase))
+                ? Path.ChangeExtension(model, ".onnx")
+                : model;
+        }
 
         private string[] _tileSizes = [
     "Auto (Estimate)",
@@ -3016,39 +3005,16 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
     }
 
-    public class DeviceResponse
+    // One entry of mangajanai_upscale --list-devices.
+    public class BackendDevice
     {
-        [JsonProperty("all_devices")]
-        public List<AcceleratorDevice> AllDevices { get; set; } = [];
-
-        [JsonProperty("best_device")]
-        public int BestDevice { get; set; }
-    }
-
-    public class AcceleratorDevice
-    {
-        [JsonProperty("type")]
-        public string Type { get; set; } = string.Empty;
-
-        [JsonProperty("index")]
-        public int Index { get; set; }
+        [JsonProperty("id")]
+        public string Id { get; set; } = "";
 
         [JsonProperty("name")]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } = "";
 
-        [JsonProperty("device_string")]
-        public string DeviceString { get; set; } = string.Empty;
-
-        [JsonProperty("supports_fp16")]
-        public bool SupportsFp16 { get; set; }
-
-        [JsonProperty("supports_bf16")]
-        public bool SupportsBf16 { get; set; }
-
-        [JsonProperty("memory_total")]
-        public long? MemoryTotal { get; set; }
-
-        [JsonProperty("memory_free")]
-        public long? MemoryFree { get; set; }
+        [JsonProperty("vram")]
+        public long Vram { get; set; }
     }
 }

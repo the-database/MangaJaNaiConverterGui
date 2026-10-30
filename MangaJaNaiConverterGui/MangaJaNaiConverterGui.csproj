@@ -42,8 +42,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.6" />
-    <PackageReference Include="SevenZipExtractor" Version="1.0.19" />
-    <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <!-- Must match the Splat major that ReactiveUI pulls in: 21.0.0 for ReactiveUI 26.0.1 (via ReactiveUI.Avalonia 12.1.6).
          A Splat.Autofac on another major pulls a binary-incompatible Splat.Core and crashes at startup. -->
     <PackageReference Include="Splat.Autofac" Version="21.0.0" />
@@ -54,8 +52,5 @@
     <None Update="appstate2.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <Content Include="backend\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 </Project>
