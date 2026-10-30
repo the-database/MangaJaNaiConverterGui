@@ -8,10 +8,11 @@ on:
         required: true
 
 # Builds the Inno-installer distribution and publishes a draft GitHub release:
-#   - MangaJaNaiConverterGui-Setup-<ver>.exe              per-user setup installer
-#   - MangaJaNaiConverterGui-full-package-<ver>.zip       the install tree (what MangaJaNaiUpdater downloads)
-#   - manifest.json                                       the package's version and file list
-# The Python backend and models are not in the package; the app downloads them on first launch.
+#   - MangaJaNaiConverterGui-Setup-<ver>.exe              per-user setup installer (wraps the slim core)
+#   - MangaJaNaiConverterGui-full-package-<ver>.zip       the slim core (what MangaJaNaiUpdater downloads)
+#   - manifest.json                                       the package's version, deps and file list
+#   - component-*.7z + packs.json                         on-demand component packs: the TensorRT runtime,
+#                                                         per-GPU builder resources, and the ONNX models
 # MangaJaNaiUpdater only sees published releases (releases/latest skips drafts), so installed apps
 # update once the draft is published.
 jobs:
@@ -26,6 +27,10 @@ jobs:
         with:
           dotnet-version: '10.x'  # Must match <TargetFramework> across the projects
 
+      # The package builder runs on the CI runner, so framework-dependent is fine.
+      - name: Publish package builder
+        run: dotnet publish BuildMangaJaNai/BuildMangaJaNai.csproj -c Release -o builder
+
       # Self-contained: it forms the install root and must run without a separately installed runtime.
       - name: Publish app
         run: dotnet publish MangaJaNaiConverterGui/MangaJaNaiConverterGui.csproj -c Release -r win-x64 --self-contained -o app-publish
@@ -34,9 +39,11 @@ jobs:
       - name: Publish updater
         run: dotnet publish MangaJaNaiUpdater/MangaJaNaiUpdater.csproj -c Release -o updater-publish
 
+      # Assemble the core (aji, the upscaling backend, ONNX Runtime/DirectML, the VC++ runtime, plus the
+      # TensorRT runtime and models), carve the TensorRT runtime, builder resources and models into
+      # component packs, then write the slim core's manifest and full-package zip.
       - name: Assemble package
-        shell: pwsh
-        run: ./installer/build-package.ps1 -Version "${{ github.event.inputs.version }}" -AppDir app-publish -UpdaterExe updater-publish/MangaJaNaiUpdater.exe -OutDir publish
+        run: ./builder/BuildMangaJaNai.exe ${{ github.event.inputs.version }} --app-dir app-publish --updater updater-publish/MangaJaNaiUpdater.exe --packs --out publish
 
       - name: Build setup installer
         shell: pwsh
@@ -69,5 +76,7 @@ jobs:
           artifacts: >-
             MangaJaNaiConverterGui-Setup-${{ github.event.inputs.version }}.exe,
             publish/MangaJaNaiConverterGui-full-package-${{ github.event.inputs.version }}.zip,
-            manifest.json
+            manifest.json,
+            publish/packs-v${{ github.event.inputs.version }}/component-*.7z,
+            publish/packs-v${{ github.event.inputs.version }}/packs.json
           token: ${{ secrets.GITHUB_TOKEN }}
