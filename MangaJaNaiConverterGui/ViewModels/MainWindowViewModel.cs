@@ -485,6 +485,15 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _displayDeviceMap, value);
         }
 
+        // The console's height, dragged with the handle above it.
+        private double _consoleHeight = 300;
+        [DataMember]
+        public double ConsoleHeight
+        {
+            get => _consoleHeight;
+            set => this.RaiseAndSetIfChanged(ref _consoleHeight, value);
+        }
+
         // The workflow sidebar's width, dragged with its splitter (app-wide, not per workflow).
         private double _sidebarWidth = 220;
         [DataMember]
@@ -757,6 +766,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         public void HandleAppSettingsSelected()
         {
             RequestShowAppSettings = true;
+        }
+
+        public void CloseAppSettings()
+        {
+            RequestShowAppSettings = false;
         }
 
 
@@ -1938,6 +1952,18 @@ namespace MangaJaNaiConverterGui.ViewModels
                 var quality = ShowLossyCompressionQuality ? $" q{LossyCompressionQuality}" : ShowUseLosslessCompression ? " lossless" : "";
                 return string.IsNullOrWhiteSpace(OutputFolderPath) ? $"{format}{quality}" : $"{format}{quality} → {OutputFolderPath}";
             }
+        }
+
+        public void ExpandAllSections() => SetAllSectionsExpanded(true);
+
+        public void CollapseAllSections() => SetAllSectionsExpanded(false);
+
+        private void SetAllSectionsExpanded(bool expanded)
+        {
+            InputSectionExpanded = expanded;
+            UpscaleSectionExpanded = expanded;
+            ShowAdvancedSettings = expanded;
+            OutputSectionExpanded = expanded;
         }
 
         private void RaiseSummaries()
