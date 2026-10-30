@@ -1,6 +1,7 @@
 using Autofac;
 using Avalonia;
 using Avalonia.Markup.Xaml;
+using MangaJaNaiConverterGui.Drivers;
 using MangaJaNaiConverterGui.Services;
 using MangaJaNaiConverterGui.ViewModels;
 using MangaJaNaiConverterGui.Views;
@@ -49,24 +50,24 @@ namespace MangaJaNaiConverterGui
 
             autofacResolver.SetLifetimeScope(container);
 
-            //var vm = container.Resolve<MainWindowViewModel>();
-            var umService = container.Resolve<IUpdateManagerService>();
+            var pythonService = container.Resolve<IPythonService>();
 
-            if (umService.IsInstalled)
+            Directory.CreateDirectory(pythonService.AppStateFolder);
+
+            // The default state ships next to the app; the working directory is wherever the app was
+            // launched from.
+            var defaultStatePath = NewtonsoftJsonSuspensionDriver.DefaultStatePath;
+            if (!File.Exists(pythonService.AppStatePath) && File.Exists(defaultStatePath)
+                && !string.Equals(Path.GetFullPath(pythonService.AppStatePath), Path.GetFullPath(defaultStatePath), System.StringComparison.OrdinalIgnoreCase))
             {
-                if (!Directory.Exists(Program.InstalledAppStateFolder))
-                {
-                    Directory.CreateDirectory(Program.InstalledAppStateFolder);
-                }
-
-                if (!File.Exists(Program.InstalledAppStatePath))
-                {
-                    File.Copy(Program.InstalledAppStateFilename, Program.InstalledAppStatePath);
-                }
+                File.Copy(defaultStatePath, pythonService.AppStatePath);
             }
 
             var suspension = new AutoSuspendHelper(ApplicationLifetime!);
-            RxSuspension.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
+            // Used when the saved state can't be loaded: start from the bundled defaults (an empty view
+            // model has no workflows, which the code below can't run with).
+            RxSuspension.SuspensionHost.CreateNewAppState = () =>
+                NewtonsoftJsonSuspensionDriver.LoadDefaultState() ?? new MainWindowViewModel();
             RxSuspension.SuspensionHost.SetupDefaultSuspendResume(container.Resolve<ISuspensionDriverService>().SuspensionDriver);
             suspension.OnFrameworkInitializationCompleted();
 
@@ -86,6 +87,7 @@ namespace MangaJaNaiConverterGui
             state.CurrentWorkflow?.Validate();
 
             new MainWindow { DataContext = state }.Show();
+            NewtonsoftJsonSuspensionDriver.StartupComplete = true;
             base.OnFrameworkInitializationCompleted();
         }
     }

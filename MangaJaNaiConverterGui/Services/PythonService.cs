@@ -53,7 +53,14 @@ namespace MangaJaNaiConverterGui.Services
         public string PythonBackendVersionPath => Path.Combine(PythonDirectory, "Version.txt");
         public string PythonPath => Path.GetFullPath(Path.Join(PythonDirectory, PYTHON_DOWNLOADS["win32"].Path));
 
-        public string AppStateFolder => ((_updateManagerService?.IsInstalled ?? false) && !(_updateManagerService?.IsPortable ?? false)) ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"MangaJaNaiConverterGui") : Path.GetFullPath(@".");
+        // MANGAJANAI_STATE_DIR redirects the saved app state (workflows, settings), so test and dev
+        // launches never touch a real install's state.
+        public string AppStateFolder =>
+            Environment.GetEnvironmentVariable("MANGAJANAI_STATE_DIR") is { Length: > 0 } stateDir
+                ? stateDir
+                : ((_updateManagerService?.IsInstalled ?? false) && !(_updateManagerService?.IsPortable ?? false))
+                    ? Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), @"MangaJaNaiConverterGui")
+                    : Path.GetFullPath(@".");
 
         public string AppStateFilename => "appstate2.json";
         public string AppStatePath => Path.Join(AppStateFolder, AppStateFilename);
