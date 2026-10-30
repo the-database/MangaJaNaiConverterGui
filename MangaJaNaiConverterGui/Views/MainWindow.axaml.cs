@@ -26,16 +26,12 @@ namespace MangaJaNaiConverterGui.Views
         {
             AvaloniaXamlLoader.Load(this);
 
-            Resized += MainWindow_Resized;
             Closing += MainWindow_Closing;
             Opened += MainWindow_Opened;
 
             var inputFileNameTextBox = this.FindControl<TextBox>("InputFileNameTextBox");
-            var outputFileNameTextBox = this.FindControl<TextBox>("OutputFileNameTextBox");
             var inputFolderNameTextBox = this.FindControl<TextBox>("InputFolderNameTextBox");
             var outputFolderNameTextBox = this.FindControl<TextBox>("OutputFolderNameTextBox");
-            var grayscaleModelFilePathTextBox = this.FindControl<TextBox>("GrayscaleModelFilePathTextBox");
-            var colorModelFilePathTextBox = this.FindControl<TextBox>("ColorModelFilePathTextBox");
 
             inputFileNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFilePath);
             inputFolderNameTextBox?.AddHandler(DragDrop.DropEvent, SetInputFolderPath);
@@ -101,16 +97,6 @@ namespace MangaJaNaiConverterGui.Views
                         }
                     }
                 }
-            }
-        }
-
-        private void MainWindow_Resized(object? sender, WindowResizedEventArgs e)
-        {
-            // Set the ScrollViewer width based on the new parent window's width
-            var consoleScrollViewer = this.FindControl<ScrollViewer>("ConsoleScrollViewer");
-            if (consoleScrollViewer != null)
-            {
-                consoleScrollViewer.Width = Width - 340; // Adjust the width as needed
             }
         }
 
@@ -357,8 +343,8 @@ namespace MangaJaNaiConverterGui.Views
                 // Start async operation to open the dialog.
                 var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
-                    Title = "Export Current Profile Conf File",
-                    DefaultExtension = "conf",
+                    Title = "Export Workflow File",
+                    DefaultExtension = "mwf",
                     FileTypeChoices =
                     [
                     new("MangaJaNai Workflow File (*.mwf)") { Patterns = ["*.mwf"] },

@@ -1,7 +1,5 @@
 ﻿using Avalonia.Collections;
 using ICSharpCode.SharpZipLib.Core;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
 using SevenZipExtractor;
 using Splat;
@@ -67,62 +65,6 @@ namespace MangaJaNaiConverterGui.Services
 
         public bool IsPythonInstalled() => File.Exists(PythonPath);
 
-        public async Task<bool> IsPythonUpdated()
-        {
-            var relPythonPath = @".\python\python\python.exe";
-
-            var cmd = $@"{relPythonPath} -V";
-
-            // Create a new process to run the CMD command
-            using (var process = new Process())
-            {
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C {cmd}";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
-                process.StartInfo.WorkingDirectory = BackendDirectory;
-
-                Version? result = null;
-
-                // Create a StreamWriter to write the output to a log file
-                try
-                {
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            // ignore
-                        }
-                    };
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            result = new Version(e.Data.Replace("Python ", ""));
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
-                    await process.WaitForExitAsync();
-                }
-                catch (IOException) { }
-
-                if (result == null || result.CompareTo(new Version(PYTHON_DOWNLOADS["win32"].Version)) < 0)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         public async Task<bool> IsBackendUpdated()
         {
             if (File.Exists(PythonBackendVersionPath))
@@ -143,19 +85,6 @@ namespace MangaJaNaiConverterGui.Services
             public string Version { get; set; }
             public string Path { get; set; }
             public string Filename { get; set; }
-        }
-
-        public void ExtractTgz(string gzArchiveName, string destFolder)
-        {
-            Stream inStream = File.OpenRead(gzArchiveName);
-            Stream gzipStream = new GZipInputStream(inStream);
-
-            TarArchive tarArchive = TarArchive.CreateInputTarArchive(gzipStream, Encoding.UTF8);
-            tarArchive.ExtractContents(destFolder);
-            tarArchive.Close();
-
-            gzipStream.Close();
-            inStream.Close();
         }
 
         public void ExtractZip(string archivePath, string outFolder, ProgressChanged progressChanged)
@@ -211,27 +140,6 @@ namespace MangaJaNaiConverterGui.Services
         {
             using ArchiveFile archiveFile = new(archiveName);
             archiveFile.Extract(outFolder);
-        }
-
-        public void AddPythonPth(string destFolder)
-        {
-            string[] lines = { "python313.zip", "DLLs", "Lib", ".", "Lib/site-packages" };
-            var filename = "python313._pth";
-
-            using var outputFile = new StreamWriter(Path.Combine(destFolder, filename));
-
-            foreach (string line in lines)
-                outputFile.WriteLine(line);
-        }
-
-        public string InstallUpdatePythonDependenciesCommand
-        {
-            get
-            {
-                var relPythonPath = @".\python\python\python.exe";
-
-                return $@"{relPythonPath} -m pip install -U pip wheel --no-warn-script-location && {relPythonPath} -m pip install torch==2.9.1 torchvision --index-url https://download.pytorch.org/whl/cu128 --no-warn-script-location && {relPythonPath} -m pip install ""{Path.GetFullPath(@".\backend\src")}"" --no-warn-script-location";
-            }
         }
 
         private AvaloniaList<string>? _allModels;

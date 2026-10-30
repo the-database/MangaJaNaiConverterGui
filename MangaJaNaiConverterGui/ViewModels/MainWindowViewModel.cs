@@ -57,9 +57,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             _timer.Tick += _timer_Tick;
 
             ShowDialog = new Interaction<MainWindowViewModel, MainWindowViewModel?>();
-
-            CheckAndDoBackup();
-            CheckForUpdates();
         }
 
         private string[] _commonResolutions = [
@@ -501,7 +498,23 @@ namespace MangaJaNaiConverterGui.ViewModels
         public int SelectedDeviceIndex
         {
             get => _selectedDeviceIndex;
-            set => this.RaiseAndSetIfChanged(ref _selectedDeviceIndex, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedDeviceIndex, value);
+                if (value >= 0 && value < DeviceList.Length)
+                {
+                    SelectedDeviceName = DeviceList[value];
+                }
+            }
+        }
+
+        // The selected device's name, so the choice survives the device list changing order.
+        private string? _selectedDeviceName;
+        [DataMember]
+        public string? SelectedDeviceName
+        {
+            get => _selectedDeviceName;
+            set => this.RaiseAndSetIfChanged(ref _selectedDeviceName, value);
         }
 
         private bool _useCpu;
@@ -1327,8 +1340,23 @@ namespace MangaJaNaiConverterGui.ViewModels
             var deviceResponse = await InitializeDeviceList();
             if (deviceResponse != null)
             {
-                DeviceList = [.. deviceResponse.AllDevices.Select(d => d.Name)];
-                SelectedDeviceIndex = deviceResponse.BestDevice;
+                // Keep the user's device if it's still there; otherwise use the best one.
+                var savedIndex = SelectedDeviceIndex;
+                var savedName = SelectedDeviceName;
+                var names = deviceResponse.AllDevices.Select(d => d.Name).ToArray();
+                DeviceList = names;
+                if (savedName != null && savedIndex >= 0 && savedIndex < names.Length && names[savedIndex] == savedName)
+                {
+                    SelectedDeviceIndex = savedIndex;
+                }
+                else if (savedName != null && Array.IndexOf(names, savedName) is >= 0 and var index)
+                {
+                    SelectedDeviceIndex = index;
+                }
+                else
+                {
+                    SelectedDeviceIndex = deviceResponse.BestDevice;
+                }
             }
             else
             {
@@ -1403,64 +1431,6 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
 
-
-        public async Task<string[]> InstallUpdatePythonDependencies()
-        {
-            var cmd = _pythonService.InstallUpdatePythonDependenciesCommand;
-            Debug.WriteLine(cmd);
-
-            // Create a new process to run the CMD command
-            using (var process = new Process())
-            {
-                process.StartInfo.FileName = "cmd.exe";
-                process.StartInfo.Arguments = @$"/C {cmd}";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-                process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
-                process.StartInfo.WorkingDirectory = _pythonService.BackendDirectory;
-
-                var result = string.Empty;
-                using var outputFile = new StreamWriter(Path.Combine(_pythonService.LogsDirectory, "install.log"));
-                outputFile.WriteLine($"Working Directory: {process.StartInfo.WorkingDirectory}");
-                outputFile.WriteLine($"Run Command: {cmd}");
-                // Create a StreamWriter to write the output to a log file
-                try
-                {
-                    //using var outputFile = new StreamWriter("error.log", append: true);
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            //Debug.WriteLine($"STDERR = {e.Data}");
-                            outputFile.WriteLine(e.Data);
-                            BackendSetupSubStatusQueueEnqueue(e.Data);
-                        }
-                    };
-
-                    process.OutputDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
-                        {
-                            result = e.Data;
-                            outputFile.WriteLine(e.Data);
-                            //Debug.WriteLine($"STDOUT = {e.Data}");
-                            BackendSetupSubStatusQueueEnqueue(e.Data);
-                        }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine(); // Start asynchronous reading of the output
-                    await process.WaitForExitAsync();
-                }
-                catch (IOException) { }
-            }
-
-            return [];
-        }
 
         public void CheckAndDoBackup()
         {
