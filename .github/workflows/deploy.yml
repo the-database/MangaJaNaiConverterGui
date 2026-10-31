@@ -12,7 +12,8 @@ on:
 #   - MangaJaNaiConverterGui-full-package-<ver>.zip       the slim core (what MangaJaNaiUpdater downloads)
 #   - manifest.json                                       the package's version, deps and file list
 #   - component-*.7z + packs.json                         on-demand component packs: the TensorRT runtime,
-#                                                         per-GPU builder resources, and the ONNX models
+#                                                         per-GPU builder resources, the ONNX models, and
+#                                                         the opt-in TensorRT-RTX backend
 # MangaJaNaiUpdater only sees published releases (releases/latest skips drafts), so installed apps
 # update once the draft is published.
 jobs:
@@ -40,8 +41,9 @@ jobs:
         run: dotnet publish MangaJaNaiUpdater/MangaJaNaiUpdater.csproj -c Release -o updater-publish
 
       # Assemble the core (aji, the upscaling backend, ONNX Runtime/DirectML, the VC++ runtime, plus the
-      # TensorRT runtime and models), carve the TensorRT runtime, builder resources and models into
-      # component packs, then write the slim core's manifest and full-package zip.
+      # TensorRT runtime, TensorRT-RTX and models), carve the TensorRT runtime, builder resources,
+      # TensorRT-RTX and models into component packs, then write the slim core's manifest and
+      # full-package zip.
       - name: Assemble package
         run: ./builder/BuildMangaJaNai.exe ${{ github.event.inputs.version }} --app-dir app-publish --updater updater-publish/MangaJaNaiUpdater.exe --packs --out publish
 
