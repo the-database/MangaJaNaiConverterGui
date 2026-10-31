@@ -2864,8 +2864,18 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string ModelFilePath
         {
             get => _modelFilePath;
-            set => this.RaiseAndSetIfChanged(ref _modelFilePath, value);
+            // The model ComboBox sets null when nothing is selected (or the saved model isn't in
+            // the list); the backend reads the setting as a string.
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _modelFilePath, value ?? string.Empty);
+                this.RaisePropertyChanged(nameof(MissingModel));
+            }
         }
+
+        // Nothing selected, as opposed to a deliberate "No Model": the images this chain matches
+        // are still only resized, so say so.
+        public bool MissingModel => string.IsNullOrWhiteSpace(ModelFilePath);
 
         private string _modelTileSize = "Auto (Estimate)";
         [DataMember]
