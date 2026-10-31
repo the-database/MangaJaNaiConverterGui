@@ -18,10 +18,11 @@
 // Saved settings and user models live in %APPDATA%\MangaJaNaiConverterGui, outside the install.
 //
 // Component packs are subsets of the install (the TensorRT runtime, per-GPU-generation builder
-// resources, the default ONNX models), emitted by BuildMangaJaNai as component-<name>.7z + packs.json
-// release assets. Archives are rooted at the install dir, so extraction is installation; packs.json
-// carries each pack's file list, so removal is deletion. Installed state lives in components.json at
-// the install root. Packs always come from the installed version's release, so they match its builds.
+// resources, the default ONNX models, the opt-in TensorRT-RTX backend), emitted by BuildMangaJaNai as
+// component-<name>.7z + packs.json release assets. Archives are rooted at the install dir, so
+// extraction is installation; packs.json carries each pack's file list, so removal is deletion.
+// Installed state lives in components.json at the install root. Packs always come from the installed
+// version's release, so they match its builds.
 //
 // Dev overrides: MANGAJANAI_UPDATE_URL=<url> reads the latest release from another GitHub-style
 // releases/latest endpoint (a fork's, or a local test server's); MANGAJANAI_PACKS_DIR=<dir> reads
@@ -699,7 +700,9 @@ static (bool HasNvidia, string Sm, string GpuName) DetectGpu()
 }
 
 // The models every install needs, plus the TensorRT runtime and the builder pack for each NVIDIA GPU
-// generation (the exact pack if published, else the PTX fallback).
+// generation (the exact pack if published, else the PTX fallback). Never trt-rtx: the TensorRT-RTX
+// backend is experimental and opt-in, so only the user installs it (App Settings > Components). Once
+// installed, PreselectPack keeps it in --auto, which refreshes it when its dep (aji) moves.
 List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 {
     var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal)).Select(p => p.Name).ToList();

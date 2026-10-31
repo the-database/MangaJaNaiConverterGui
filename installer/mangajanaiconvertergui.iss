@@ -156,7 +156,8 @@ begin
 end;
 
 // Install the recommended packs the user kept selected: models-* under the models option, the rest
-// (trt-*) under the TensorRT option. Returns the count that failed.
+// (trt-*) under the TensorRT option. Returns the count that failed. The opt-in TensorRT-RTX pack
+// (trt-rtx) is never recommended, and is skipped here regardless: users add it in App Settings.
 function InstallSelectedPacks: Integer;
 var
   csv, pack: String;
@@ -178,7 +179,7 @@ begin
       pack := Trim(csv);
       csv := '';
     end;
-    if pack = '' then
+    if (pack = '') or (pack = 'trt-rtx') then
       Continue;
     isModels := Pos('models-', pack) = 1;
     if (isModels and CompPage.Values[0]) or ((not isModels) and CompPage.Values[1]) then
