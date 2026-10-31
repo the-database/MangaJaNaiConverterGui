@@ -553,6 +553,11 @@
                                   <materialIcons:MaterialIcon Kind="FolderOpen" />
                                 </Button>
                               </Grid>
+                              <StackPanel Classes="row" Spacing="5" IsVisible="{Binding MissingModel}">
+                                <materialIcons:MaterialIcon Kind="Alert" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+                                <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}" TextWrapping="Wrap"
+                                           Text="No model selected. Images this chain handles will only be resized, not upscaled. Select a model, or No Model to skip upscaling on purpose." />
+                              </StackPanel>
                               <StackPanel Classes="row">
                                 <ContentControl Classes="hint" Content="Model Tile Size"
                                                 ToolTip.Tip="Tile size to use when upscaling images with the selected model. The image is cut into tiles in order to upscale without running into the VRAM limits of your GPU. Larger is better when the GPU has enough VRAM to support it. Auto uses 512, which suits most GPUs. With TensorRT, each tile size builds its own engine the first time it is used." />
