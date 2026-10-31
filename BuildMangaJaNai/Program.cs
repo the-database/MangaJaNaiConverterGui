@@ -48,9 +48,10 @@ const string CudartVersion     = "13.4.49";
 const string CudartSha256Win   = "e6663f3d3e8949eedc2d5ab92c7c5b9fa3f2a222086d91c42bfc5a38bf2b0225";
 
 // the-database/animejanai-inference. v0.18.0 added the still-image ABI (aji_image.h) the backend uses;
-// v0.18.2 makes DirectML device ids the card's PCI address, so they match TensorRT's and survive reboots.
-const string AjiVersion        = "v0.18.2";
-const string AjiSha256Win      = "e0c9c08335c234682f2f3583f1775d0274fc2516dfb28aeb70b668aed38ed481";
+// v0.18.2 makes DirectML device ids the card's PCI address, so they match TensorRT's and survive reboots;
+// v0.19.0 makes DirectML ~35-40% faster.
+const string AjiVersion        = "v0.19.0";
+const string AjiSha256Win      = "adab29cab85efa3471a9422f6ea82a69e925064acec9b1a0bd341db89a36c419";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
 // DirectML backend runtime (aji_dml.dll loads both from its own directory). The last DirectML-flavored
 // ORT releases (DML is in sustained engineering); same pins as VideoJaNai.
