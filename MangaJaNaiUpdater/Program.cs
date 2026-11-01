@@ -18,7 +18,7 @@
 // Saved settings and user models live in %APPDATA%\MangaJaNaiConverterGui, outside the install.
 //
 // Component packs are subsets of the install (the TensorRT runtime, per-GPU-generation builder
-// resources, the default ONNX models, the opt-in TensorRT-RTX backend), emitted by BuildMangaJaNai as
+// resources, the default ONNX models, the TensorRT-RTX backend), emitted by BuildMangaJaNai as
 // component-<name>.7z + packs.json release assets. Archives are rooted at the install dir, so
 // extraction is installation; packs.json carries each pack's file list, so removal is deletion.
 // Installed state lives in components.json at the install root. Packs always come from the installed
@@ -703,16 +703,20 @@ static (bool HasNvidia, string Sm, string GpuName) DetectGpu()
 }
 
 // The models every install needs, plus the TensorRT runtime and the builder pack for each NVIDIA GPU
-// generation (the exact pack if published, else the PTX fallback). Never trt-rtx: the TensorRT-RTX
-// backend is experimental and opt-in, so only the user installs it (App Settings > Components). Once
-// installed, PreselectPack keeps it in --auto, which refreshes it when its dep (aji) moves.
+// generation (the exact pack if published, else the PTX fallback), plus trt-rtx when a GPU is one
+// TensorRT-RTX is the default for (TrtRtxDefault). The TensorRT runtime stays: TensorRT-RTX runs on
+// its CUDA runtime and falls back to TensorRT. Elsewhere trt-rtx is the user's to install (App
+// Settings > Components); once installed, PreselectPack keeps it in --auto, which refreshes it when
+// its dep (aji) moves. Since --auto installs what's recommended, an update brings trt-rtx to an
+// existing install on such a GPU too.
 List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 {
     var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal)).Select(p => p.Name).ToList();
     if (hasNvidia)
     {
         rec.Add("trt-runtime");
-        foreach (var s in sm.Split(", ", StringSplitOptions.RemoveEmptyEntries))
+        var sms = sm.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+        foreach (var s in sms)
         {
             var pack = index.Packs.Any(p => p.Name == $"trt-{s}") ? $"trt-{s}" : "trt-ptx";
             if (!rec.Contains(pack))
@@ -720,8 +724,26 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
                 rec.Add(pack);
             }
         }
+        if (sms.Any(TrtRtxDefault) && index.Packs.Any(p => p.Name == "trt-rtx"))
+        {
+            rec.Add("trt-rtx");
+        }
     }
     return rec;
+}
+
+// Whether TensorRT-RTX is the default on a GPU ("sm86"): consumer Ampere (8.6), Ada (8.9) and
+// Blackwell (12.x). TensorRT-RTX 1.7 supports 7.5, 8.6, 8.9 and 12.x; on Turing (7.5) it lacks FP32
+// GEMMs and 3D convolutions, which some models need, so Turing keeps TensorRT. Data-center 8.0, 9.0
+// and 10.0 aren't supported.
+static bool TrtRtxDefault(string sm)
+{
+    if (!sm.StartsWith("sm", StringComparison.Ordinal) || !int.TryParse(sm[2..], out int cc) || cc < 10)
+    {
+        return false;
+    }
+    int major = cc / 10, minor = cc % 10;
+    return (major == 8 && (minor == 6 || minor == 9)) || major >= 12;
 }
 
 bool PreselectPack(Pack pack, Dictionary<string, string> installed, List<string> rec) =>

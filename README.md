@@ -2,7 +2,7 @@
 [![Discord](https://img.shields.io/discord/1121653618173546546?label=Discord&logo=Discord&logoColor=white)](https://discord.gg/EeFfZUBvxj)
 
 ## Overview
-Formerly MangaJaNaiConverterGui. This project provides a Windows GUI for upscaling manga images and archives with ONNX models, running on TensorRT, DirectML or (experimental) TensorRT-RTX through [animejanai-inference](https://github.com/the-database/animejanai-inference). It includes a set of models optimized for upscaling manga with Japanese and English text, but many other models are also supported. It also utilizes linear light downscaling to minimize halftone artifacts when downscaling. 
+Formerly MangaJaNaiConverterGui. This project provides a Windows GUI for upscaling manga images and archives with ONNX models, running on TensorRT-RTX, TensorRT or DirectML through [animejanai-inference](https://github.com/the-database/animejanai-inference). It includes a set of models optimized for upscaling manga with Japanese and English text, but many other models are also supported. It also utilizes linear light downscaling to minimize halftone artifacts when downscaling. 
 
 ![image](https://github.com/the-database/MangaJaNaiConverterGui/assets/25811902/89095677-5b1f-46c9-9a1d-3d9df80cefe8)
 
@@ -13,9 +13,9 @@ Download and run `MangaJaNaiGUI-Setup-<version>.exe` from the [latest release](h
 With **Auto Update** on (App Settings), updates download in the background and install when you close the app.
 
 ### Requirements
-- An NVIDIA RTX GPU for the **TensorRT** backend (fastest), or any DirectX 12 GPU (NVIDIA, AMD, Intel) for the **DirectML** backend. Choose one in App Settings; **Auto** picks TensorRT when it can run.
+- An NVIDIA RTX GPU for the **TensorRT-RTX** and **TensorRT** backends (fastest), or any DirectX 12 GPU (NVIDIA, AMD, Intel) for the **DirectML** backend. Choose one in App Settings; **Auto** picks TensorRT-RTX when its component is installed, else TensorRT when it can run, else DirectML.
 - TensorRT builds an engine for each model and tile size the first time it is used, which takes a few minutes. Later upscales reuse it.
-- **TensorRT-RTX** (experimental, NVIDIA RTX GPUs) builds its engines in about a second instead. Its output is equivalent to TensorRT's but not bit-identical, and it falls back to TensorRT when it can't start or can't build a model's engine, with a warning in the status bar. It is opt-in: install the **TensorRT-RTX** component in App Settings > Components (it needs the **TensorRT runtime** component too), then choose TensorRT-RTX as the backend. Auto never picks it.
+- **TensorRT-RTX** builds its engines in seconds instead, and upscales faster. Setup installs it on RTX 30-series and newer GPUs; on an RTX 20 or GTX 16 card, TensorRT stays the default (TensorRT-RTX can't run some models there), and you can add TensorRT-RTX in App Settings > Components. Its output is equivalent to TensorRT's but not bit-identical, and it falls back to TensorRT when it can't start or can't build a model's engine, with a warning in the status bar.
 - There's no CPU backend.
 
 Keep your NVIDIA drivers up to date.

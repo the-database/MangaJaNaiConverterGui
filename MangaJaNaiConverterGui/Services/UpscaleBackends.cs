@@ -8,7 +8,8 @@ namespace MangaJaNaiConverterGui.Services
     {
         public const string Auto = "Auto";
         public const string TensorRt = "TensorRT";
-        // Experimental and opt-in (the trt-rtx component): only ever an explicit choice.
+        // The trt-rtx component, which the updater installs on RTX 30-series and newer: Auto's first
+        // choice wherever it's installed, and an explicit choice on any NVIDIA GPU.
         public const string TensorRtRtx = "TensorRT-RTX";
         public const string DirectMl = "DirectML";
 
@@ -21,20 +22,21 @@ namespace MangaJaNaiConverterGui.Services
         public static string Normalize(string? choice) =>
             choice is TensorRt or TensorRtRtx or DirectMl ? choice : Auto;
 
-        // The backends asked for --list-devices, in order, until one lists a device. Auto: TensorRT
-        // where it can run, else DirectML; it never picks TensorRT-RTX. TensorRT-RTX: its own list,
-        // else TensorRT's (the same cards, under the same PCI-address ids).
-        public static string[] DeviceQueryOrder(string? choice) => Normalize(choice) switch
+        // The backends asked for --list-devices, in order, until one lists a device. Auto: TensorRT-RTX
+        // when its component is installed, then TensorRT where it can run, else DirectML. TensorRT-RTX:
+        // its own list, else TensorRT's (the same cards, under the same PCI-address ids).
+        public static string[] DeviceQueryOrder(string? choice, bool trtRtxInstalled) => Normalize(choice) switch
         {
             TensorRt => [CliTensorRt],
             TensorRtRtx => [CliTensorRtRtx, CliTensorRt],
             DirectMl => [CliDirectMl],
-            _ => [CliTensorRt, CliDirectMl],
+            _ => trtRtxInstalled ? [CliTensorRtRtx, CliTensorRt, CliDirectMl] : [CliTensorRt, CliDirectMl],
         };
 
         // The --backend an upscale runs with, given the backend whose list supplied the devices (null
-        // when none listed any). TensorRT-RTX stays TensorRT-RTX on TensorRT's device list: the CLI
-        // falls back to TensorRT on its own when TensorRT-RTX can't start.
+        // when none listed any): Auto runs whichever listed them. TensorRT-RTX stays TensorRT-RTX on
+        // TensorRT's device list: the CLI falls back to TensorRT on its own when TensorRT-RTX can't
+        // start, and per model when one can't build.
         public static string UpscaleBackend(string? choice, string? listedBy) =>
             listedBy is null ? CliAuto
             : Normalize(choice) == TensorRtRtx ? CliTensorRtRtx
@@ -60,7 +62,7 @@ namespace MangaJaNaiConverterGui.Services
             var missing = new List<string>();
             if (!trtRtxInstalled)
             {
-                missing.Add("\"TensorRT-RTX (experimental)\"");
+                missing.Add("\"TensorRT-RTX\"");
             }
             if (!trtRuntimeInstalled)
             {

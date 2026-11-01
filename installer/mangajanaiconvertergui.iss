@@ -134,7 +134,9 @@ begin
     False, False);
 
   CompPage.Add('Upscaling models (MangaJaNai and IllustrationJaNai)');
-  if HasNvidia then
+  if HasNvidia and (Pos('trt-rtx', Packs) > 0) then
+    trtLabel := 'TensorRT-RTX and TensorRT engines (fastest) - for ' + GpuName
+  else if HasNvidia then
     trtLabel := 'TensorRT engine (fastest) - for ' + GpuName
   else
     trtLabel := 'TensorRT engine - requires an NVIDIA GPU (your GPU uses the built-in DirectML engine)';
@@ -159,8 +161,8 @@ begin
 end;
 
 // Install the recommended packs the user kept selected: models-* under the models option, the rest
-// (trt-*) under the TensorRT option. Returns the count that failed. The opt-in TensorRT-RTX pack
-// (trt-rtx) is never recommended, and is skipped here regardless: users add it in App Settings.
+// (trt-*, including trt-rtx, which is recommended on RTX 30-series and newer) under the TensorRT
+// option. Returns the count that failed.
 function InstallSelectedPacks: Integer;
 var
   csv, pack: String;
@@ -182,7 +184,7 @@ begin
       pack := Trim(csv);
       csv := '';
     end;
-    if (pack = '') or (pack = 'trt-rtx') then
+    if pack = '' then
       Continue;
     isModels := Pos('models-', pack) = 1;
     if (isModels and CompPage.Values[0]) or ((not isModels) and CompPage.Values[1]) then

@@ -4,7 +4,7 @@
 // Assembles the redistributable install tree (the app + MangaJaNaiUpdater + the inference dir: libaji,
 // the mangajanai_upscale backend, ONNX Runtime/DirectML, the VC++ runtime) and, under --packs, carves
 // the heavy optional pieces (TensorRT runtime, per-GPU-generation builder resources, the ONNX models,
-// the opt-in TensorRT-RTX backend) into component-*.7z + packs.json release assets, then slims them out
+// the TensorRT-RTX backend) into component-*.7z + packs.json release assets, then slims them out
 // of the core. End users download the small core plus the packs their hardware needs.
 //
 //   BuildMangaJaNai <version> --app-dir <dir> --updater <exe> [--packs] [--out <dir>]
@@ -56,7 +56,7 @@ const string CudartSha256Win   = "e6663f3d3e8949eedc2d5ab92c7c5b9fa3f2a222086d91
 // v0.19.0 makes DirectML ~35-40% faster and adds TensorRT-RTX; v0.19.1 fixes its engine-build teardown.
 const string AjiVersion        = "v0.19.1";
 const string AjiSha256Win      = "855fa197bc01a3621ee8265e0c19a9238024443cd9cd4a4692e5205c1716beee";
-// The same release's opt-in TensorRT-RTX backend: aji_trtrtx.dll + the TensorRT for RTX runtime and its
+// The same release's TensorRT-RTX backend: aji_trtrtx.dll + the TensorRT for RTX runtime and its
 // licence notices (~232 MB unpacked). It becomes the trt-rtx pack, never part of the core.
 const string AjiTrtRtxSha256Win = "87742617e83c3e55a990d9e0355b9342c31a4fb5c283506908f9fcb05263defe";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
@@ -648,7 +648,7 @@ async Task<List<string>> EmitComponentPacks()
             packs.Add(($"trt-{m.Groups[1].Value}", "inference_runtime", Rel([f])));
         }
     }
-    // The opt-in TensorRT-RTX backend (never recommended, so nothing installs it unasked). Its dep is
+    // The TensorRT-RTX backend (recommended on RTX 30-series and newer, see the updater). Its dep is
     // aji: aji_trtrtx.dll has to match aji.dll, so the pack goes stale with every aji bump. It runs
     // on trt-runtime's cudart, and its fallback to TensorRT needs trt-runtime too.
     packs.Add(("trt-rtx", "aji", Rel(Directory.GetFiles(inferencePath).Where(f => IsTrtRtxFile(Path.GetFileName(f))))));

@@ -508,8 +508,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _autoUpdate, value);
         }
 
-        // Which inference backend upscales: Auto (TensorRT when it can run, else DirectML), TensorRT,
-        // TensorRT-RTX (experimental, opt-in) or DirectML. See UpscaleBackends.
+        // Which inference backend upscales: Auto (TensorRT-RTX where its component is installed, then
+        // TensorRT when it can run, else DirectML), TensorRT, TensorRT-RTX or DirectML. See
+        // UpscaleBackends.
         private string _upscaleBackend = UpscaleBackends.Auto;
         [DataMember]
         public string UpscaleBackend
@@ -876,8 +877,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                     var installed = (bool?)p["installed"] ?? false;
                     var recommended = (bool?)p["recommended"] ?? false;
                     // Only surface packs relevant to this machine: what it uses (recommended) or
-                    // already has (installed, so it can be removed), plus the opt-in TensorRT-RTX
-                    // pack on NVIDIA GPUs. Kernel packs for other GPU generations stay hidden; the
+                    // already has (installed, so it can be removed), plus the TensorRT-RTX pack on
+                    // any NVIDIA GPU (it's only recommended on RTX 30-series and newer). Kernel packs for other GPU generations stay hidden; the
                     // updater CLI still lists them all.
                     if (!ComponentItem.IsShown(name, installed, recommended, nvidia))
                     {
@@ -1376,12 +1377,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        // Fill the device list for the chosen backend (Auto: TensorRT's devices if it can run here,
-        // else DirectML's; TensorRT-RTX: its own, else TensorRT's), keeping the user's device while
-        // it's still there.
+        // Fill the device list for the chosen backend (Auto: TensorRT-RTX's devices if its component
+        // is installed, else TensorRT's if it can run here, else DirectML's; TensorRT-RTX: its own,
+        // else TensorRT's), keeping the user's device while it's still there.
         public async Task RefreshDevices()
         {
-            var backends = UpscaleBackends.DeviceQueryOrder(UpscaleBackend);
+            var backends = UpscaleBackends.DeviceQueryOrder(UpscaleBackend, _backendService.IsTensorRtRtxInstalled);
             List<BackendDevice> devices = [];
             var backend = backends[0];
             foreach (var b in backends)
@@ -1410,7 +1411,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             DeviceStatusText = MissingBackendComponents() ?? (devices.Count == 0
                 ? "No compatible GPU found. MangaJaNai GUI needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
                 : upscaleBackend == UpscaleBackends.CliTensorRtRtx
-                    ? "Using TensorRT-RTX (experimental). If it can't start on this GPU, TensorRT is used instead."
+                    ? "Using TensorRT-RTX. If it can't run on this GPU, TensorRT is used instead."
                     : $"Using {UpscaleBackends.DisplayName(upscaleBackend)}.");
         }
 
@@ -1865,12 +1866,13 @@ namespace MangaJaNaiConverterGui.ViewModels
         public bool Installed { get; } = installed;
         public bool Recommended { get; } = recommended;
 
-        // The opt-in TensorRT-RTX backend: never recommended, so the updater never installs it unasked.
+        // The TensorRT-RTX backend: recommended (so installed by setup and --auto) on RTX 30-series and
+        // newer, and available to install on any other NVIDIA GPU.
         public const string TensorRtRtxPack = "trt-rtx";
 
         // Which packs the component manager lists: what this machine uses (recommended) or has
-        // (installed, so it can be removed), and on an NVIDIA GPU the TensorRT-RTX pack, so it can
-        // be opted into.
+        // (installed, so it can be removed), and on any NVIDIA GPU the TensorRT-RTX pack, so it can
+        // be installed where it isn't recommended.
         public static bool IsShown(string name, bool installed, bool recommended, bool nvidia) =>
             installed || recommended || (nvidia && name == TensorRtRtxPack);
 
@@ -1879,7 +1881,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string Title => Name switch
         {
             "trt-runtime" => "TensorRT runtime",
-            TensorRtRtxPack => "TensorRT-RTX (experimental)",
+            TensorRtRtxPack => "TensorRT-RTX",
             "trt-ptx" => "TensorRT kernels: other NVIDIA GPUs",
             "models-mangajanai" => "MangaJaNai models (grayscale manga)",
             "models-illustrationjanai" => "IllustrationJaNai models (color)",
@@ -1890,7 +1892,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string Description => Name switch
         {
             "trt-runtime" => "The fastest upscaling engine, for NVIDIA GPUs. Without it, upscaling uses the slower DirectML engine. TensorRT-RTX needs it too.",
-            TensorRtRtxPack => "Optional, experimental backend for NVIDIA RTX GPUs (RTX 20 series and newer). It builds engines in about a second instead of a TensorRT build's few minutes; output is equivalent to TensorRT's, though not bit-identical. Needs the TensorRT runtime. To use it, choose TensorRT-RTX under Upscale Settings > Backend.",
+            TensorRtRtxPack => "The fastest NVIDIA backend, installed by default on RTX 30-series and newer. It builds engines in seconds instead of a TensorRT build's few minutes and upscales faster; output is equivalent to TensorRT's, though not bit-identical. Auto uses it when it's installed. Needs the TensorRT runtime, which it falls back to if it can't run.",
             "trt-ptx" => "Fallback kernels for NVIDIA GPUs without a dedicated kernel pack. The first engine build is slower.",
             "models-mangajanai" => "The default models for grayscale manga pages, one per source resolution.",
             "models-illustrationjanai" => "The default models for color pages and illustrations.",
