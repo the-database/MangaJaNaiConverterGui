@@ -70,11 +70,12 @@ const string DirectMLVersion   = "1.15.4";                // Microsoft.AI.Direct
 // yosh-image + libaji, released on its own mangajanai-cli-v* tags. MANGAJANAI_CLI_LOCAL overrides it
 // with a local build.
 const string CliRepo           = "the-database/yosh";
-// v0.1.2: --backend tensorrt-rtx (with its fallbacks to TensorRT, reported as BACKEND_FALLBACK lines)
-// and the backend named in ENGINE_BUILD lines.
-const string CliVersion        = "mangajanai-cli-v0.1.2";
+// v0.1.4: --model-info and HINT lines (each model's precision, and a hint when a faster export would
+// run on this GPU and backend), compute_capability in --list-devices, and it runs exactly the model
+// file it is given. v0.1.2 added --backend tensorrt-rtx and BACKEND_FALLBACK lines.
+const string CliVersion        = "mangajanai-cli-v0.1.4";
 const string CliAsset          = "mangajanai-cli-windows-x64.zip";
-const string CliSha256         = "a7264d0996ccfbd15706e152401c58944cdf5c341ca608a24a198cf615e0f9a8";
+const string CliSha256         = "d4501d6e3c8eaf14147700d4849412ee54fce2f62d062b54ebf3ed02aec2e2e7";
 
 // The default ONNX models, published as archives on each model's MangaJaNai release, one archive per
 // component pack. Every file is named <checkpoint>_<precision of the ONNX itself> (fp16, bf16 or fp32),
