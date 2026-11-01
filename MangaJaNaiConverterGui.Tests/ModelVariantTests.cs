@@ -417,7 +417,7 @@ namespace MangaJaNaiConverterGui.Tests
         public void TheChainsListFollowsTheBackend()
         {
             var (vm, chain) = VmWithChain(Dat2Bf16, Installed);
-            Assert.Same(vm.PickerModels, chain.AllModels);
+            Assert.Equal(vm.PickerModels, chain.ModelChoices.Select(c => c.Name));
             Assert.Equal(Installed, vm.PickerModels); // all of them until a device is listed
 
             Use(vm, UpscaleBackends.Auto, UpscaleBackends.CliTensorRtRtx, Rtx4090);
@@ -429,6 +429,7 @@ namespace MangaJaNaiConverterGui.Tests
             Assert.Contains(Dat2Fp32, vm.PickerModels);
             Assert.Contains("4x_Mine_bf16.onnx", vm.PickerModels);
             Assert.Equal(Dat2Fp32, chain.ModelFilePath);
+            Assert.Equal(vm.PickerModels, chain.ModelChoices.Select(c => c.Name));
         }
 
         [Fact]
@@ -476,26 +477,6 @@ namespace MangaJaNaiConverterGui.Tests
             {
                 Assert.DoesNotContain(name, json);
             }
-        }
-
-        sealed class FakeBackendService(string[] models) : IBackendService
-        {
-            public string AppStateFolder => Path.GetTempPath();
-            public string AppStateFilename => "appstate2.json";
-            public string AppStatePath => Path.Combine(AppStateFolder, AppStateFilename);
-            public string LogsDirectory => AppStateFolder;
-            public string InferenceDirectory => Path.Combine(AppStateFolder, "no-such-inference-dir");
-            public string BackendExePath => Path.Combine(InferenceDirectory, "mangajanai_upscale.exe");
-            public bool IsBackendInstalled => false;
-            public bool IsTensorRtRtxInstalled => false;
-            public bool IsTensorRtRuntimeInstalled => false;
-            public string UserModelsDirectory => AppStateFolder;
-            public string BundledModelsDirectory => AppStateFolder;
-            public bool AreModelsInstalled => true;
-            public string EngineCacheDirectory => AppStateFolder;
-            public AvaloniaList<string> AllModels { get; } = new(models);
-            public bool RefreshModels() => false;
-            public string? ResolveModelPath(string? model) => null;
         }
     }
 }

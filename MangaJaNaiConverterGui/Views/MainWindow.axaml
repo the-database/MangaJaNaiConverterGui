@@ -585,7 +585,17 @@
                                 </Grid.ColumnDefinitions>
                                 <ContentControl Classes="hint" Content="Model"
                                                 ToolTip.Tip="The upscaling model to run. To choose from more models, add ONNX (*.onnx) model files to the models folder (App Settings &gt; Models). Select No Model to skip running any upscaling model for this chain." />
-                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" />
+                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ModelChoices}"
+                                          SelectedValueBinding="{Binding Name, x:DataType=vm:ModelChoice}" SelectedValue="{Binding ModelFilePath}">
+                                  <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ModelChoice">
+                                      <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock IsVisible="{Binding Missing}" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="(not installed)" />
+                                      </StackPanel>
+                                    </DataTemplate>
+                                  </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <Border Grid.Column="2" Classes="precisionTag" Classes.caution="{Binding HasPrecisionHint}"
                                         IsVisible="{Binding ShowPrecisionTag}" ToolTip.Tip="{Binding PrecisionToolTip}">
                                   <StackPanel Orientation="Horizontal" Spacing="3">
