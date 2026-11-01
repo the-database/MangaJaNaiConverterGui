@@ -1,4 +1,4 @@
-// Package builder for MangaJaNaiConverterGui (Inno-installer distribution model, Windows).
+// Package builder for MangaJaNai GUI (Inno-installer distribution model, Windows).
 // Ported from VideoJaNai's BuildVideoJaNai, without ffmpeg/RIFE/Linux.
 //
 // Assembles the redistributable install tree (the app + MangaJaNaiUpdater + the inference dir: libaji,
@@ -11,7 +11,7 @@
 //
 // Outputs, under --out (default: next to this exe):
 //   MangaJaNaiConverterGui-v<ver>/                    the (slim) install tree, the Inno installer's SourceDir
-//   MangaJaNaiConverterGui-full-package-<ver>.zip     that tree, the updater's full update
+//   MangaJaNaiGUI-full-package-<ver>.zip              that tree, the updater's full update
 //   packs-v<ver>/component-*.7z + packs.json          component packs (with --packs)
 //
 // Dev overrides (skip large downloads on local builds):
@@ -89,7 +89,10 @@ const string IllustrationJaNaiModelsAsset = "IllustrationJaNai_V3_ONNX.7z";
     (IllustrationJaNaiModelsTag, IllustrationJaNaiModelsAsset),
 ];
 
+// The app was MangaJaNaiConverterGui until 2.0. The exe and the install tree's root folder keep that
+// name (older updaters look for it in the full package); the release assets carry the new one.
 const string AppName = "MangaJaNaiConverterGui";
+const string ReleaseName = "MangaJaNaiGUI";
 
 if (args.Length < 1 || args[0].StartsWith("--"))
 {
@@ -539,7 +542,7 @@ void WriteVersionAndManifest()
 // The full package the updater downloads: the install tree, rooted at its versioned folder name.
 void WriteFullPackage()
 {
-    var zip = Path.Combine(outDirectory, $"{AppName}-full-package-{version}.zip");
+    var zip = Path.Combine(outDirectory, $"{ReleaseName}-full-package-{version}.zip");
     if (File.Exists(zip)) File.Delete(zip);
     Console.WriteLine($"Writing {Path.GetFileName(zip)}...");
     System.IO.Compression.ZipFile.CreateFromDirectory(installDirectory, zip, CompressionLevel.Optimal, includeBaseDirectory: true);

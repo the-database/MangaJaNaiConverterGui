@@ -1408,7 +1408,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             var upscaleBackend = UpscaleBackends.UpscaleBackend(UpscaleBackend, devices.Count > 0 ? backend : null);
             DeviceStatusText = MissingBackendComponents() ?? (devices.Count == 0
-                ? "No compatible GPU found. MangaJaNaiConverterGui needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
+                ? "No compatible GPU found. MangaJaNai GUI needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
                 : upscaleBackend == UpscaleBackends.CliTensorRtRtx
                     ? "Using TensorRT-RTX (experimental). If it can't start on this GPU, TensorRT is used instead."
                     : $"Using {UpscaleBackends.DisplayName(upscaleBackend)}.");
@@ -1836,7 +1836,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             else if (_readyUpdateVersion == _availableUpdateVersion && AutoUpdateEnabled)
             {
-                status = $"Version {_availableUpdateVersion} is ready and will install when you close MangaJaNaiConverterGui.";
+                status = $"Version {_availableUpdateVersion} is ready and will install when you close MangaJaNai GUI.";
             }
             else
             {
@@ -2662,7 +2662,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (!chain.HasOnnxModel)
                 {
                     valid = false;
-                    validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNaiConverterGui 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
+                    validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNai GUI 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
                 }
             }
 
@@ -2970,7 +2970,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public AvaloniaList<string> AllModels => _backendService.AllModels;
 
-        public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiConverterGui/tree/main/tools/onnx-export";
+        public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export";
 
         // 2.0 runs ONNX models; an empty model or "No Model" runs none.
         public bool HasOnnxModel =>

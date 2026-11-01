@@ -1,14 +1,14 @@
-# <img src="logo.png" width="24"></img> MangaJaNaiConverterGui
+# <img src="logo.png" width="24"></img> MangaJaNai GUI
 [![Discord](https://img.shields.io/discord/1121653618173546546?label=Discord&logo=Discord&logoColor=white)](https://discord.gg/EeFfZUBvxj)
 
 ## Overview
-This project provides a Windows GUI for upscaling manga images and archives with ONNX models, running on TensorRT, DirectML or (experimental) TensorRT-RTX through [animejanai-inference](https://github.com/the-database/animejanai-inference). It includes a set of models optimized for upscaling manga with Japanese and English text, but many other models are also supported. It also utilizes linear light downscaling to minimize halftone artifacts when downscaling. 
+Formerly MangaJaNaiConverterGui. This project provides a Windows GUI for upscaling manga images and archives with ONNX models, running on TensorRT, DirectML or (experimental) TensorRT-RTX through [animejanai-inference](https://github.com/the-database/animejanai-inference). It includes a set of models optimized for upscaling manga with Japanese and English text, but many other models are also supported. It also utilizes linear light downscaling to minimize halftone artifacts when downscaling. 
 
 ![image](https://github.com/the-database/MangaJaNaiConverterGui/assets/25811902/89095677-5b1f-46c9-9a1d-3d9df80cefe8)
 
 
 ## Instructions
-Download and run `MangaJaNaiConverterGui-Setup-<version>.exe` from the [latest release](https://github.com/the-database/MangaJaNaiConverterGui/releases/latest). It installs for your user only, so no administrator rights are needed. Setup downloads the upscaling components for your GPU and the default models. Then select your input file or folder, choose your upscale settings, and click Upscale.
+Download and run `MangaJaNaiGUI-Setup-<version>.exe` from the [latest release](https://github.com/the-database/MangaJaNaiGUI/releases/latest). It installs for your user only, so no administrator rights are needed. Setup downloads the upscaling components for your GPU and the default models. Then select your input file or folder, choose your upscale settings, and click Upscale.
 
 With **Auto Update** on (App Settings), updates download in the background and install when you close the app.
 
@@ -39,4 +39,4 @@ The upscaling backend, `inference\mangajanai_upscale.exe`, also runs on its own:
 - [traiNNer-redux](https://github.com/the-database/traiNNer-redux): Software for training upscaling models.
 
 ## Acknowledgments 
-- [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. MangaJaNaiConverterGui 1.x used a modified version of its backend for running upscaling models.
+- [chaiNNer](https://github.com/chaiNNer-org/chaiNNer): General purpose tool for AI upscaling. MangaJaNai GUI 1.x used a modified version of its backend for running upscaling models.

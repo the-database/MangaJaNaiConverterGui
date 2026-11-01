@@ -1,4 +1,4 @@
-// MangaJaNaiUpdater — keeps an installed MangaJaNaiConverterGui folder up to date in place, and
+// MangaJaNaiUpdater — keeps an installed MangaJaNai GUI folder up to date in place, and
 // manages its component packs (the in-app component manager and the installer shell this). Ships at
 // the install root next to MangaJaNaiConverterGui.exe. Ported from VideoJaNaiUpdater.
 //
@@ -12,7 +12,7 @@
 //   MangaJaNaiUpdater.exe --auto         install everything the detected hardware needs (or refresh stale packs)
 //   MangaJaNaiUpdater.exe --recommend    KEY=value hardware summary for the Inno installer
 //
-// An update is the latest GitHub release's full package (MangaJaNaiConverterGui-full-package-<ver>.zip,
+// An update is the latest GitHub release's full package (MangaJaNaiGUI-full-package-<ver>.zip,
 // rooted at MangaJaNaiConverterGui-v<ver>/). Files the previous version shipped (manifest.json "files")
 // that the new one no longer has are removed; manifest.json "user_preserve" paths are never touched.
 // Saved settings and user models live in %APPDATA%\MangaJaNaiConverterGui, outside the install.
@@ -34,8 +34,11 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using static Downloader;
 
+// The app was MangaJaNaiConverterGui until 2.0. Its exe, the package's root folder and %APPDATA% folder
+// keep that name (AppName), so existing installs and older updaters keep working; users see DisplayName.
 const string AppName = "MangaJaNaiConverterGui";
-const string Repo = "the-database/MangaJaNaiConverterGui";
+const string DisplayName = "MangaJaNai GUI";
+const string Repo = "the-database/MangaJaNaiGUI";
 string apiLatest = Environment.GetEnvironmentVariable("MANGAJANAI_UPDATE_URL") is { Length: > 0 } url
     ? url
     : $"https://api.github.com/repos/{Repo}/releases/latest";
@@ -132,7 +135,7 @@ async Task<int> ApplyAsync(bool noRelaunch)
             // Another window is still open; installing on its close covers it.
             return 0;
         }
-        Console.WriteLine($"Close all {AppName} windows, then try again.");
+        Console.WriteLine($"Close all {DisplayName} windows, then try again.");
         return 1;
     }
 
@@ -461,7 +464,7 @@ void RelaunchApp()
     {
         Process.Start(new ProcessStartInfo { FileName = app, UseShellExecute = true, WorkingDirectory = installDir });
     }
-    catch (Exception e) { Console.WriteLine($"Could not relaunch {AppName}: {e.Message}"); }
+    catch (Exception e) { Console.WriteLine($"Could not relaunch {DisplayName}: {e.Message}"); }
 }
 
 // Waits until no other process runs from the install folder; false if some still do at the timeout.

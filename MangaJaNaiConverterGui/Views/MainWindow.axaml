@@ -13,7 +13,7 @@
         x:Class="MangaJaNaiConverterGui.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/logo.ico"
-        Title="MangaJaNaiConverterGui">
+        Title="MangaJaNai GUI">
 
   <Window.Styles>
     <Style Selector="TabControl[TabStripPlacement=Top]">
@@ -707,21 +707,21 @@
               <TextBlock FontWeight="Bold" Text="Updates" />
               <StackPanel Spacing="12" IsVisible="{Binding IsInstalled}">
                 <ContentControl Classes="hint" HorizontalAlignment="Left"
-                                ToolTip.Tip="Download updates in the background and install them when MangaJaNaiConverterGui is closed. Updates are always checked for and shown here.">
+                                ToolTip.Tip="Download updates in the background and install them when MangaJaNai GUI is closed. Updates are always checked for and shown here.">
                   <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
                 </ContentControl>
 
                 <StackPanel Classes="row">
                   <TextBlock Text="Current Version" />
                   <TextBlock FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0" />
-                  <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
+                  <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiGUI/releases"/>
                 </StackPanel>
 
                 <TextBlock TextWrapping="Wrap" Text="{Binding UpdateStatusText}" />
 
                 <Button IsVisible="{Binding ShowCheckUpdateButton}" Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
                 <Button IsVisible="{Binding ShowApplyButton}" Command="{Binding ApplyUpdate}" IsEnabled="{Binding !Upscaling}"
-                        ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNaiConverterGui</Button>
+                        ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNai GUI</Button>
               </StackPanel>
               <TextBlock IsVisible="{Binding !IsInstalled}" Text="App is not installed; auto update settings unavailable." />
             </StackPanel>
@@ -799,7 +799,7 @@
               <TextBlock TextWrapping="Wrap" Text="Put your own ONNX models (.onnx) in the models folder to use them in a chain. PyTorch models (.pth, .safetensors) need converting to ONNX first." />
               <StackPanel Classes="row">
                 <Button Content="Open Models Folder" Command="{Binding OpenModelsDirectory}" />
-                <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/tree/main/tools/onnx-export" />
+                <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export" />
               </StackPanel>
               <TextBlock Foreground="Gray" FontFamily="Consolas" TextWrapping="Wrap" Text="{Binding ModelsDirectory}" />
             </StackPanel>

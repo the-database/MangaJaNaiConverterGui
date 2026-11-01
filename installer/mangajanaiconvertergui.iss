@@ -1,4 +1,4 @@
-; MangaJaNaiConverterGui setup installer (Inno Setup 6).
+; MangaJaNai GUI setup installer (Inno Setup 6).
 ;
 ; Wraps the slim install tree that BuildMangaJaNai produces into a per-user Windows installer.
 ; Built in CI by deploy.yml:
@@ -21,7 +21,10 @@
   #error Define SourceDir (the built install tree) with /DSourceDir=...
 #endif
 
-#define AppName "MangaJaNaiConverterGui"
+#define AppName "MangaJaNai GUI"
+; The app was MangaJaNaiConverterGui until 2.0. The exe, the install folder and the %APPDATA% folder
+; keep that name (existing installs, the updater and 1.x settings depend on it), as do 1.x's paths.
+#define LegacyName "MangaJaNaiConverterGui"
 #define Publisher "the-database"
 #define AppExe "MangaJaNaiConverterGui.exe"
 #define UpdaterExe "MangaJaNaiUpdater.exe"
@@ -31,17 +34,17 @@ AppId={{530AF8E6-8505-4160-8FBC-C07D0B9A0910}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#Publisher}
-AppPublisherURL=https://github.com/the-database/MangaJaNaiConverterGui
+AppPublisherURL=https://github.com/the-database/MangaJaNaiGUI
 WizardStyle=modern
 ; Per-user install: no elevation, lands in %LOCALAPPDATA%\Programs\MangaJaNaiConverterGui (not
 ; %LOCALAPPDATA%\MangaJaNaiConverterGui, where 1.x's Velopack install lives).
 PrivilegesRequired=lowest
-DefaultDirName={localappdata}\Programs\{#AppName}
+DefaultDirName={localappdata}\Programs\{#LegacyName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName} {#AppVersion}
-OutputBaseFilename={#AppName}-Setup-{#AppVersion}
+OutputBaseFilename=MangaJaNaiGUI-Setup-{#AppVersion}
 SetupIconFile=..\MangaJaNaiConverterGui\Assets\logo.ico
 Compression=lzma2/max
 SolidCompression=yes
@@ -70,9 +73,9 @@ Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait pos
 ; but keep settings and models (which may include models the user added).
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
-Type: filesandordirs; Name: "{userappdata}\{#AppName}\engines"
-Type: filesandordirs; Name: "{userappdata}\{#AppName}\logs"
-Type: filesandordirs; Name: "{userappdata}\{#AppName}\python"
+Type: filesandordirs; Name: "{userappdata}\{#LegacyName}\engines"
+Type: filesandordirs; Name: "{userappdata}\{#LegacyName}\logs"
+Type: filesandordirs; Name: "{userappdata}\{#LegacyName}\python"
 
 [Code]
 var
@@ -194,7 +197,7 @@ end;
 
 function VelopackDir: String;
 begin
-  Result := ExpandConstant('{localappdata}\{#AppName}');
+  Result := ExpandConstant('{localappdata}\{#LegacyName}');
 end;
 
 function VelopackRetiredDir: String;
@@ -216,7 +219,7 @@ begin
   begin
     DelTree(VelopackRetiredDir, True, True, True);
     if not RenameFile(VelopackDir, VelopackRetiredDir) then
-      Result := 'Close {#AppName} 1.x (and any upscale it is running), then run setup again.' + #13#10#13#10 +
+      Result := 'Close {#LegacyName} 1.x (and any upscale it is running), then run setup again.' + #13#10#13#10 +
                 'Setup replaces the 1.x install. Your settings and models are kept.';
   end;
 end;
@@ -227,16 +230,16 @@ var
 begin
   if CurStep = ssInstall then
   begin
-    // Before this install creates its shortcuts: 1.x's desktop shortcut has the same name.
+    // 1.x's shortcuts and uninstall entry, under its old name.
     if DirExists(VelopackRetiredDir) then
     begin
       DelTree(VelopackRetiredDir, True, True, True);
-      DeleteFile(ExpandConstant('{userprograms}\{#AppName}.lnk'));
-      DeleteFile(ExpandConstant('{userdesktop}\{#AppName}.lnk'));
-      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppName}');
+      DeleteFile(ExpandConstant('{userprograms}\{#LegacyName}.lnk'));
+      DeleteFile(ExpandConstant('{userdesktop}\{#LegacyName}.lnk'));
+      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#LegacyName}');
     end;
     // 1.x's Python backend (several GB): 2.0 runs on its own inference engine instead.
-    DelTree(ExpandConstant('{userappdata}\{#AppName}\python'), True, True, True);
+    DelTree(ExpandConstant('{userappdata}\{#LegacyName}\python'), True, True, True);
   end
   else if CurStep = ssPostInstall then
   begin

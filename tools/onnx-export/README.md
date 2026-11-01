@@ -1,6 +1,6 @@
-# ONNX models for MangaJaNaiConverterGui 2.0
+# ONNX models for MangaJaNai GUI 2.0
 
-MangaJaNaiConverterGui 2.0 runs ONNX models through [animejanai-inference](https://github.com/the-database/animejanai-inference)
+MangaJaNai GUI 2.0 runs ONNX models through [animejanai-inference](https://github.com/the-database/animejanai-inference)
 on TensorRT (NVIDIA) or DirectML (any DirectX 12 GPU). PyTorch models (`.pth`, `.safetensors`) can't
 be used directly; export them to ONNX first.
 
@@ -25,13 +25,13 @@ Use [traiNNer-redux](https://github.com/the-database/traiNNer-redux)'s `convert_
    ```
 
 4. Run `python convert_to_onnx.py -opt <your yml>` and copy the `.onnx` from `onnx/` into
-   MangaJaNaiConverterGui's models folder (App Settings → Open Models Directory). Pick it in a
+   MangaJaNai GUI's models folder (App Settings → Open Models Directory). Pick it in a
    workflow chain like any other model.
 
 Notes:
 - Don't export bf16: DirectML can't run it.
 - Some architectures only accept tile sizes that are a multiple of 8 or 16 (FDAT, HAT). The tile
-  sizes MangaJaNaiConverterGui offers all are.
+  sizes MangaJaNai GUI offers all are.
 - A model's first use on TensorRT builds an engine for your GPU, which takes a few minutes once
   per model and tile size.
 
