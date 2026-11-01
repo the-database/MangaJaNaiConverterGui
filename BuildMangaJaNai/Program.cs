@@ -69,11 +69,11 @@ const string DirectMLVersion   = "1.15.4";                // Microsoft.AI.Direct
 // yosh-image + libaji, released on its own mangajanai-cli-v* tags. MANGAJANAI_CLI_LOCAL overrides it
 // with a local build.
 const string CliRepo           = "the-database/yosh";
-// TODO: the app's TensorRT-RTX backend choice (--backend tensorrt-rtx) needs the next mangajanai-cli
-// release; v0.1.1 rejects that backend. Bump this (and CliSha256) once it is released.
-const string CliVersion        = "mangajanai-cli-v0.1.1";
+// v0.1.2: --backend tensorrt-rtx (with its fallbacks to TensorRT, reported as BACKEND_FALLBACK lines)
+// and the backend named in ENGINE_BUILD lines.
+const string CliVersion        = "mangajanai-cli-v0.1.2";
 const string CliAsset          = "mangajanai-cli-windows-x64.zip";
-const string CliSha256         = "4ea0f5e5db5bcade428cb73f14c2ed5393fd3cde51ab73ef831905a4c8aac527";
+const string CliSha256         = "a7264d0996ccfbd15706e152401c58944cdf5c341ca608a24a198cf615e0f9a8";
 
 // The default ONNX models (opset 17, fp16 where the model allows: one set for TensorRT and DirectML),
 // published as an archive on each model's MangaJaNai release. Local builds can use
