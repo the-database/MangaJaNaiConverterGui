@@ -46,6 +46,24 @@ namespace MangaJaNaiConverterGui.Services
 
         public bool IsBackendInstalled => File.Exists(BackendExePath) && File.Exists(Path.Combine(InferenceDirectory, "aji.dll"));
 
+        public bool IsTensorRtRtxInstalled => File.Exists(Path.Combine(InferenceDirectory, "aji_trtrtx.dll"));
+
+        // trtexec.exe and cudart ship only in trt-runtime: TensorRT builds with the one, and both
+        // TensorRT backends link the other.
+        public bool IsTensorRtRuntimeInstalled => File.Exists(Path.Combine(InferenceDirectory, "trtexec.exe")) && HasFile(InferenceDirectory, "cudart64_*.dll");
+
+        private static bool HasFile(string dir, string pattern)
+        {
+            try
+            {
+                return Directory.Exists(dir) && Directory.EnumerateFiles(dir, pattern).Any();
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
+
         public string BundledModelsDirectory => Path.GetFullPath(Path.Combine(InferenceDirectory, "..", "models"));
 
         public bool AreModelsInstalled => ModelFiles(BundledModelsDirectory).Any() || ModelFiles(UserModelsDirectory).Any();
