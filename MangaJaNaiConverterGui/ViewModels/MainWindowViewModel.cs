@@ -2997,6 +2997,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             _ => "Auto (Estimate)",
         };
 
+        // 1.x's default settings pointed every Custom Workflow's color chain at IllustrationJaNai V1,
+        // which 2.0 doesn't ship (and 1.x didn't download either): such a chain moves to the 4x
+        // IllustrationJaNai model the default workflow uses.
+        private const string LegacyIllustrationModel = "4x_IllustrationJaNai_V1_ESRGAN_135k";
+        private const string LegacyIllustrationReplacement = "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.onnx";
+
         public static string MigrateModelName(string model)
         {
             if (string.IsNullOrWhiteSpace(model) || model.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase))
@@ -3004,6 +3010,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                 return model;
             }
             var ext = Path.GetExtension(model);
+            if (Path.GetFileNameWithoutExtension(model).Equals(LegacyIllustrationModel, StringComparison.OrdinalIgnoreCase) &&
+                (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase)))
+            {
+                return LegacyIllustrationReplacement;
+            }
             return Regex.IsMatch(Path.GetFileName(model), @"^\dx_(MangaJaNai|IllustrationJaNai)_", RegexOptions.IgnoreCase) &&
                    (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase))
                 ? Path.ChangeExtension(model, ".onnx")
