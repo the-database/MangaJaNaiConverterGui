@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/the-database/traiNNer-redux/refs/heads/master/schemas/redux-config.schema.json
+# MangaJaNai 2.0 ONNX export: DAT2, fp32. For TensorRT 11 and ONNX Runtime DirectML.
+name: 4x_IllustrationJaNai_V3detail_DAT2_28k_bf16
+scale: 4
+num_gpu: auto
+
+network_g:
+  type: "dat_2"
+
+path:
+  pretrain_network_g: "path/to/4x_IllustrationJaNai_V3detail_DAT2_28k_bf16.safetensors"
+
+onnx:
+  dynamo: false
+  dtype: fp32
+  opset: 17
+  shape: 1x3xHxW
+  verify: true
+  optimize: false
