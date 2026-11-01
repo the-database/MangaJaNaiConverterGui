@@ -15,12 +15,18 @@ namespace MangaJaNaiConverterGui.Services
         string BackendExePath { get; }
         bool IsBackendInstalled { get; }
 
+        // The opt-in TensorRT-RTX backend (the trt-rtx component) and the TensorRT runtime
+        // (trt-runtime), which TensorRT-RTX needs as well.
+        bool IsTensorRtRtxInstalled { get; }
+        bool IsTensorRtRuntimeInstalled { get; }
+
         // Models the user added (shown first) and the default models installed with the app.
         string UserModelsDirectory { get; }
         string BundledModelsDirectory { get; }
         bool AreModelsInstalled { get; }
 
-        // TensorRT engines built for this GPU, one per model and tile size.
+        // TensorRT (*.engine) and TensorRT-RTX (*.rtxengine + *.jitcache) engines built for this GPU,
+        // one per model and tile size. Each backend's stale cleanup only touches its own files.
         string EngineCacheDirectory { get; }
 
         // The ONNX models in both folders, plus "No Model". Cached; RefreshModels rescans.

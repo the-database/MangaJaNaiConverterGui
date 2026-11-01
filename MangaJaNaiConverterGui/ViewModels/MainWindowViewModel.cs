@@ -508,9 +508,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _autoUpdate, value);
         }
 
-        // Which inference backend upscales: Auto (TensorRT when it can run, else DirectML), TensorRT or
-        // DirectML.
-        private string _upscaleBackend = "Auto";
+        // Which inference backend upscales: Auto (TensorRT when it can run, else DirectML), TensorRT,
+        // TensorRT-RTX (experimental, opt-in) or DirectML. See UpscaleBackends.
+        private string _upscaleBackend = UpscaleBackends.Auto;
         [DataMember]
         public string UpscaleBackend
         {
@@ -520,17 +520,20 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaiseAndSetIfChanged(ref _upscaleBackend, value);
                 this.RaisePropertyChanged(nameof(AutoBackendSelected));
                 this.RaisePropertyChanged(nameof(TensorRtBackendSelected));
+                this.RaisePropertyChanged(nameof(TensorRtRtxBackendSelected));
                 this.RaisePropertyChanged(nameof(DirectMlBackendSelected));
             }
         }
 
-        public bool AutoBackendSelected => UpscaleBackend != "TensorRT" && UpscaleBackend != "DirectML";
-        public bool TensorRtBackendSelected => UpscaleBackend == "TensorRT";
-        public bool DirectMlBackendSelected => UpscaleBackend == "DirectML";
+        public bool AutoBackendSelected => UpscaleBackends.Normalize(UpscaleBackend) == UpscaleBackends.Auto;
+        public bool TensorRtBackendSelected => UpscaleBackend == UpscaleBackends.TensorRt;
+        public bool TensorRtRtxBackendSelected => UpscaleBackend == UpscaleBackends.TensorRtRtx;
+        public bool DirectMlBackendSelected => UpscaleBackend == UpscaleBackends.DirectMl;
 
-        public async Task SetBackendAuto() => await SetBackend("Auto");
-        public async Task SetBackendTensorRt() => await SetBackend("TensorRT");
-        public async Task SetBackendDirectMl() => await SetBackend("DirectML");
+        public async Task SetBackendAuto() => await SetBackend(UpscaleBackends.Auto);
+        public async Task SetBackendTensorRt() => await SetBackend(UpscaleBackends.TensorRt);
+        public async Task SetBackendTensorRtRtx() => await SetBackend(UpscaleBackends.TensorRtRtx);
+        public async Task SetBackendDirectMl() => await SetBackend(UpscaleBackends.DirectMl);
 
         private async Task SetBackend(string backend)
         {
@@ -873,9 +876,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                     var installed = (bool?)p["installed"] ?? false;
                     var recommended = (bool?)p["recommended"] ?? false;
                     // Only surface packs relevant to this machine: what it uses (recommended) or
-                    // already has (installed, so it can be removed). Kernel packs for other GPU
-                    // generations stay hidden; the updater CLI still lists them all.
-                    if (!installed && !recommended)
+                    // already has (installed, so it can be removed), plus the opt-in TensorRT-RTX
+                    // pack on NVIDIA GPUs. Kernel packs for other GPU generations stay hidden; the
+                    // updater CLI still lists them all.
+                    if (!ComponentItem.IsShown(name, installed, recommended, nvidia))
                     {
                         continue;
                     }
@@ -936,6 +940,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 _totalEtaCalculator.Reset();
                 ct.ThrowIfCancellationRequested();
                 ConsoleQueueClear();
+                BackendFallbackText = string.Empty;
                 Upscaling = true;
                 ProgressCurrentFile = 0;
                 ProgressCurrentFileInArchive = 0;
@@ -946,12 +951,17 @@ namespace MangaJaNaiConverterGui.ViewModels
                     ConsoleQueueEnqueue($"The upscaling engine is missing ({_backendService.BackendExePath}). Install it from App Settings > Components.");
                     return;
                 }
+                if (MissingBackendComponents() is string missing)
+                {
+                    ConsoleQueueEnqueue(missing);
+                    return;
+                }
                 Directory.CreateDirectory(_backendService.EngineCacheDirectory);
                 var args = new List<string>
                 {
                     "--settings", _backendService.AppStatePath,
                     "--aji-dir", _backendService.InferenceDirectory,
-                    "--backend", _deviceIds.Length > 0 ? _deviceBackend : "auto",
+                    "--backend", UpscaleBackends.UpscaleBackend(UpscaleBackend, _deviceIds.Length > 0 ? _deviceBackend : null),
                     "--cache-dir", _backendService.EngineCacheDirectory,
                     "--models-dir", _backendService.UserModelsDirectory,
                     "--models-dir", _backendService.BundledModelsDirectory,
@@ -1263,9 +1273,21 @@ namespace MangaJaNaiConverterGui.ViewModels
                             else
                             {
                                 // A first-use TensorRT engine build takes minutes: say so in the status bar.
-                                if (e.Data.StartsWith("ENGINE_BUILD "))
+                                // The line names the engine it builds: a TensorRT-RTX build takes about a
+                                // second, and after a TensorRT-RTX fallback the build is TensorRT's.
+                                // BACKEND_FALLBACK: TensorRT-RTX failed (at start, or for one model)
+                                // and the CLI runs TensorRT instead; warned about until the next run.
+                                if (e.Data.StartsWith("BACKEND_FALLBACK "))
                                 {
-                                    EngineStatusText = $"Building the TensorRT engine for {e.Data["ENGINE_BUILD ".Length..].Split(' ')[0]} (a few minutes, once per model)...";
+                                    BackendFallbackText = e.Data["BACKEND_FALLBACK ".Length..];
+                                    EngineStatusText = string.Empty; // a failed TensorRT-RTX build ends here
+                                }
+                                else if (e.Data.StartsWith("ENGINE_BUILD "))
+                                {
+                                    var model = e.Data["ENGINE_BUILD ".Length..].Split(' ')[0];
+                                    EngineStatusText = e.Data.Contains("TensorRT-RTX")
+                                        ? $"Building the TensorRT-RTX engine for {model}..."
+                                        : $"Building the TensorRT engine for {model} (a few minutes, once per model)...";
                                 }
                                 else if (e.Data.StartsWith("ENGINE_READY "))
                                 {
@@ -1287,6 +1309,21 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             }
         }
+
+        // The CLI's last TensorRT-RTX fallback this run ("TensorRT-RTX failed (...); using TensorRT
+        // instead"): a warning in the status bar, the full line as its tooltip.
+        private string _backendFallbackText = string.Empty;
+        public string BackendFallbackText
+        {
+            get => _backendFallbackText;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendFallbackText, value);
+                this.RaisePropertyChanged(nameof(ShowBackendFallback));
+            }
+        }
+
+        public bool ShowBackendFallback => !string.IsNullOrEmpty(BackendFallbackText);
 
         private string _engineStatusText = string.Empty;
         public string EngineStatusText
@@ -1340,15 +1377,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         // Fill the device list for the chosen backend (Auto: TensorRT's devices if it can run here,
-        // else DirectML's), keeping the user's device while it's still there.
+        // else DirectML's; TensorRT-RTX: its own, else TensorRT's), keeping the user's device while
+        // it's still there.
         public async Task RefreshDevices()
         {
-            var backends = UpscaleBackend switch
-            {
-                "TensorRT" => new[] { "tensorrt" },
-                "DirectML" => new[] { "directml" },
-                _ => new[] { "tensorrt", "directml" },
-            };
+            var backends = UpscaleBackends.DeviceQueryOrder(UpscaleBackend);
             List<BackendDevice> devices = [];
             var backend = backends[0];
             foreach (var b in backends)
@@ -1373,10 +1406,17 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 SelectedDeviceIndex = selected;
             }
-            DeviceStatusText = devices.Count == 0
+            var upscaleBackend = UpscaleBackends.UpscaleBackend(UpscaleBackend, devices.Count > 0 ? backend : null);
+            DeviceStatusText = MissingBackendComponents() ?? (devices.Count == 0
                 ? "No compatible GPU found. MangaJaNaiConverterGui needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
-                : $"Using {(backend == "tensorrt" ? "TensorRT" : "DirectML")}.";
+                : upscaleBackend == UpscaleBackends.CliTensorRtRtx
+                    ? "Using TensorRT-RTX (experimental). If it can't start on this GPU, TensorRT is used instead."
+                    : $"Using {UpscaleBackends.DisplayName(upscaleBackend)}.");
         }
+
+        // The components the chosen backend needs that aren't installed, as a message; null if none.
+        private string? MissingBackendComponents() =>
+            UpscaleBackends.MissingComponentsMessage(UpscaleBackend, _backendService.IsTensorRtRtxInstalled, _backendService.IsTensorRtRuntimeInstalled);
 
         private string _deviceStatusText = string.Empty;
         public string DeviceStatusText
@@ -1825,11 +1865,21 @@ namespace MangaJaNaiConverterGui.ViewModels
         public bool Installed { get; } = installed;
         public bool Recommended { get; } = recommended;
 
+        // The opt-in TensorRT-RTX backend: never recommended, so the updater never installs it unasked.
+        public const string TensorRtRtxPack = "trt-rtx";
+
+        // Which packs the component manager lists: what this machine uses (recommended) or has
+        // (installed, so it can be removed), and on an NVIDIA GPU the TensorRT-RTX pack, so it can
+        // be opted into.
+        public static bool IsShown(string name, bool installed, bool recommended, bool nvidia) =>
+            installed || recommended || (nvidia && name == TensorRtRtxPack);
+
         // User-facing label for the raw pack id. Only the packs relevant to this machine reach the
         // UI, so the GPU family shown is the user's own.
         public string Title => Name switch
         {
             "trt-runtime" => "TensorRT runtime",
+            TensorRtRtxPack => "TensorRT-RTX (experimental)",
             "trt-ptx" => "TensorRT kernels: other NVIDIA GPUs",
             "models-mangajanai" => "MangaJaNai models (grayscale manga)",
             "models-illustrationjanai" => "IllustrationJaNai models (color)",
@@ -1839,7 +1889,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public string Description => Name switch
         {
-            "trt-runtime" => "The fastest upscaling engine, for NVIDIA GPUs. Without it, upscaling uses the slower DirectML engine.",
+            "trt-runtime" => "The fastest upscaling engine, for NVIDIA GPUs. Without it, upscaling uses the slower DirectML engine. TensorRT-RTX needs it too.",
+            TensorRtRtxPack => "Optional, experimental backend for NVIDIA RTX GPUs (RTX 20 series and newer). It builds engines in about a second instead of a TensorRT build's few minutes; output is equivalent to TensorRT's, though not bit-identical. Needs the TensorRT runtime. To use it, choose TensorRT-RTX under Upscale Settings > Backend.",
             "trt-ptx" => "Fallback kernels for NVIDIA GPUs without a dedicated kernel pack. The first engine build is slower.",
             "models-mangajanai" => "The default models for grayscale manga pages, one per source resolution.",
             "models-illustrationjanai" => "The default models for color pages and illustrations.",

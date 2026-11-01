@@ -3,9 +3,9 @@
 //
 // Assembles the redistributable install tree (the app + MangaJaNaiUpdater + the inference dir: libaji,
 // the mangajanai_upscale backend, ONNX Runtime/DirectML, the VC++ runtime) and, under --packs, carves
-// the heavy optional pieces (TensorRT runtime, per-GPU-generation builder resources, the ONNX models)
-// into component-*.7z + packs.json release assets, then slims them out of the core. End users download
-// the small core plus the packs their hardware needs.
+// the heavy optional pieces (TensorRT runtime, per-GPU-generation builder resources, the ONNX models,
+// the opt-in TensorRT-RTX backend) into component-*.7z + packs.json release assets, then slims them out
+// of the core. End users download the small core plus the packs their hardware needs.
 //
 //   BuildMangaJaNai <version> --app-dir <dir> --updater <exe> [--packs] [--out <dir>]
 //
@@ -18,7 +18,11 @@
 //   TRT_LOCAL_ZIP           -> a downloaded TensorRT "-external" zip
 //   TRT_LOCAL_DIR           -> an existing inference dir holding the TensorRT runtime + cudart (e.g. VideoJaNai's)
 //   AJI_LOCAL_ZIP           -> a locally built aji-windows-x64.zip
-//   AJI_LOCAL_DIR           -> a directory of aji files copied flat into inference/
+//   AJI_LOCAL_DIR           -> a directory of aji files copied flat into inference/ (with aji_trtrtx.dll
+//                              and its runtime, if it holds them)
+//   AJI_TRTRTX_LOCAL_ZIP    -> a locally built aji-trtrtx-windows-x64.zip, from the same build as the
+//                              aji files. With AJI_LOCAL_ZIP/AJI_LOCAL_DIR and without this, the released
+//                              one is not mixed in: there is no trt-rtx pack unless the dir holds it.
 //   MANGAJANAI_CLI_LOCAL    -> a local mangajanai_upscale.exe, or a directory/zip holding it
 //   MANGAJANAI_MODELS_DIR   -> a local directory of the model archives (models-*.7z) or loose .onnx files
 //   VC_CRT_DIR              -> a Microsoft.VC14x.CRT directory (default: found through vswhere)
@@ -48,9 +52,13 @@ const string CudartVersion     = "13.4.49";
 const string CudartSha256Win   = "e6663f3d3e8949eedc2d5ab92c7c5b9fa3f2a222086d91c42bfc5a38bf2b0225";
 
 // the-database/animejanai-inference. v0.18.0 added the still-image ABI (aji_image.h) the backend uses;
-// v0.18.2 makes DirectML device ids the card's PCI address, so they match TensorRT's and survive reboots.
-const string AjiVersion        = "v0.18.2";
-const string AjiSha256Win      = "e0c9c08335c234682f2f3583f1775d0274fc2516dfb28aeb70b668aed38ed481";
+// v0.18.2 makes DirectML device ids the card's PCI address, so they match TensorRT's and survive reboots;
+// v0.19.0 makes DirectML ~35-40% faster and adds TensorRT-RTX; v0.19.1 fixes its engine-build teardown.
+const string AjiVersion        = "v0.19.1";
+const string AjiSha256Win      = "855fa197bc01a3621ee8265e0c19a9238024443cd9cd4a4692e5205c1716beee";
+// The same release's opt-in TensorRT-RTX backend: aji_trtrtx.dll + the TensorRT for RTX runtime and its
+// licence notices (~232 MB unpacked). It becomes the trt-rtx pack, never part of the core.
+const string AjiTrtRtxSha256Win = "87742617e83c3e55a990d9e0355b9342c31a4fb5c283506908f9fcb05263defe";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
 // DirectML backend runtime (aji_dml.dll loads both from its own directory). The last DirectML-flavored
 // ORT releases (DML is in sustained engineering); same pins as VideoJaNai.
@@ -61,9 +69,11 @@ const string DirectMLVersion   = "1.15.4";                // Microsoft.AI.Direct
 // yosh-image + libaji, released on its own mangajanai-cli-v* tags. MANGAJANAI_CLI_LOCAL overrides it
 // with a local build.
 const string CliRepo           = "the-database/yosh";
-const string CliVersion        = "mangajanai-cli-v0.1.1";
+// v0.1.2: --backend tensorrt-rtx (with its fallbacks to TensorRT, reported as BACKEND_FALLBACK lines)
+// and the backend named in ENGINE_BUILD lines.
+const string CliVersion        = "mangajanai-cli-v0.1.2";
 const string CliAsset          = "mangajanai-cli-windows-x64.zip";
-const string CliSha256         = "4ea0f5e5db5bcade428cb73f14c2ed5393fd3cde51ab73ef831905a4c8aac527";
+const string CliSha256         = "a7264d0996ccfbd15706e152401c58944cdf5c341ca608a24a198cf615e0f9a8";
 
 // The default ONNX models (opset 17, fp16 where the model allows: one set for TensorRT and DirectML),
 // published as an archive on each model's MangaJaNai release. Local builds can use
@@ -197,6 +207,17 @@ static bool KeepInferenceFile(string name) =>
     name.StartsWith("nvinfer_builder_resource_", StringComparison.OrdinalIgnoreCase) ||
     name.Contains("LICENSE", StringComparison.OrdinalIgnoreCase);
 
+// The TensorRT-RTX backend's files (aji-trtrtx-windows-x64.zip): aji_trtrtx.dll, the TensorRT for RTX
+// runtime (tensorrt_rtx_<M>_<m>.dll, tensorrt_onnxparser_rtx_<M>_<m>.dll) and NVIDIA's notices, which
+// must ship with the DLLs. Exactly these make up the trt-rtx pack.
+static bool IsTrtRtxFile(string name) =>
+    name.Equals("aji_trtrtx.dll", StringComparison.OrdinalIgnoreCase) ||
+    ((name.StartsWith("tensorrt_rtx_", StringComparison.OrdinalIgnoreCase) ||
+      name.StartsWith("tensorrt_onnxparser_rtx_", StringComparison.OrdinalIgnoreCase)) &&
+     name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) ||
+    (name.StartsWith("TensorRT-RTX-", StringComparison.OrdinalIgnoreCase) &&
+     name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase));
+
 static void VerifySha256(string path, string expected)
 {
     using var stream = File.OpenRead(path);
@@ -216,6 +237,7 @@ async Task InstallAji()
     Directory.CreateDirectory(inferencePath);
 
     var localDir = Environment.GetEnvironmentVariable("AJI_LOCAL_DIR");
+    var localZip = Environment.GetEnvironmentVariable("AJI_LOCAL_ZIP");
     if (!string.IsNullOrEmpty(localDir))
     {
         Console.WriteLine($"Using local aji files: {localDir}");
@@ -223,33 +245,68 @@ async Task InstallAji()
         {
             File.Copy(f, Path.Combine(inferencePath, Path.GetFileName(f)), true);
         }
-        return;
-    }
-
-    var localZip = Environment.GetEnvironmentVariable("AJI_LOCAL_ZIP");
-    string targetPath;
-    if (!string.IsNullOrEmpty(localZip))
-    {
-        Console.WriteLine($"Using local aji build: {localZip}");
-        targetPath = localZip;
     }
     else
     {
-        const string asset = "aji-windows-x64.zip";
-        Console.WriteLine($"Downloading {asset} {AjiVersion}...");
-        targetPath = Path.Combine(workDirectory, asset);
-        await DownloadFileAsync($"https://github.com/the-database/animejanai-inference/releases/download/{AjiVersion}/{asset}",
-            targetPath, p => Console.WriteLine($"Downloading {asset} ({p}%)..."));
-        VerifySha256(targetPath, AjiSha256Win);
+        string targetPath;
+        if (!string.IsNullOrEmpty(localZip))
+        {
+            Console.WriteLine($"Using local aji build: {localZip}");
+            targetPath = localZip;
+        }
+        else
+        {
+            targetPath = await DownloadAjiAsset("aji-windows-x64.zip", AjiSha256Win);
+        }
+        // Only the libraries: the video tools (aji_encode, harnesses) aren't used by the image backend.
+        ExtractZipFiltered(targetPath, entry =>
+        {
+            var name = Path.GetFileName(entry);
+            return name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || name.Contains("LICENSE", StringComparison.OrdinalIgnoreCase)
+                ? Path.Combine(inferencePath, name)
+                : null;
+        });
     }
-    // Only the libraries: the video tools (aji_encode, harnesses) aren't used by the image backend.
-    ExtractZipFiltered(targetPath, entry =>
+
+    // The TensorRT-RTX backend, a separate asset. aji_trtrtx.dll must come from the same build as
+    // aji.dll, so a local aji build takes it only from AJI_TRTRTX_LOCAL_ZIP (or its own directory).
+    var rtxZip = Environment.GetEnvironmentVariable("AJI_TRTRTX_LOCAL_ZIP");
+    if (!string.IsNullOrEmpty(rtxZip))
+    {
+        Console.WriteLine($"Using local aji TensorRT-RTX build: {rtxZip}");
+    }
+    else if (!string.IsNullOrEmpty(localDir) || !string.IsNullOrEmpty(localZip))
+    {
+        if (!File.Exists(Path.Combine(inferencePath, "aji_trtrtx.dll")))
+        {
+            Console.WriteLine("WARNING: local aji build and no AJI_TRTRTX_LOCAL_ZIP; TensorRT-RTX not bundled (no trt-rtx pack).");
+        }
+        return;
+    }
+    else
+    {
+        rtxZip = await DownloadAjiAsset("aji-trtrtx-windows-x64.zip", AjiTrtRtxSha256Win);
+    }
+    ExtractZipFiltered(rtxZip, entry =>
     {
         var name = Path.GetFileName(entry);
-        return name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || name.Contains("LICENSE", StringComparison.OrdinalIgnoreCase)
-            ? Path.Combine(inferencePath, name)
-            : null;
+        return IsTrtRtxFile(name) ? Path.Combine(inferencePath, name) : null;
     });
+}
+
+// One asset of the pinned animejanai-inference release, sha-verified. Returns the downloaded path.
+async Task<string> DownloadAjiAsset(string asset, string sha256)
+{
+    Console.WriteLine($"Downloading {asset} {AjiVersion}...");
+    var targetPath = Path.Combine(workDirectory, asset);
+    double lastProgress = -1;
+    await DownloadFileAsync($"https://github.com/the-database/animejanai-inference/releases/download/{AjiVersion}/{asset}",
+        targetPath, p =>
+        {
+            if (p >= lastProgress + 10) { Console.WriteLine($"Downloading {asset} ({p}%)..."); lastProgress = p; }
+        });
+    VerifySha256(targetPath, sha256);
+    return targetPath;
 }
 
 // ONNX Runtime + DirectML for the DirectML backend. They ship in the core rather than a component
@@ -424,7 +481,12 @@ void WriteThirdPartyNotices()
         "shipped alongside it as DirectML_LICENSE.txt (use on Windows and Xbox only).\n\n" +
         "Microsoft Visual C++ runtime (msvcp140*.dll, vcruntime140*.dll, concrt140.dll),\n" +
         "(c) Microsoft Corporation, redistributed under the Visual Studio redistributable terms.\n\n" +
-        "aji.dll / aji_trt.dll / aji_dml.dll:\n" +
+        "NVIDIA TensorRT for RTX runtime (tensorrt_rtx_*.dll, tensorrt_onnxparser_rtx_*.dll), only\n" +
+        "with the optional TensorRT-RTX component: NVIDIA proprietary software, redistributed under the\n" +
+        "NVIDIA TensorRT for RTX Software License Agreement. Its notice and NVIDIA's acknowledgements\n" +
+        "of the third-party software it includes ship with it as TensorRT-RTX-NOTICE.txt and\n" +
+        "TensorRT-RTX-Acknowledgements.txt.\n\n" +
+        "aji.dll / aji_trt.dll / aji_dml.dll / aji_trtrtx.dll:\n" +
         "https://github.com/the-database/animejanai-inference\n\n" +
         "mangajanai_upscale.exe (built on yosh-engine):\n" +
         "https://github.com/the-database/yosh\n";
@@ -456,7 +518,7 @@ void WriteVersionAndManifest()
         // reinstall that pack.
         deps = new
         {
-            aji = AjiVersion,
+            aji = AjiVersion,            // the trt-rtx pack's: aji_trtrtx.dll must match aji.dll
             inference_runtime = $"trt-{TrtVersion}",
             ort_dml = $"{OrtDmlVersion}+{DirectMLVersion}",
             backend = CliVersion,
@@ -583,6 +645,10 @@ async Task<List<string>> EmitComponentPacks()
             packs.Add(($"trt-{m.Groups[1].Value}", "inference_runtime", Rel([f])));
         }
     }
+    // The opt-in TensorRT-RTX backend (never recommended, so nothing installs it unasked). Its dep is
+    // aji: aji_trtrtx.dll has to match aji.dll, so the pack goes stale with every aji bump. It runs
+    // on trt-runtime's cudart, and its fallback to TensorRT needs trt-runtime too.
+    packs.Add(("trt-rtx", "aji", Rel(Directory.GetFiles(inferencePath).Where(f => IsTrtRtxFile(Path.GetFileName(f))))));
 
     var index = new List<object>();
     var packedFiles = new List<string>();
