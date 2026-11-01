@@ -766,12 +766,14 @@
                     <StackPanel Spacing="6">
                       <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Auto</Bold>: TensorRT on an NVIDIA GPU it supports, otherwise DirectML.</TextBlock>
                       <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT</Bold>: fastest, NVIDIA RTX GPUs only. Builds an engine for each model and tile size the first time it's used, which takes a few minutes.</TextBlock>
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT-RTX</Bold> (experimental): NVIDIA RTX GPUs only. Builds its engines in about a second instead of minutes. Output is equivalent to TensorRT's but not bit-identical. Falls back to TensorRT if TensorRT-RTX can't start. Needs the TensorRT-RTX and TensorRT runtime components (App Settings > Components). Auto never picks it.</TextBlock>
                       <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>DirectML</Bold>: any DirectX 12 GPU (NVIDIA, AMD, Intel). Slower than TensorRT, with no engine build.</TextBlock>
                     </StackPanel>
                   </ToolTip.Tip>
                 </ContentControl>
                 <ToggleButton IsChecked="{Binding AutoBackendSelected, Mode=OneWay}" Content="Auto" Command="{Binding SetBackendAuto}" IsEnabled="{Binding !Upscaling}" />
                 <ToggleButton IsChecked="{Binding TensorRtBackendSelected, Mode=OneWay}" Content="TensorRT" Command="{Binding SetBackendTensorRt}" IsEnabled="{Binding !Upscaling}" />
+                <ToggleButton IsChecked="{Binding TensorRtRtxBackendSelected, Mode=OneWay}" Content="TensorRT-RTX" Command="{Binding SetBackendTensorRtRtx}" IsEnabled="{Binding !Upscaling}" />
                 <ToggleButton IsChecked="{Binding DirectMlBackendSelected, Mode=OneWay}" Content="DirectML" Command="{Binding SetBackendDirectMl}" IsEnabled="{Binding !Upscaling}" />
               </StackPanel>
               <StackPanel Classes="row">
