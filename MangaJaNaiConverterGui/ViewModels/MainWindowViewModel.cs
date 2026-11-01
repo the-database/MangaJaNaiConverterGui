@@ -604,15 +604,6 @@ namespace MangaJaNaiConverterGui.ViewModels
             var bf16 = Bf16Runnable;
             var directMl = BackendIsDirectMl;
 
-            // The model list, filtered once the backend and device are known (before that, all).
-            var picker = _devicesListed ? ModelVariants.PickerModels(installed, bf16, directMl) : installed;
-            var rebuilt = !PickerModels.SequenceEqual(picker);
-            if (rebuilt)
-            {
-                PickerModels.Clear();
-                PickerModels.AddRange(picker);
-            }
-
             _applyingModelVariants = true;
             try
             {
@@ -625,9 +616,14 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 _applyingModelVariants = false;
             }
-            if (rebuilt)
+
+            // Then the model list, filtered once the backend and device are known (before that, all
+            // installed models). Each chain's picker follows it, holding on to the chain's model.
+            var picker = _devicesListed ? ModelVariants.PickerModels(installed, bf16, directMl) : installed;
+            if (!PickerModels.SequenceEqual(picker))
             {
-                ReselectModels();
+                PickerModels.Clear();
+                PickerModels.AddRange(picker);
             }
             RefreshPrecisionTags();
             CurrentWorkflow?.Validate();
@@ -637,15 +633,6 @@ namespace MangaJaNaiConverterGui.ViewModels
         // updated in place; every installed model until the first device list.
         private AvaloniaList<string>? _pickerModels;
         public AvaloniaList<string> PickerModels => _pickerModels ??= new AvaloniaList<string>(_backendService?.AllModels ?? []);
-
-        // The model list was rebuilt: reselect every chain's model.
-        private void ReselectModels()
-        {
-            foreach (var chain in Workflows?.SelectMany(w => w.Chains ?? []) ?? [])
-            {
-                chain.ReselectModel();
-            }
-        }
 
         // The backend or device changed: what runs where, and the hints that depend on it.
         private void OnBackendContextChanged()
@@ -696,6 +683,24 @@ namespace MangaJaNaiConverterGui.ViewModels
             return choice.MissingPack is string pack
                 ? $"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is bf16, which DirectML can't run. Install the \"{ComponentItem.TitleOf(pack)}\" component in App Settings > Components, or choose another backend."
                 : null;
+        }
+
+        // A chain's model that isn't installed (and that the variant rule can't replace with an
+        // installed variant), as a validation message; null if it is, or for none / No Model.
+        public string? ModelNotInstalledProblem(UpscaleChain chain)
+        {
+            var model = chain.ModelFilePath;
+            if (_backendService is null || string.IsNullOrWhiteSpace(model) || model == BackendService.NoModel)
+            {
+                return null;
+            }
+            var installed = _backendService.AllModels;
+            var runs = ModelVariants.Resolve(model, installed, Bf16Runnable, BackendIsDirectMl).Model;
+            if (installed.Contains(runs, StringComparer.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+            return $"Chain {chain.ChainNumber}'s model {model} isn't installed. Add it to the models folder (App Settings > Models), or choose another model. PyTorch models (.pth, .safetensors) need converting to ONNX first: {UpscaleChain.ConvertModelsUrl}";
         }
 
         // ---- precision tags --------------------------------------------------------------------
@@ -3055,7 +3060,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     valid = false;
                     validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNai GUI 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
                 }
-                else if (Vm?.ModelVariantProblem(chain) is string problem)
+                else if ((Vm?.ModelVariantProblem(chain) ?? Vm?.ModelNotInstalledProblem(chain)) is string problem)
                 {
                     valid = false;
                     validationText.Add(problem);
@@ -3091,6 +3096,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             {
                 sub?.Dispose();
                 sub = null;
+                // The picker lists the view model's (variant-filtered) models once wired up; a chain
+                // taken off the view model lets go of its list.
+                AttachModelSource(vm?.PickerModels);
                 if (vm is null)
                 {
                     return;
@@ -3099,12 +3107,10 @@ namespace MangaJaNaiConverterGui.ViewModels
                     x => x.IsExtractingBackend
                     ).Subscribe(x =>
                     {
-                        this.RaisePropertyChanged(nameof(AllModels));
                         this.RaisePropertyChanged(nameof(ModelFilePath));
                     });
             });
 
-            this.RaisePropertyChanged(nameof(AllModels));
             this.RaisePropertyChanged(nameof(ModelFilePath));
 
             // The collapsed chains' summaries follow every setting.
@@ -3190,7 +3196,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private string ResolutionRange => RangeText(ResolutionText(MinResolution), ResolutionText(MaxResolution), "any resolution");
 
-        // "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.safetensors" -> "2x IllustrationJaNai_V3denoise_FDAT_M"
+        // "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.onnx" -> "2x IllustrationJaNai_V3denoise_FDAT_M (fp16)":
+        // short, but with the precision the name states (a name without one shows none).
         public static string ShortModelName(string? fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -3208,7 +3215,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 name = $"{scale.Groups[1].Value} {name[scale.Length..]}";
             }
             var cut = Regex.Match(name, @"_(unshuffle|fp16|fp32|bf16|\d+k)(_|$)", RegexOptions.IgnoreCase);
-            return cut.Success && cut.Index > 0 ? name[..cut.Index] : name;
+            var shortName = cut.Success && cut.Index > 0 ? name[..cut.Index] : name;
+            return ModelVariants.NamedPrecision(fileName) is string precision ? $"{shortName} ({precision})" : shortName;
         }
 
         private string ImageKinds => (IsColor, IsGrayscale) switch
@@ -3311,17 +3319,118 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string ModelFilePath
         {
             get => _modelFilePath;
-            // The model ComboBox sets null when nothing is selected (or the saved model isn't in
-            // the list); the backend reads the setting as a string.
+            // Only a choice changes the model. The model ComboBox writes null whenever its selection
+            // goes (bound before its list holds the model, the list replaced, the selected item
+            // removed): ignored, so a saved model is never lost. Its list always holds this model
+            // (ModelChoices), so it shows it, as missing if it isn't installed.
             set
             {
-                var changed = _modelFilePath != (value ?? string.Empty);
-                this.RaiseAndSetIfChanged(ref _modelFilePath, value ?? string.Empty);
-                this.RaisePropertyChanged(nameof(MissingModel));
-                if (changed)
+                if (value is null || value == _modelFilePath)
                 {
-                    Vm?.OnChainModelChanged(this);
+                    return;
                 }
+                this.RaisePropertyChanging(nameof(ModelFilePath));
+                _modelFilePath = value;
+                // The list first, so the ComboBox finds the model when told about it.
+                UpdateModelChoices();
+                this.RaisePropertyChanged(nameof(ModelFilePath));
+                this.RaisePropertyChanged(nameof(MissingModel));
+                Vm?.OnChainModelChanged(this);
+            }
+        }
+
+        // ---- the model picker's list -----------------------------------------------------------
+        // One list per chain, kept as the same instance (the ComboBox clears its selection, and
+        // writes null, when its list is replaced): the shared model list (PickerModels), plus this
+        // chain's model last when the list doesn't hold it, marked missing. Last, so adding or
+        // removing it never moves the other entries under the ComboBox's selection.
+
+        private AvaloniaList<string>? _modelSource;
+        private readonly AvaloniaList<ModelChoice> _modelChoices = [];
+
+        // (A chain shown without a view model lists the installed models.)
+        public AvaloniaList<ModelChoice> ModelChoices
+        {
+            get
+            {
+                if (_modelSource is null)
+                {
+                    AttachModelSource(Vm?.PickerModels ?? _backendService?.AllModels);
+                }
+                return _modelChoices;
+            }
+        }
+
+        // The picker's items for a model list and the chain's model.
+        public static List<ModelChoice> ModelChoicesFor(IEnumerable<string> listed, string model)
+        {
+            var names = listed.ToList();
+            var choices = names.Select(n => new ModelChoice(n, false)).ToList();
+            if (!string.IsNullOrEmpty(model) && !names.Contains(model))
+            {
+                choices.Add(new ModelChoice(model, true));
+            }
+            return choices;
+        }
+
+        private void AttachModelSource(AvaloniaList<string>? source)
+        {
+            if (ReferenceEquals(source, _modelSource))
+            {
+                return;
+            }
+            if (_modelSource != null)
+            {
+                _modelSource.CollectionChanged -= ModelSourceChanged;
+            }
+            _modelSource = source;
+            if (_modelSource != null)
+            {
+                _modelSource.CollectionChanged += ModelSourceChanged;
+            }
+            UpdateModelChoices();
+        }
+
+        private void ModelSourceChanged(object? sender, NotifyCollectionChangedEventArgs e) => UpdateModelChoices();
+
+        private bool _staleRemovalPosted;
+
+        private void UpdateModelChoices()
+        {
+            var wanted = ModelChoicesFor((IEnumerable<string>?)_modelSource ?? [], _modelFilePath);
+            if (_modelChoices.SequenceEqual(wanted))
+            {
+                return;
+            }
+            if (!_modelChoices.Where(c => !c.Missing).SequenceEqual(wanted.Where(c => !c.Missing)))
+            {
+                // The model list changed: rebuild, then show the model again.
+                _modelChoices.Clear();
+                _modelChoices.AddRange(wanted);
+                ReselectModel();
+                return;
+            }
+            // Only the missing entry changed. A new one goes in now, before the ComboBox is told
+            // about the model; an old one goes after the change is through (removed now, while the
+            // ComboBox is still writing a pick, it would disturb the selection).
+            if (wanted.LastOrDefault() is { Missing: true } missing && !_modelChoices.Contains(missing))
+            {
+                _modelChoices.Add(missing);
+            }
+            if (!_staleRemovalPosted && _modelChoices.Any(c => c.Missing && c.Name != _modelFilePath))
+            {
+                _staleRemovalPosted = true;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _staleRemovalPosted = false;
+                    for (var i = _modelChoices.Count - 1; i >= 0; i--)
+                    {
+                        if (_modelChoices[i].Missing && _modelChoices[i].Name != _modelFilePath)
+                        {
+                            _modelChoices.RemoveAt(i);
+                        }
+                    }
+                });
             }
         }
 
@@ -3369,9 +3478,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
-        // What the model picker lists: the view model's variant-filtered list (every installed model
-        // before the chain is wired up).
-        public AvaloniaList<string> AllModels => Vm?.PickerModels ?? _backendService.AllModels;
+
 
         public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export";
 
@@ -3517,6 +3624,13 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             return string.Join(" ", parts);
         }
+    }
+
+    // An entry of a chain's model picker: a model file name, and whether it's missing (the chain's
+    // saved model, which isn't installed).
+    public sealed record ModelChoice(string Name, bool Missing)
+    {
+        public override string ToString() => Name;
     }
 
     // One entry of mangajanai_upscale --list-devices.
