@@ -84,17 +84,50 @@ namespace MangaJaNaiConverterGui.Services
 
         public AvaloniaList<string> AllModels => _allModels ??= ScanModels();
 
-        public void RefreshModels()
+        public bool RefreshModels()
         {
             var models = ScanModels();
             if (_allModels == null)
             {
                 _allModels = models;
-                return;
+                return true;
+            }
+            // Unchanged: leave the list alone, so the model ComboBoxes keep their selection.
+            if (_allModels.SequenceEqual(models))
+            {
+                return false;
             }
             // Update in place: every chain's model list shares this collection.
             _allModels.Clear();
             _allModels.AddRange(models);
+            return true;
+        }
+
+        public string? ResolveModelPath(string? model)
+        {
+            if (string.IsNullOrWhiteSpace(model) || model == NoModel)
+            {
+                return null;
+            }
+            try
+            {
+                if (Path.IsPathRooted(model))
+                {
+                    return File.Exists(model) ? model : null;
+                }
+                foreach (var dir in new[] { UserModelsDirectory, BundledModelsDirectory })
+                {
+                    var path = Path.Combine(dir, model);
+                    if (File.Exists(path))
+                    {
+                        return path;
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+            }
+            return null;
         }
 
         private AvaloniaList<string> ScanModels()

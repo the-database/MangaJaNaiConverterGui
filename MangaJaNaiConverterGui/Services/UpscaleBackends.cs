@@ -1,4 +1,6 @@
+using MangaJaNaiConverterGui.ViewModels;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MangaJaNaiConverterGui.Services
 {
@@ -49,6 +51,21 @@ namespace MangaJaNaiConverterGui.Services
             CliDirectMl => DirectMl,
             _ => Auto,
         };
+
+        // App Settings' setup check: with DirectML chosen while an NVIDIA GPU that TensorRT-RTX or
+        // TensorRT can use is listed (nvidiaDevices, as Auto finds them, listed by nvidiaBackend),
+        // the line saying Auto would be much faster there; null otherwise. Names the selected device
+        // when it's one of them (ids are the card's PCI address on every backend), else the first.
+        public static string? FasterBackendHint(string? choice, IReadOnlyList<BackendDevice>? nvidiaDevices, string? nvidiaBackend, string? selectedDeviceId)
+        {
+            if (Normalize(choice) != DirectMl || nvidiaDevices is not { Count: > 0 } ||
+                nvidiaBackend is not (CliTensorRt or CliTensorRtRtx))
+            {
+                return null;
+            }
+            var device = nvidiaDevices.FirstOrDefault(d => d.Id == selectedDeviceId) ?? nvidiaDevices[0];
+            return $"{DisplayName(nvidiaBackend)} is much faster on {device.Name}.";
+        }
 
         // TensorRT-RTX runs on the trt-rtx component and needs trt-runtime too (its CUDA runtime, and
         // TensorRT for the fallback). Names what's missing, as App Settings > Components lists it;
