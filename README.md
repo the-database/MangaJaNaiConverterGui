@@ -15,7 +15,7 @@ With **Auto Update** on (App Settings), updates download in the background and i
 ### Requirements
 - An NVIDIA RTX GPU for the **TensorRT** backend (fastest), or any DirectX 12 GPU (NVIDIA, AMD, Intel) for the **DirectML** backend. Choose one in App Settings; **Auto** picks TensorRT when it can run.
 - TensorRT builds an engine for each model and tile size the first time it is used, which takes a few minutes. Later upscales reuse it.
-- **TensorRT-RTX** (experimental, NVIDIA RTX GPUs) builds its engines in about a second instead. Its output is equivalent to TensorRT's but not bit-identical, and it falls back to TensorRT when it can't start. It is opt-in: install the **TensorRT-RTX** component in App Settings > Components (it needs the **TensorRT runtime** component too), then choose TensorRT-RTX as the backend. Auto never picks it.
+- **TensorRT-RTX** (experimental, NVIDIA RTX GPUs) builds its engines in about a second instead. Its output is equivalent to TensorRT's but not bit-identical, and it falls back to TensorRT when it can't start or can't build a model's engine, with a warning in the status bar. It is opt-in: install the **TensorRT-RTX** component in App Settings > Components (it needs the **TensorRT runtime** component too), then choose TensorRT-RTX as the backend. Auto never picks it.
 - There's no CPU backend.
 
 Keep your NVIDIA drivers up to date.
