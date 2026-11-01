@@ -53,12 +53,12 @@ const string CudartSha256Win   = "e6663f3d3e8949eedc2d5ab92c7c5b9fa3f2a222086d91
 
 // the-database/animejanai-inference. v0.18.0 added the still-image ABI (aji_image.h) the backend uses;
 // v0.18.2 makes DirectML device ids the card's PCI address, so they match TensorRT's and survive reboots;
-// v0.19.0 makes DirectML ~35-40% faster.
-const string AjiVersion        = "v0.19.0";
-const string AjiSha256Win      = "adab29cab85efa3471a9422f6ea82a69e925064acec9b1a0bd341db89a36c419";
+// v0.19.0 makes DirectML ~35-40% faster and adds TensorRT-RTX; v0.19.1 fixes its engine-build teardown.
+const string AjiVersion        = "v0.19.1";
+const string AjiSha256Win      = "855fa197bc01a3621ee8265e0c19a9238024443cd9cd4a4692e5205c1716beee";
 // The same release's opt-in TensorRT-RTX backend: aji_trtrtx.dll + the TensorRT for RTX runtime and its
 // licence notices (~232 MB unpacked). It becomes the trt-rtx pack, never part of the core.
-const string AjiTrtRtxSha256Win = "03f7874141fb046fe2cee340f0de9047eb6eacc07a8c95cf4331654017b17906";
+const string AjiTrtRtxSha256Win = "87742617e83c3e55a990d9e0355b9342c31a4fb5c283506908f9fcb05263defe";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
 // DirectML backend runtime (aji_dml.dll loads both from its own directory). The last DirectML-flavored
 // ORT releases (DML is in sustained engineering); same pins as VideoJaNai.
