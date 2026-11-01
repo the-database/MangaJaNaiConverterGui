@@ -12,17 +12,24 @@ namespace MangaJaNaiConverterGui.Tests
     public class UpscaleBackendTests
     {
         [Theory]
-        [InlineData("Auto", new[] { "tensorrt", "directml" })]
-        [InlineData("TensorRT", new[] { "tensorrt" })]
-        [InlineData("TensorRT-RTX", new[] { "tensorrt-rtx", "tensorrt" })]
-        [InlineData("DirectML", new[] { "directml" })]
-        // A value from a newer version (or garbage) is Auto, which never asks for TensorRT-RTX.
-        [InlineData("SomethingNew", new[] { "tensorrt", "directml" })]
-        [InlineData(null, new[] { "tensorrt", "directml" })]
-        public void DeviceListQueries(string? choice, string[] backends) =>
-            Assert.Equal(backends, UpscaleBackends.DeviceQueryOrder(choice));
+        [InlineData("Auto", false, new[] { "tensorrt", "directml" })]
+        [InlineData("TensorRT", false, new[] { "tensorrt" })]
+        [InlineData("TensorRT-RTX", false, new[] { "tensorrt-rtx", "tensorrt" })]
+        [InlineData("DirectML", false, new[] { "directml" })]
+        // A value from a newer version (or garbage) is Auto.
+        [InlineData("SomethingNew", false, new[] { "tensorrt", "directml" })]
+        [InlineData(null, false, new[] { "tensorrt", "directml" })]
+        // With the TensorRT-RTX component installed, Auto tries it first; explicit choices don't change.
+        [InlineData("Auto", true, new[] { "tensorrt-rtx", "tensorrt", "directml" })]
+        [InlineData(null, true, new[] { "tensorrt-rtx", "tensorrt", "directml" })]
+        [InlineData("TensorRT", true, new[] { "tensorrt" })]
+        [InlineData("TensorRT-RTX", true, new[] { "tensorrt-rtx", "tensorrt" })]
+        [InlineData("DirectML", true, new[] { "directml" })]
+        public void DeviceListQueries(string? choice, bool trtRtxInstalled, string[] backends) =>
+            Assert.Equal(backends, UpscaleBackends.DeviceQueryOrder(choice, trtRtxInstalled));
 
         [Theory]
+        [InlineData("Auto", "tensorrt-rtx", "tensorrt-rtx")]
         [InlineData("Auto", "tensorrt", "tensorrt")]
         [InlineData("Auto", "directml", "directml")]
         [InlineData("TensorRT", "tensorrt", "tensorrt")]
@@ -58,7 +65,7 @@ namespace MangaJaNaiConverterGui.Tests
         public void MissingTensorRtRtxNamesTheComponentToInstall()
         {
             var message = UpscaleBackends.MissingComponentsMessage("TensorRT-RTX", false, true);
-            Assert.Equal("TensorRT-RTX needs the \"TensorRT-RTX (experimental)\" component. Install it in App Settings > Components, or choose another backend.", message);
+            Assert.Equal("TensorRT-RTX needs the \"TensorRT-RTX\" component. Install it in App Settings > Components, or choose another backend.", message);
         }
 
         [Fact]
@@ -72,18 +79,18 @@ namespace MangaJaNaiConverterGui.Tests
         public void MissingBothNamesBoth()
         {
             var message = UpscaleBackends.MissingComponentsMessage("TensorRT-RTX", false, false);
-            Assert.Equal("TensorRT-RTX needs the \"TensorRT-RTX (experimental)\" and \"TensorRT runtime\" components. Install them in App Settings > Components, or choose another backend.", message);
+            Assert.Equal("TensorRT-RTX needs the \"TensorRT-RTX\" and \"TensorRT runtime\" components. Install them in App Settings > Components, or choose another backend.", message);
         }
 
         // The names the messages use are the component manager's titles.
         [Fact]
         public void MessageNamesMatchComponentTitles()
         {
-            Assert.Equal("TensorRT-RTX (experimental)", new ComponentItem("trt-rtx", 0, false, false).Title);
+            Assert.Equal("TensorRT-RTX", new ComponentItem("trt-rtx", 0, false, false).Title);
             Assert.Equal("TensorRT runtime", new ComponentItem("trt-runtime", 0, false, false).Title);
         }
 
-        // trt-rtx is never recommended, but an NVIDIA machine lists it so it can be opted into.
+        // trt-rtx is listed on any NVIDIA machine (recommended or not), so it can be installed anywhere.
         [Theory]
         [InlineData("trt-rtx", false, false, true, true)]
         [InlineData("trt-rtx", false, false, false, false)]

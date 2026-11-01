@@ -1,4 +1,4 @@
-; MangaJaNaiConverterGui setup installer (Inno Setup 6).
+; MangaJaNai GUI setup installer (Inno Setup 6).
 ;
 ; Wraps the slim install tree that BuildMangaJaNai produces into a per-user Windows installer.
 ; Built in CI by deploy.yml:
@@ -21,7 +21,10 @@
   #error Define SourceDir (the built install tree) with /DSourceDir=...
 #endif
 
-#define AppName "MangaJaNaiConverterGui"
+#define AppName "MangaJaNai GUI"
+; The app was MangaJaNaiConverterGui until 2.0. The exe, the install folder and the %APPDATA% folder
+; keep that name (existing installs, the updater and 1.x settings depend on it), as do 1.x's paths.
+#define LegacyName "MangaJaNaiConverterGui"
 #define Publisher "the-database"
 #define AppExe "MangaJaNaiConverterGui.exe"
 #define UpdaterExe "MangaJaNaiUpdater.exe"
@@ -31,17 +34,17 @@ AppId={{530AF8E6-8505-4160-8FBC-C07D0B9A0910}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#Publisher}
-AppPublisherURL=https://github.com/the-database/MangaJaNaiConverterGui
+AppPublisherURL=https://github.com/the-database/MangaJaNaiGUI
 WizardStyle=modern
 ; Per-user install: no elevation, lands in %LOCALAPPDATA%\Programs\MangaJaNaiConverterGui (not
 ; %LOCALAPPDATA%\MangaJaNaiConverterGui, where 1.x's Velopack install lives).
 PrivilegesRequired=lowest
-DefaultDirName={localappdata}\Programs\{#AppName}
+DefaultDirName={localappdata}\Programs\{#LegacyName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName} {#AppVersion}
-OutputBaseFilename={#AppName}-Setup-{#AppVersion}
+OutputBaseFilename=MangaJaNaiGUI-Setup-{#AppVersion}
 SetupIconFile=..\MangaJaNaiConverterGui\Assets\logo.ico
 Compression=lzma2/max
 SolidCompression=yes
@@ -70,9 +73,9 @@ Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait pos
 ; but keep settings and models (which may include models the user added).
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
-Type: filesandordirs; Name: "{userappdata}\{#AppName}\engines"
-Type: filesandordirs; Name: "{userappdata}\{#AppName}\logs"
-Type: filesandordirs; Name: "{userappdata}\{#AppName}\python"
+Type: filesandordirs; Name: "{userappdata}\{#LegacyName}\engines"
+Type: filesandordirs; Name: "{userappdata}\{#LegacyName}\logs"
+Type: filesandordirs; Name: "{userappdata}\{#LegacyName}\python"
 
 [Code]
 var
@@ -131,7 +134,9 @@ begin
     False, False);
 
   CompPage.Add('Upscaling models (MangaJaNai and IllustrationJaNai)');
-  if HasNvidia then
+  if HasNvidia and (Pos('trt-rtx', Packs) > 0) then
+    trtLabel := 'TensorRT-RTX and TensorRT engines (fastest) - for ' + GpuName
+  else if HasNvidia then
     trtLabel := 'TensorRT engine (fastest) - for ' + GpuName
   else
     trtLabel := 'TensorRT engine - requires an NVIDIA GPU (your GPU uses the built-in DirectML engine)';
@@ -156,8 +161,8 @@ begin
 end;
 
 // Install the recommended packs the user kept selected: models-* under the models option, the rest
-// (trt-*) under the TensorRT option. Returns the count that failed. The opt-in TensorRT-RTX pack
-// (trt-rtx) is never recommended, and is skipped here regardless: users add it in App Settings.
+// (trt-*, including trt-rtx, which is recommended on RTX 20 / GTX 16 series and newer) under the TensorRT
+// option. Returns the count that failed.
 function InstallSelectedPacks: Integer;
 var
   csv, pack: String;
@@ -179,7 +184,7 @@ begin
       pack := Trim(csv);
       csv := '';
     end;
-    if (pack = '') or (pack = 'trt-rtx') then
+    if pack = '' then
       Continue;
     isModels := Pos('models-', pack) = 1;
     if (isModels and CompPage.Values[0]) or ((not isModels) and CompPage.Values[1]) then
@@ -194,7 +199,7 @@ end;
 
 function VelopackDir: String;
 begin
-  Result := ExpandConstant('{localappdata}\{#AppName}');
+  Result := ExpandConstant('{localappdata}\{#LegacyName}');
 end;
 
 function VelopackRetiredDir: String;
@@ -207,6 +212,50 @@ begin
   Result := FileExists(VelopackDir + '\Update.exe');
 end;
 
+// 1.x's default models: PyTorch files that 2.0 can't run. 2.0 ships their ONNX exports and moves
+// saved chains to them (UpscaleChain.MigrateModelName), so only files with those names go:
+// <digit>x_MangaJaNai_* or <digit>x_IllustrationJaNai_*, ending in .pth or .safetensors. Models the
+// user added under any other name stay.
+function IsLegacyDefaultModel(Name: String): Boolean;
+var
+  Lower, Ext: String;
+begin
+  Lower := Lowercase(Name);
+  Ext := ExtractFileExt(Lower);
+  Result := (Length(Lower) > 3) and (Lower[1] >= '0') and (Lower[1] <= '9') and (Lower[2] = 'x') and
+            ((Pos('_mangajanai_', Lower) = 3) or (Pos('_illustrationjanai_', Lower) = 3)) and
+            ((Ext = '.pth') or (Ext = '.safetensors'));
+end;
+
+procedure DeleteLegacyDefaultModels;
+var
+  Dir: String;
+  FindRec: TFindRec;
+  Names: TStringList;
+  i: Integer;
+begin
+  Dir := ExpandConstant('{userappdata}\{#LegacyName}\models');
+  Names := TStringList.Create;
+  try
+    // Collect first, then delete: don't remove files from the folder being enumerated.
+    if FindFirst(Dir + '\*', FindRec) then
+    begin
+      try
+        repeat
+          if ((FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0) and IsLegacyDefaultModel(FindRec.Name) then
+            Names.Add(FindRec.Name);
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
+    end;
+    for i := 0 to Names.Count - 1 do
+      DeleteFile(Dir + '\' + Names[i]);
+  finally
+    Names.Free;
+  end;
+end;
+
 // Moving the folder fails while 1.x is running, so it doubles as the "is it closed" check, and
 // leaves the old install intact if it is still open.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -216,27 +265,34 @@ begin
   begin
     DelTree(VelopackRetiredDir, True, True, True);
     if not RenameFile(VelopackDir, VelopackRetiredDir) then
-      Result := 'Close {#AppName} 1.x (and any upscale it is running), then run setup again.' + #13#10#13#10 +
-                'Setup replaces the 1.x install. Your settings and models are kept.';
+      Result := 'Close {#LegacyName} 1.x (and any upscale it is running), then run setup again.' + #13#10#13#10 +
+                'Setup replaces the 1.x install. Your settings and the models you added are kept.';
   end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   failed: Integer;
+  pythonDir: String;
 begin
   if CurStep = ssInstall then
   begin
-    // Before this install creates its shortcuts: 1.x's desktop shortcut has the same name.
+    pythonDir := ExpandConstant('{userappdata}\{#LegacyName}\python');
+    // Upgrading from 1.x: its install (moved aside in PrepareToInstall), or its Python backend,
+    // which 1.x left behind even when its program folder was removed some other way. Its default
+    // models only go then, so a 2.0 reinstall never touches the models folder.
+    if DirExists(VelopackRetiredDir) or DirExists(pythonDir) then
+      DeleteLegacyDefaultModels;
+    // 1.x's shortcuts and uninstall entry, under its old name.
     if DirExists(VelopackRetiredDir) then
     begin
       DelTree(VelopackRetiredDir, True, True, True);
-      DeleteFile(ExpandConstant('{userprograms}\{#AppName}.lnk'));
-      DeleteFile(ExpandConstant('{userdesktop}\{#AppName}.lnk'));
-      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#AppName}');
+      DeleteFile(ExpandConstant('{userprograms}\{#LegacyName}.lnk'));
+      DeleteFile(ExpandConstant('{userdesktop}\{#LegacyName}.lnk'));
+      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#LegacyName}');
     end;
     // 1.x's Python backend (several GB): 2.0 runs on its own inference engine instead.
-    DelTree(ExpandConstant('{userappdata}\{#AppName}\python'), True, True, True);
+    DelTree(pythonDir, True, True, True);
   end
   else if CurStep = ssPostInstall then
   begin

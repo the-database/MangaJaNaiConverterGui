@@ -1,4 +1,4 @@
-// MangaJaNaiUpdater — keeps an installed MangaJaNaiConverterGui folder up to date in place, and
+// MangaJaNaiUpdater — keeps an installed MangaJaNai GUI folder up to date in place, and
 // manages its component packs (the in-app component manager and the installer shell this). Ships at
 // the install root next to MangaJaNaiConverterGui.exe. Ported from VideoJaNaiUpdater.
 //
@@ -12,13 +12,13 @@
 //   MangaJaNaiUpdater.exe --auto         install everything the detected hardware needs (or refresh stale packs)
 //   MangaJaNaiUpdater.exe --recommend    KEY=value hardware summary for the Inno installer
 //
-// An update is the latest GitHub release's full package (MangaJaNaiConverterGui-full-package-<ver>.zip,
+// An update is the latest GitHub release's full package (MangaJaNaiGUI-full-package-<ver>.zip,
 // rooted at MangaJaNaiConverterGui-v<ver>/). Files the previous version shipped (manifest.json "files")
 // that the new one no longer has are removed; manifest.json "user_preserve" paths are never touched.
 // Saved settings and user models live in %APPDATA%\MangaJaNaiConverterGui, outside the install.
 //
 // Component packs are subsets of the install (the TensorRT runtime, per-GPU-generation builder
-// resources, the default ONNX models, the opt-in TensorRT-RTX backend), emitted by BuildMangaJaNai as
+// resources, the default ONNX models, the TensorRT-RTX backend), emitted by BuildMangaJaNai as
 // component-<name>.7z + packs.json release assets. Archives are rooted at the install dir, so
 // extraction is installation; packs.json carries each pack's file list, so removal is deletion.
 // Installed state lives in components.json at the install root. Packs always come from the installed
@@ -34,8 +34,11 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using static Downloader;
 
+// The app was MangaJaNaiConverterGui until 2.0. Its exe, the package's root folder and %APPDATA% folder
+// keep that name (AppName), so existing installs and older updaters keep working; users see DisplayName.
 const string AppName = "MangaJaNaiConverterGui";
-const string Repo = "the-database/MangaJaNaiConverterGui";
+const string DisplayName = "MangaJaNai GUI";
+const string Repo = "the-database/MangaJaNaiGUI";
 string apiLatest = Environment.GetEnvironmentVariable("MANGAJANAI_UPDATE_URL") is { Length: > 0 } url
     ? url
     : $"https://api.github.com/repos/{Repo}/releases/latest";
@@ -132,7 +135,7 @@ async Task<int> ApplyAsync(bool noRelaunch)
             // Another window is still open; installing on its close covers it.
             return 0;
         }
-        Console.WriteLine($"Close all {AppName} windows, then try again.");
+        Console.WriteLine($"Close all {DisplayName} windows, then try again.");
         return 1;
     }
 
@@ -461,7 +464,7 @@ void RelaunchApp()
     {
         Process.Start(new ProcessStartInfo { FileName = app, UseShellExecute = true, WorkingDirectory = installDir });
     }
-    catch (Exception e) { Console.WriteLine($"Could not relaunch {AppName}: {e.Message}"); }
+    catch (Exception e) { Console.WriteLine($"Could not relaunch {DisplayName}: {e.Message}"); }
 }
 
 // Waits until no other process runs from the install folder; false if some still do at the timeout.
@@ -700,16 +703,22 @@ static (bool HasNvidia, string Sm, string GpuName) DetectGpu()
 }
 
 // The models every install needs, plus the TensorRT runtime and the builder pack for each NVIDIA GPU
-// generation (the exact pack if published, else the PTX fallback). Never trt-rtx: the TensorRT-RTX
-// backend is experimental and opt-in, so only the user installs it (App Settings > Components). Once
-// installed, PreselectPack keeps it in --auto, which refreshes it when its dep (aji) moves.
+// generation (the exact pack if published, else the PTX fallback), plus trt-rtx when a GPU is one
+// TensorRT-RTX is the default for (TrtRtxDefault). The TensorRT runtime stays: TensorRT-RTX runs on
+// its CUDA runtime and falls back to TensorRT. Elsewhere trt-rtx is the user's to install (App
+// Settings > Components); once installed, PreselectPack keeps it in --auto, which refreshes it when
+// its dep (aji) moves. Since --auto installs what's recommended, an update brings trt-rtx to an
+// existing install on such a GPU too.
 List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 {
-    var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal)).Select(p => p.Name).ToList();
+    // models-bf16 only helps NVIDIA GPUs that run bf16 (below); the other models-* packs are for all.
+    var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal) && p.Name != "models-bf16")
+        .Select(p => p.Name).ToList();
     if (hasNvidia)
     {
         rec.Add("trt-runtime");
-        foreach (var s in sm.Split(", ", StringSplitOptions.RemoveEmptyEntries))
+        var sms = sm.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+        foreach (var s in sms)
         {
             var pack = index.Packs.Any(p => p.Name == $"trt-{s}") ? $"trt-{s}" : "trt-ptx";
             if (!rec.Contains(pack))
@@ -717,8 +726,37 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
                 rec.Add(pack);
             }
         }
+        if (sms.Any(TrtRtxDefault) && index.Packs.Any(p => p.Name == "trt-rtx"))
+        {
+            rec.Add("trt-rtx");
+        }
+        // bf16 variants of the fp32 IllustrationJaNai models, which mangajanai_upscale uses on TensorRT
+        // and TensorRT-RTX from compute capability 8.0 (Turing and older have no bf16).
+        if (sms.Any(s => SmNumber(s) >= 80) && index.Packs.Any(p => p.Name == "models-bf16"))
+        {
+            rec.Add("models-bf16");
+        }
     }
     return rec;
+}
+
+// Whether TensorRT-RTX is the default on a GPU ("sm86"): the GPUs TensorRT-RTX 1.7 supports, Turing
+// (7.5), consumer Ampere (8.6), Ada (8.9) and Blackwell (12.x). On Turing it lacks FP32 GEMMs and 3D
+// convolutions, but no default model needs them (MangaJaNai ESRGAN is convolutions only, and the
+// IllustrationJaNai FDAT and SPAN models run their matrix multiplies in fp16); the fp32 DAT2 and HAT
+// models fall back to TensorRT per model there. Data-center 8.0, 9.0 and 10.0 aren't supported.
+// "sm86" -> 86, "sm120" -> 120 (major * 10 + minor); 0 if it isn't one.
+static int SmNumber(string sm) =>
+    sm.StartsWith("sm", StringComparison.Ordinal) && int.TryParse(sm[2..], out int cc) ? cc : 0;
+
+static bool TrtRtxDefault(string sm)
+{
+    if (!sm.StartsWith("sm", StringComparison.Ordinal) || !int.TryParse(sm[2..], out int cc) || cc < 10)
+    {
+        return false;
+    }
+    int major = cc / 10, minor = cc % 10;
+    return (major == 7 && minor == 5) || (major == 8 && (minor == 6 || minor == 9)) || major >= 12;
 }
 
 bool PreselectPack(Pack pack, Dictionary<string, string> installed, List<string> rec) =>

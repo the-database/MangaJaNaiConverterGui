@@ -13,7 +13,7 @@
         x:Class="MangaJaNaiConverterGui.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/logo.ico"
-        Title="MangaJaNaiConverterGui">
+        Title="MangaJaNai GUI">
 
   <Window.Styles>
     <Style Selector="TabControl[TabStripPlacement=Top]">
@@ -707,21 +707,21 @@
               <TextBlock FontWeight="Bold" Text="Updates" />
               <StackPanel Spacing="12" IsVisible="{Binding IsInstalled}">
                 <ContentControl Classes="hint" HorizontalAlignment="Left"
-                                ToolTip.Tip="Download updates in the background and install them when MangaJaNaiConverterGui is closed. Updates are always checked for and shown here.">
+                                ToolTip.Tip="Download updates in the background and install them when MangaJaNai GUI is closed. Updates are always checked for and shown here.">
                   <CheckBox IsChecked="{Binding AutoUpdateEnabled}">Auto Update</CheckBox>
                 </ContentControl>
 
                 <StackPanel Classes="row">
                   <TextBlock Text="Current Version" />
                   <TextBlock FontFamily="Consolas" Text="{Binding AppVersion}" Margin="20,0,0,0" />
-                  <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/releases"/>
+                  <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiGUI/releases"/>
                 </StackPanel>
 
                 <TextBlock TextWrapping="Wrap" Text="{Binding UpdateStatusText}" />
 
                 <Button IsVisible="{Binding ShowCheckUpdateButton}" Command="{Binding CheckForUpdates}">Check for Updates Now</Button>
                 <Button IsVisible="{Binding ShowApplyButton}" Command="{Binding ApplyUpdate}" IsEnabled="{Binding !Upscaling}"
-                        ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNaiConverterGui</Button>
+                        ToolTip.Tip="Not available while upscaling." ToolTip.ShowOnDisabled="True">Restart to Update MangaJaNai GUI</Button>
               </StackPanel>
               <TextBlock IsVisible="{Binding !IsInstalled}" Text="App is not installed; auto update settings unavailable." />
             </StackPanel>
@@ -771,9 +771,9 @@
                 <ContentControl Classes="hint" Content="Backend">
                   <ToolTip.Tip>
                     <StackPanel Spacing="6">
-                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Auto</Bold>: TensorRT on an NVIDIA GPU it supports, otherwise DirectML.</TextBlock>
-                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT</Bold>: fastest, NVIDIA RTX GPUs only. Builds an engine for each model and tile size the first time it's used, which takes a few minutes.</TextBlock>
-                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT-RTX</Bold> (experimental): NVIDIA RTX GPUs only. Builds its engines in about a second instead of minutes. Output is equivalent to TensorRT's but not bit-identical. Falls back to TensorRT if TensorRT-RTX can't start. Needs the TensorRT-RTX and TensorRT runtime components (App Settings > Components). Auto never picks it.</TextBlock>
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>Auto</Bold>: TensorRT-RTX if its component is installed (by default on RTX 20 / GTX 16 series and newer), else TensorRT on an NVIDIA GPU it supports, otherwise DirectML.</TextBlock>
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT</Bold>: NVIDIA RTX GPUs only. Builds an engine for each model and tile size the first time it's used, which takes a few minutes.</TextBlock>
+                      <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>TensorRT-RTX</Bold>: fastest, NVIDIA RTX GPUs only. Builds its engines in seconds instead of minutes, and upscales faster than TensorRT. Output is equivalent to TensorRT's but not bit-identical. Falls back to TensorRT if TensorRT-RTX can't run. Needs the TensorRT-RTX and TensorRT runtime components (App Settings > Components), installed by default on RTX 20 / GTX 16 series and newer.</TextBlock>
                       <TextBlock TextWrapping="Wrap" xml:space="preserve"><Bold>DirectML</Bold>: any DirectX 12 GPU (NVIDIA, AMD, Intel). Slower than TensorRT, with no engine build.</TextBlock>
                     </StackPanel>
                   </ToolTip.Tip>
@@ -799,7 +799,7 @@
               <TextBlock TextWrapping="Wrap" Text="Put your own ONNX models (.onnx) in the models folder to use them in a chain. PyTorch models (.pth, .safetensors) need converting to ONNX first." />
               <StackPanel Classes="row">
                 <Button Content="Open Models Folder" Command="{Binding OpenModelsDirectory}" />
-                <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiConverterGui/tree/main/tools/onnx-export" />
+                <hypertext:Hyperlink VerticalAlignment="Center" Margin="20,0,0,0" Url="https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export" />
               </StackPanel>
               <TextBlock Foreground="Gray" FontFamily="Consolas" TextWrapping="Wrap" Text="{Binding ModelsDirectory}" />
             </StackPanel>

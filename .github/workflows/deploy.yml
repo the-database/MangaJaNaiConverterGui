@@ -8,8 +8,8 @@ on:
         required: true
 
 # Builds the Inno-installer distribution and publishes a draft GitHub release:
-#   - MangaJaNaiConverterGui-Setup-<ver>.exe              per-user setup installer (wraps the slim core)
-#   - MangaJaNaiConverterGui-full-package-<ver>.zip       the slim core (what MangaJaNaiUpdater downloads)
+#   - MangaJaNaiGUI-Setup-<ver>.exe                       per-user setup installer (wraps the slim core)
+#   - MangaJaNaiGUI-full-package-<ver>.zip                the slim core (what MangaJaNaiUpdater downloads)
 #   - manifest.json                                       the package's version, deps and file list
 #   - component-*.7z + packs.json                         on-demand component packs: the TensorRT runtime,
 #                                                         per-GPU builder resources, the ONNX models, and
@@ -76,8 +76,8 @@ jobs:
           allowUpdates: true
           updateOnlyUnreleased: true
           artifacts: >-
-            MangaJaNaiConverterGui-Setup-${{ github.event.inputs.version }}.exe,
-            publish/MangaJaNaiConverterGui-full-package-${{ github.event.inputs.version }}.zip,
+            MangaJaNaiGUI-Setup-${{ github.event.inputs.version }}.exe,
+            publish/MangaJaNaiGUI-full-package-${{ github.event.inputs.version }}.zip,
             manifest.json,
             publish/packs-v${{ github.event.inputs.version }}/component-*.7z,
             publish/packs-v${{ github.event.inputs.version }}/packs.json

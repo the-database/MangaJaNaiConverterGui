@@ -10,6 +10,10 @@ namespace MangaJaNaiConverterGui.Tests
         [InlineData("2x_MangaJaNai_1200p_V1_ESRGAN_70k.pth", "2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx")]
         [InlineData("4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.safetensors", "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.onnx")]
         [InlineData("2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx", "2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx")]
+        // 1.x's Custom Workflow default, never shipped by 2.0: the 4x model the default workflow uses.
+        [InlineData("4x_IllustrationJaNai_V1_ESRGAN_135k.pth", "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.onnx")]
+        // An ONNX conversion the user made of it themselves stays.
+        [InlineData("4x_IllustrationJaNai_V1_ESRGAN_135k.onnx", "4x_IllustrationJaNai_V1_ESRGAN_135k.onnx")]
         // A user's own PyTorch model has no ONNX export to move to: validation asks for a conversion.
         [InlineData("4x_MyModel.pth", "4x_MyModel.pth")]
         [InlineData("No Model", "No Model")]

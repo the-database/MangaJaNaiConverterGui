@@ -1,6 +1,6 @@
-# ONNX models for MangaJaNaiConverterGui 2.0
+# ONNX models for MangaJaNai GUI 2.0
 
-MangaJaNaiConverterGui 2.0 runs ONNX models through [animejanai-inference](https://github.com/the-database/animejanai-inference)
+MangaJaNai GUI 2.0 runs ONNX models through [animejanai-inference](https://github.com/the-database/animejanai-inference)
 on TensorRT (NVIDIA) or DirectML (any DirectX 12 GPU). PyTorch models (`.pth`, `.safetensors`) can't
 be used directly; export them to ONNX first.
 
@@ -25,13 +25,13 @@ Use [traiNNer-redux](https://github.com/the-database/traiNNer-redux)'s `convert_
    ```
 
 4. Run `python convert_to_onnx.py -opt <your yml>` and copy the `.onnx` from `onnx/` into
-   MangaJaNaiConverterGui's models folder (App Settings → Open Models Directory). Pick it in a
+   MangaJaNai GUI's models folder (App Settings → Open Models Directory). Pick it in a
    workflow chain like any other model.
 
 Notes:
 - Don't export bf16: DirectML can't run it.
 - Some architectures only accept tile sizes that are a multiple of 8 or 16 (FDAT, HAT). The tile
-  sizes MangaJaNaiConverterGui offers all are.
+  sizes MangaJaNai GUI offers all are.
 - A model's first use on TensorRT builds an engine for your GPU, which takes a few minutes once
   per model and tile size.
 
@@ -46,6 +46,7 @@ replaced with `path/to/`). They ship as two component packs, `models-mangajanai`
 | MangaJaNai V1 ESRGAN 2x/4x (14) | fp16 | Matches 1.x, whose default was fp16. fp32 would be no more accurate on TensorRT, which builds fp32 models as TF32 by default, and is ~3x slower. |
 | IllustrationJaNai V3 FDAT_M, FDAT_XL, SPAN_S (8) | fp16 | 56–72 dB vs fp32 PyTorch on TensorRT and DirectML |
 | IllustrationJaNai V3 DAT2 (2), HAT_L (1) | fp32 | fp16 overflows (activations above 65504), producing NaN |
+| ...and their bf16 variants (3, `models-bf16` pack, `models/bf16/`) | bf16 (strongly typed) | ~40% faster on TensorRT and TensorRT-RTX (RTX 5090), 53 dB vs fp32. Used only there, from compute capability 8.0: DirectML and Turing can't run bf16 |
 
 All are opset 17 with input `input` and output `output` in NCHW RGB [0, 1], batch 1, dynamic
 height/width. Gray pages are fed to them as one channel; the inference engine replicates it.

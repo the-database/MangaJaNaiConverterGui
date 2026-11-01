@@ -508,8 +508,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _autoUpdate, value);
         }
 
-        // Which inference backend upscales: Auto (TensorRT when it can run, else DirectML), TensorRT,
-        // TensorRT-RTX (experimental, opt-in) or DirectML. See UpscaleBackends.
+        // Which inference backend upscales: Auto (TensorRT-RTX where its component is installed, then
+        // TensorRT when it can run, else DirectML), TensorRT, TensorRT-RTX or DirectML. See
+        // UpscaleBackends.
         private string _upscaleBackend = UpscaleBackends.Auto;
         [DataMember]
         public string UpscaleBackend
@@ -876,8 +877,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                     var installed = (bool?)p["installed"] ?? false;
                     var recommended = (bool?)p["recommended"] ?? false;
                     // Only surface packs relevant to this machine: what it uses (recommended) or
-                    // already has (installed, so it can be removed), plus the opt-in TensorRT-RTX
-                    // pack on NVIDIA GPUs. Kernel packs for other GPU generations stay hidden; the
+                    // already has (installed, so it can be removed), plus the TensorRT-RTX pack on
+                    // any NVIDIA GPU (it's only recommended on RTX 20 / GTX 16 series and newer). Kernel packs for other GPU generations stay hidden; the
                     // updater CLI still lists them all.
                     if (!ComponentItem.IsShown(name, installed, recommended, nvidia))
                     {
@@ -1376,12 +1377,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
         }
 
-        // Fill the device list for the chosen backend (Auto: TensorRT's devices if it can run here,
-        // else DirectML's; TensorRT-RTX: its own, else TensorRT's), keeping the user's device while
-        // it's still there.
+        // Fill the device list for the chosen backend (Auto: TensorRT-RTX's devices if its component
+        // is installed, else TensorRT's if it can run here, else DirectML's; TensorRT-RTX: its own,
+        // else TensorRT's), keeping the user's device while it's still there.
         public async Task RefreshDevices()
         {
-            var backends = UpscaleBackends.DeviceQueryOrder(UpscaleBackend);
+            var backends = UpscaleBackends.DeviceQueryOrder(UpscaleBackend, _backendService.IsTensorRtRtxInstalled);
             List<BackendDevice> devices = [];
             var backend = backends[0];
             foreach (var b in backends)
@@ -1408,9 +1409,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             var upscaleBackend = UpscaleBackends.UpscaleBackend(UpscaleBackend, devices.Count > 0 ? backend : null);
             DeviceStatusText = MissingBackendComponents() ?? (devices.Count == 0
-                ? "No compatible GPU found. MangaJaNaiConverterGui needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
+                ? "No compatible GPU found. MangaJaNai GUI needs an NVIDIA GPU (TensorRT) or a DirectX 12 GPU (DirectML)."
                 : upscaleBackend == UpscaleBackends.CliTensorRtRtx
-                    ? "Using TensorRT-RTX (experimental). If it can't start on this GPU, TensorRT is used instead."
+                    ? "Using TensorRT-RTX. If it can't run on this GPU, TensorRT is used instead."
                     : $"Using {UpscaleBackends.DisplayName(upscaleBackend)}.");
         }
 
@@ -1836,7 +1837,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             else if (_readyUpdateVersion == _availableUpdateVersion && AutoUpdateEnabled)
             {
-                status = $"Version {_availableUpdateVersion} is ready and will install when you close MangaJaNaiConverterGui.";
+                status = $"Version {_availableUpdateVersion} is ready and will install when you close MangaJaNai GUI.";
             }
             else
             {
@@ -1865,12 +1866,13 @@ namespace MangaJaNaiConverterGui.ViewModels
         public bool Installed { get; } = installed;
         public bool Recommended { get; } = recommended;
 
-        // The opt-in TensorRT-RTX backend: never recommended, so the updater never installs it unasked.
+        // The TensorRT-RTX backend: recommended (so installed by setup and --auto) on RTX 30-series and
+        // newer, and available to install on any other NVIDIA GPU.
         public const string TensorRtRtxPack = "trt-rtx";
 
         // Which packs the component manager lists: what this machine uses (recommended) or has
-        // (installed, so it can be removed), and on an NVIDIA GPU the TensorRT-RTX pack, so it can
-        // be opted into.
+        // (installed, so it can be removed), and on any NVIDIA GPU the TensorRT-RTX pack, so it can
+        // be installed where it isn't recommended.
         public static bool IsShown(string name, bool installed, bool recommended, bool nvidia) =>
             installed || recommended || (nvidia && name == TensorRtRtxPack);
 
@@ -1879,10 +1881,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string Title => Name switch
         {
             "trt-runtime" => "TensorRT runtime",
-            TensorRtRtxPack => "TensorRT-RTX (experimental)",
+            TensorRtRtxPack => "TensorRT-RTX",
             "trt-ptx" => "TensorRT kernels: other NVIDIA GPUs",
             "models-mangajanai" => "MangaJaNai models (grayscale manga)",
             "models-illustrationjanai" => "IllustrationJaNai models (color)",
+            "models-bf16" => "IllustrationJaNai models, bf16 (NVIDIA)",
             _ when Name.StartsWith("trt-sm") => $"TensorRT kernels: {SmFamily(Name[6..])}",
             _ => Name,
         };
@@ -1890,10 +1893,11 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string Description => Name switch
         {
             "trt-runtime" => "The fastest upscaling engine, for NVIDIA GPUs. Without it, upscaling uses the slower DirectML engine. TensorRT-RTX needs it too.",
-            TensorRtRtxPack => "Optional, experimental backend for NVIDIA RTX GPUs (RTX 20 series and newer). It builds engines in about a second instead of a TensorRT build's few minutes; output is equivalent to TensorRT's, though not bit-identical. Needs the TensorRT runtime. To use it, choose TensorRT-RTX under Upscale Settings > Backend.",
+            TensorRtRtxPack => "The fastest NVIDIA backend, installed by default on RTX 20 / GTX 16 series and newer. It builds engines in seconds instead of a TensorRT build's few minutes and upscales faster; output is equivalent to TensorRT's, though not bit-identical. Auto uses it when it's installed. Needs the TensorRT runtime, which it falls back to if it can't run.",
             "trt-ptx" => "Fallback kernels for NVIDIA GPUs without a dedicated kernel pack. The first engine build is slower.",
             "models-mangajanai" => "The default models for grayscale manga pages, one per source resolution.",
             "models-illustrationjanai" => "The default models for color pages and illustrations.",
+            "models-bf16" => "Faster bf16 versions of the IllustrationJaNai DAT2 and HAT models, used automatically on TensorRT and TensorRT-RTX with an RTX 30-series or newer GPU.",
             _ when Name.StartsWith("trt-sm") => "Engine-builder kernels matched to your GPU generation.",
             _ => "",
         };
@@ -2662,7 +2666,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 if (!chain.HasOnnxModel)
                 {
                     valid = false;
-                    validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNaiConverterGui 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
+                    validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNai GUI 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
                 }
             }
 
@@ -2970,7 +2974,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public AvaloniaList<string> AllModels => _backendService.AllModels;
 
-        public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiConverterGui/tree/main/tools/onnx-export";
+        public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export";
 
         // 2.0 runs ONNX models; an empty model or "No Model" runs none.
         public bool HasOnnxModel =>
@@ -2995,6 +2999,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             _ => "Auto (Estimate)",
         };
 
+        // 1.x's default settings pointed every Custom Workflow's color chain at IllustrationJaNai V1,
+        // which 2.0 doesn't ship (and 1.x didn't download either): such a chain moves to the 4x
+        // IllustrationJaNai model the default workflow uses.
+        private const string LegacyIllustrationModel = "4x_IllustrationJaNai_V1_ESRGAN_135k";
+        private const string LegacyIllustrationReplacement = "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.onnx";
+
         public static string MigrateModelName(string model)
         {
             if (string.IsNullOrWhiteSpace(model) || model.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase))
@@ -3002,6 +3012,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                 return model;
             }
             var ext = Path.GetExtension(model);
+            if (Path.GetFileNameWithoutExtension(model).Equals(LegacyIllustrationModel, StringComparison.OrdinalIgnoreCase) &&
+                (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase)))
+            {
+                return LegacyIllustrationReplacement;
+            }
             return Regex.IsMatch(Path.GetFileName(model), @"^\dx_(MangaJaNai|IllustrationJaNai)_", RegexOptions.IgnoreCase) &&
                    (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase))
                 ? Path.ChangeExtension(model, ".onnx")

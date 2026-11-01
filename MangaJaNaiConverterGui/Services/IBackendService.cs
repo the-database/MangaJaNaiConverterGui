@@ -15,8 +15,8 @@ namespace MangaJaNaiConverterGui.Services
         string BackendExePath { get; }
         bool IsBackendInstalled { get; }
 
-        // The opt-in TensorRT-RTX backend (the trt-rtx component) and the TensorRT runtime
-        // (trt-runtime), which TensorRT-RTX needs as well.
+        // The TensorRT-RTX backend (the trt-rtx component) and the TensorRT runtime (trt-runtime),
+        // which TensorRT-RTX needs as well (its CUDA runtime, and TensorRT for the fallback).
         bool IsTensorRtRtxInstalled { get; }
         bool IsTensorRtRuntimeInstalled { get; }
 

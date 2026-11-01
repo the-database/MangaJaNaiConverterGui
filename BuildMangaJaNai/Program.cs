@@ -1,17 +1,17 @@
-// Package builder for MangaJaNaiConverterGui (Inno-installer distribution model, Windows).
+// Package builder for MangaJaNai GUI (Inno-installer distribution model, Windows).
 // Ported from VideoJaNai's BuildVideoJaNai, without ffmpeg/RIFE/Linux.
 //
 // Assembles the redistributable install tree (the app + MangaJaNaiUpdater + the inference dir: libaji,
 // the mangajanai_upscale backend, ONNX Runtime/DirectML, the VC++ runtime) and, under --packs, carves
 // the heavy optional pieces (TensorRT runtime, per-GPU-generation builder resources, the ONNX models,
-// the opt-in TensorRT-RTX backend) into component-*.7z + packs.json release assets, then slims them out
+// the TensorRT-RTX backend) into component-*.7z + packs.json release assets, then slims them out
 // of the core. End users download the small core plus the packs their hardware needs.
 //
 //   BuildMangaJaNai <version> --app-dir <dir> --updater <exe> [--packs] [--out <dir>]
 //
 // Outputs, under --out (default: next to this exe):
 //   MangaJaNaiConverterGui-v<ver>/                    the (slim) install tree, the Inno installer's SourceDir
-//   MangaJaNaiConverterGui-full-package-<ver>.zip     that tree, the updater's full update
+//   MangaJaNaiGUI-full-package-<ver>.zip              that tree, the updater's full update
 //   packs-v<ver>/component-*.7z + packs.json          component packs (with --packs)
 //
 // Dev overrides (skip large downloads on local builds):
@@ -25,6 +25,7 @@
 //                              one is not mixed in: there is no trt-rtx pack unless the dir holds it.
 //   MANGAJANAI_CLI_LOCAL    -> a local mangajanai_upscale.exe, or a directory/zip holding it
 //   MANGAJANAI_MODELS_DIR   -> a local directory of the model archives (models-*.7z) or loose .onnx files
+//                              (the bf16 variants: its bf16\ subfolder, or the bf16 archive)
 //   VC_CRT_DIR              -> a Microsoft.VC14x.CRT directory (default: found through vswhere)
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
@@ -56,7 +57,7 @@ const string CudartSha256Win   = "e6663f3d3e8949eedc2d5ab92c7c5b9fa3f2a222086d91
 // v0.19.0 makes DirectML ~35-40% faster and adds TensorRT-RTX; v0.19.1 fixes its engine-build teardown.
 const string AjiVersion        = "v0.19.1";
 const string AjiSha256Win      = "855fa197bc01a3621ee8265e0c19a9238024443cd9cd4a4692e5205c1716beee";
-// The same release's opt-in TensorRT-RTX backend: aji_trtrtx.dll + the TensorRT for RTX runtime and its
+// The same release's TensorRT-RTX backend: aji_trtrtx.dll + the TensorRT for RTX runtime and its
 // licence notices (~232 MB unpacked). It becomes the trt-rtx pack, never part of the core.
 const string AjiTrtRtxSha256Win = "87742617e83c3e55a990d9e0355b9342c31a4fb5c283506908f9fcb05263defe";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
@@ -88,8 +89,18 @@ const string IllustrationJaNaiModelsAsset = "IllustrationJaNai_V3_ONNX.7z";
     (MangaJaNaiModelsTag, MangaJaNaiModelsAsset),
     (IllustrationJaNaiModelsTag, IllustrationJaNaiModelsAsset),
 ];
+// bf16 variants of the IllustrationJaNai models that ship as fp32 (DAT2 x2 and HAT_L, where fp16
+// overflows), under the fp32 files' names: ~40% faster on TensorRT and TensorRT-RTX, visually the
+// same (53 dB vs fp32). DirectML and Turing can't run bf16, so they go to models/bf16/, which the
+// app's model list never shows; mangajanai_upscale prefers them on TensorRT/TensorRT-RTX with compute
+// capability 8.0 or newer. They become the models-bf16 pack, recommended on such GPUs.
+const string Bf16ModelsTag     = "3.0.0";
+const string Bf16ModelsAsset   = "IllustrationJaNai_V3_ONNX_bf16.7z";
 
+// The app was MangaJaNaiConverterGui until 2.0. The exe and the install tree's root folder keep that
+// name (older updaters look for it in the full package); the release assets carry the new one.
 const string AppName = "MangaJaNaiConverterGui";
+const string ReleaseName = "MangaJaNaiGUI";
 
 if (args.Length < 1 || args[0].StartsWith("--"))
 {
@@ -458,6 +469,43 @@ async Task InstallModels()
         using ArchiveFile archiveFile = new(archive);
         archiveFile.Extract(modelsPath);
     }
+
+    var bf16Path = Path.Combine(modelsPath, "bf16");
+    Directory.CreateDirectory(bf16Path);
+    string? bf16Archive = null;
+    if (!string.IsNullOrEmpty(local))
+    {
+        var localBf16 = Path.Combine(local, "bf16");
+        if (Directory.Exists(localBf16))
+        {
+            foreach (var onnx in Directory.GetFiles(localBf16, "*.onnx"))
+            {
+                File.Copy(onnx, Path.Combine(bf16Path, Path.GetFileName(onnx)), true);
+            }
+        }
+        var a = Path.Combine(local, Bf16ModelsAsset);
+        bf16Archive = File.Exists(a) ? a : null;
+    }
+    else
+    {
+        Console.WriteLine($"Downloading {Bf16ModelsAsset} ({Bf16ModelsTag})...");
+        bf16Archive = Path.Combine(workDirectory, Bf16ModelsAsset);
+        await DownloadFileAsync($"https://github.com/{ModelsRepo}/releases/download/{Bf16ModelsTag}/{Bf16ModelsAsset}", bf16Archive, _ => { });
+    }
+    if (bf16Archive is not null)
+    {
+        Console.WriteLine($"Extracting {Path.GetFileName(bf16Archive)} into models\\bf16...");
+        using ArchiveFile archiveFile = new(bf16Archive);
+        archiveFile.Extract(bf16Path);
+    }
+    // Each bf16 file stands in for an fp32 file of the same name; one without it would never be used.
+    foreach (var f in Directory.GetFiles(bf16Path, "*.onnx"))
+    {
+        if (!File.Exists(Path.Combine(modelsPath, Path.GetFileName(f))))
+        {
+            throw new InvalidOperationException($"bf16 model {Path.GetFileName(f)} has no fp32 model of the same name");
+        }
+    }
 }
 
 // The TensorRT SLA requires this attribution when redistributing the runtime.
@@ -525,6 +573,7 @@ void WriteVersionAndManifest()
             // a pack's content changes only when its archive does
             models_mangajanai = $"{MangaJaNaiModelsAsset}@{MangaJaNaiModelsTag}",
             models_illustrationjanai = $"{IllustrationJaNaiModelsAsset}@{IllustrationJaNaiModelsTag}",
+            models_bf16 = $"{Bf16ModelsAsset}@{Bf16ModelsTag}",
             sevenzip = SevenZipVersion,
         },
         // Runtime-created data in the install folder that an update must never touch.
@@ -539,7 +588,7 @@ void WriteVersionAndManifest()
 // The full package the updater downloads: the install tree, rooted at its versioned folder name.
 void WriteFullPackage()
 {
-    var zip = Path.Combine(outDirectory, $"{AppName}-full-package-{version}.zip");
+    var zip = Path.Combine(outDirectory, $"{ReleaseName}-full-package-{version}.zip");
     if (File.Exists(zip)) File.Delete(zip);
     Console.WriteLine($"Writing {Path.GetFileName(zip)}...");
     System.IO.Compression.ZipFile.CreateFromDirectory(installDirectory, zip, CompressionLevel.Optimal, includeBaseDirectory: true);
@@ -635,6 +684,9 @@ async Task<List<string>> EmitComponentPacks()
         }))),
         ("models-mangajanai", "models_mangajanai", ModelFiles("MangaJaNai_")),
         ("models-illustrationjanai", "models_illustrationjanai", ModelFiles("IllustrationJaNai_")),
+        ("models-bf16", "models_bf16", Directory.Exists(Path.Combine(modelsPath, "bf16"))
+            ? Rel(Directory.GetFiles(Path.Combine(modelsPath, "bf16"), "*.onnx"))
+            : []),
     };
     foreach (var f in Directory.GetFiles(inferencePath, "*builder_resource_*"))
     {
@@ -645,7 +697,7 @@ async Task<List<string>> EmitComponentPacks()
             packs.Add(($"trt-{m.Groups[1].Value}", "inference_runtime", Rel([f])));
         }
     }
-    // The opt-in TensorRT-RTX backend (never recommended, so nothing installs it unasked). Its dep is
+    // The TensorRT-RTX backend (recommended on RTX 20 / GTX 16 series and newer, see the updater). Its dep is
     // aji: aji_trtrtx.dll has to match aji.dll, so the pack goes stale with every aji bump. It runs
     // on trt-runtime's cudart, and its fallback to TensorRT needs trt-runtime too.
     packs.Add(("trt-rtx", "aji", Rel(Directory.GetFiles(inferencePath).Where(f => IsTrtRtxFile(Path.GetFileName(f))))));
