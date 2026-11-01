@@ -254,6 +254,13 @@
                          Width="220"
                          IsVisible="{Binding ShowArchiveProgressBar}" />
 
+            <!-- TensorRT-RTX fell back to TensorRT this run (the CLI's BACKEND_FALLBACK line) -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Margin="10,0,0,0" VerticalAlignment="Center"
+                        IsVisible="{Binding ShowBackendFallback}" ToolTip.Tip="{Binding BackendFallbackText}">
+              <materialIcons:MaterialIcon Kind="Alert" Width="12" Height="12" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+              <TextBlock FontSize="10" VerticalAlignment="Center" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="TensorRT-RTX failed; using TensorRT" />
+            </StackPanel>
+
             <TextBlock Margin="10,0,10,0" DockPanel.Dock="Left" FontSize="10" TextTrimming="CharacterEllipsis" MaxWidth="400" Text="{Binding LeftStatus}" />
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" ClipToBounds="True" Spacing="20" Margin="5,0,10,0" IsVisible="{Binding ShowEstimates}">

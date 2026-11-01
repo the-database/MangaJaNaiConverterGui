@@ -940,6 +940,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 _totalEtaCalculator.Reset();
                 ct.ThrowIfCancellationRequested();
                 ConsoleQueueClear();
+                BackendFallbackText = string.Empty;
                 Upscaling = true;
                 ProgressCurrentFile = 0;
                 ProgressCurrentFileInArchive = 0;
@@ -1274,7 +1275,14 @@ namespace MangaJaNaiConverterGui.ViewModels
                                 // A first-use TensorRT engine build takes minutes: say so in the status bar.
                                 // The line names the engine it builds: a TensorRT-RTX build takes about a
                                 // second, and after a TensorRT-RTX fallback the build is TensorRT's.
-                                if (e.Data.StartsWith("ENGINE_BUILD "))
+                                // BACKEND_FALLBACK: TensorRT-RTX failed (at start, or for one model)
+                                // and the CLI runs TensorRT instead; warned about until the next run.
+                                if (e.Data.StartsWith("BACKEND_FALLBACK "))
+                                {
+                                    BackendFallbackText = e.Data["BACKEND_FALLBACK ".Length..];
+                                    EngineStatusText = string.Empty; // a failed TensorRT-RTX build ends here
+                                }
+                                else if (e.Data.StartsWith("ENGINE_BUILD "))
                                 {
                                     var model = e.Data["ENGINE_BUILD ".Length..].Split(' ')[0];
                                     EngineStatusText = e.Data.Contains("TensorRT-RTX")
@@ -1301,6 +1309,21 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             }
         }
+
+        // The CLI's last TensorRT-RTX fallback this run ("TensorRT-RTX failed (...); using TensorRT
+        // instead"): a warning in the status bar, the full line as its tooltip.
+        private string _backendFallbackText = string.Empty;
+        public string BackendFallbackText
+        {
+            get => _backendFallbackText;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendFallbackText, value);
+                this.RaisePropertyChanged(nameof(ShowBackendFallback));
+            }
+        }
+
+        public bool ShowBackendFallback => !string.IsNullOrEmpty(BackendFallbackText);
 
         private string _engineStatusText = string.Empty;
         public string EngineStatusText
