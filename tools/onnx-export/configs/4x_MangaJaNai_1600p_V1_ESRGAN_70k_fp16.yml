@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/the-database/traiNNer-redux/refs/heads/master/schemas/redux-config.schema.json
-# MangaJaNai 2.0 ONNX export: ESRGAN, fp16. For TensorRT 11 and ONNX Runtime DirectML.
-name: 4x_MangaJaNai_1600p_V1_ESRGAN_70k
+# MangaJaNai 2.0 ONNX export: ESRGAN, fp16. For TensorRT, TensorRT-RTX and ONNX Runtime DirectML.
+name: 4x_MangaJaNai_1600p_V1_ESRGAN_70k_fp16
 scale: 4
 num_gpu: auto
 
