@@ -3196,7 +3196,8 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         private string ResolutionRange => RangeText(ResolutionText(MinResolution), ResolutionText(MaxResolution), "any resolution");
 
-        // "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.safetensors" -> "2x IllustrationJaNai_V3denoise_FDAT_M"
+        // "2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.onnx" -> "2x IllustrationJaNai_V3denoise_FDAT_M (fp16)":
+        // short, but with the precision the name states (a name without one shows none).
         public static string ShortModelName(string? fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -3214,7 +3215,8 @@ namespace MangaJaNaiConverterGui.ViewModels
                 name = $"{scale.Groups[1].Value} {name[scale.Length..]}";
             }
             var cut = Regex.Match(name, @"_(unshuffle|fp16|fp32|bf16|\d+k)(_|$)", RegexOptions.IgnoreCase);
-            return cut.Success && cut.Index > 0 ? name[..cut.Index] : name;
+            var shortName = cut.Success && cut.Index > 0 ? name[..cut.Index] : name;
+            return ModelVariants.NamedPrecision(fileName) is string precision ? $"{shortName} ({precision})" : shortName;
         }
 
         private string ImageKinds => (IsColor, IsGrayscale) switch

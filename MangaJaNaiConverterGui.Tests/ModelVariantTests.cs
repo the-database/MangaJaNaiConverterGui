@@ -275,6 +275,31 @@ namespace MangaJaNaiConverterGui.Tests
         public void Bf16Runnable(string backend, string? computeCapability, bool runnable) =>
             Assert.Equal(runnable, ModelVariants.Bf16Runnable(backend, computeCapability));
 
+        // ---- summaries -------------------------------------------------------------------------------
+        // Short, but naming the precision wherever the file name states one.
+
+        [Theory]
+        [InlineData("4x_IllustrationJaNai_V3detail_HAT_L_28k_bf16.onnx", "4x IllustrationJaNai_V3detail_HAT_L (bf16)")]
+        [InlineData("4x_IllustrationJaNai_V3detail_HAT_L_28k_fp32.onnx", "4x IllustrationJaNai_V3detail_HAT_L (fp32)")]
+        [InlineData("2x_IllustrationJaNai_V3denoise_FDAT_M_unshuffle_30k_fp16.onnx", "2x IllustrationJaNai_V3denoise_FDAT_M (fp16)")]
+        [InlineData("2x_MangaJaNai_1200p_V1_ESRGAN_70k_fp16.onnx", "2x MangaJaNai_1200p_V1_ESRGAN (fp16)")]
+        // no precision in the name: as before
+        [InlineData("2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx", "2x MangaJaNai_1200p_V1_ESRGAN")]
+        [InlineData("4x_MyModel.onnx", "4x MyModel")]
+        [InlineData("MyModel.onnx", "MyModel")]
+        [InlineData("No Model", "No Model")]
+        [InlineData("", "no model")]
+        public void ShortModelNames(string model, string shortName) =>
+            Assert.Equal(shortName, UpscaleChain.ShortModelName(model));
+
+        [Fact]
+        public void ChainSummariesNameThePrecision()
+        {
+            var chain = new UpscaleChain(new FakeBackendService([])) { ModelFilePath = "4x_IllustrationJaNai_V3detail_HAT_L_28k_bf16.onnx", IsColor = true, IsGrayscale = true };
+            Assert.Equal("any resolution · color + grayscale → 4x IllustrationJaNai_V3detail_HAT_L (bf16)", chain.ChainSummary);
+            Assert.Equal("4x IllustrationJaNai_V3detail_HAT_L (bf16) · tile Auto (Estimate)", chain.UpscaleSummary);
+        }
+
         // ---- the shipped default settings ---------------------------------------------------------
 
         [Fact]
