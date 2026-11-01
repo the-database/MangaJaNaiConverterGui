@@ -25,6 +25,7 @@
 //                              one is not mixed in: there is no trt-rtx pack unless the dir holds it.
 //   MANGAJANAI_CLI_LOCAL    -> a local mangajanai_upscale.exe, or a directory/zip holding it
 //   MANGAJANAI_MODELS_DIR   -> a local directory of the model archives (models-*.7z) or loose .onnx files
+//                              (the bf16 variants: its bf16\ subfolder, or the bf16 archive)
 //   VC_CRT_DIR              -> a Microsoft.VC14x.CRT directory (default: found through vswhere)
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
@@ -88,6 +89,13 @@ const string IllustrationJaNaiModelsAsset = "IllustrationJaNai_V3_ONNX.7z";
     (MangaJaNaiModelsTag, MangaJaNaiModelsAsset),
     (IllustrationJaNaiModelsTag, IllustrationJaNaiModelsAsset),
 ];
+// bf16 variants of the IllustrationJaNai models that ship as fp32 (DAT2 x2 and HAT_L, where fp16
+// overflows), under the fp32 files' names: ~40% faster on TensorRT and TensorRT-RTX, visually the
+// same (53 dB vs fp32). DirectML and Turing can't run bf16, so they go to models/bf16/, which the
+// app's model list never shows; mangajanai_upscale prefers them on TensorRT/TensorRT-RTX with compute
+// capability 8.0 or newer. They become the models-bf16 pack, recommended on such GPUs.
+const string Bf16ModelsTag     = "3.0.0";
+const string Bf16ModelsAsset   = "IllustrationJaNai_V3_ONNX_bf16.7z";
 
 // The app was MangaJaNaiConverterGui until 2.0. The exe and the install tree's root folder keep that
 // name (older updaters look for it in the full package); the release assets carry the new one.
@@ -461,6 +469,43 @@ async Task InstallModels()
         using ArchiveFile archiveFile = new(archive);
         archiveFile.Extract(modelsPath);
     }
+
+    var bf16Path = Path.Combine(modelsPath, "bf16");
+    Directory.CreateDirectory(bf16Path);
+    string? bf16Archive = null;
+    if (!string.IsNullOrEmpty(local))
+    {
+        var localBf16 = Path.Combine(local, "bf16");
+        if (Directory.Exists(localBf16))
+        {
+            foreach (var onnx in Directory.GetFiles(localBf16, "*.onnx"))
+            {
+                File.Copy(onnx, Path.Combine(bf16Path, Path.GetFileName(onnx)), true);
+            }
+        }
+        var a = Path.Combine(local, Bf16ModelsAsset);
+        bf16Archive = File.Exists(a) ? a : null;
+    }
+    else
+    {
+        Console.WriteLine($"Downloading {Bf16ModelsAsset} ({Bf16ModelsTag})...");
+        bf16Archive = Path.Combine(workDirectory, Bf16ModelsAsset);
+        await DownloadFileAsync($"https://github.com/{ModelsRepo}/releases/download/{Bf16ModelsTag}/{Bf16ModelsAsset}", bf16Archive, _ => { });
+    }
+    if (bf16Archive is not null)
+    {
+        Console.WriteLine($"Extracting {Path.GetFileName(bf16Archive)} into models\\bf16...");
+        using ArchiveFile archiveFile = new(bf16Archive);
+        archiveFile.Extract(bf16Path);
+    }
+    // Each bf16 file stands in for an fp32 file of the same name; one without it would never be used.
+    foreach (var f in Directory.GetFiles(bf16Path, "*.onnx"))
+    {
+        if (!File.Exists(Path.Combine(modelsPath, Path.GetFileName(f))))
+        {
+            throw new InvalidOperationException($"bf16 model {Path.GetFileName(f)} has no fp32 model of the same name");
+        }
+    }
 }
 
 // The TensorRT SLA requires this attribution when redistributing the runtime.
@@ -528,6 +573,7 @@ void WriteVersionAndManifest()
             // a pack's content changes only when its archive does
             models_mangajanai = $"{MangaJaNaiModelsAsset}@{MangaJaNaiModelsTag}",
             models_illustrationjanai = $"{IllustrationJaNaiModelsAsset}@{IllustrationJaNaiModelsTag}",
+            models_bf16 = $"{Bf16ModelsAsset}@{Bf16ModelsTag}",
             sevenzip = SevenZipVersion,
         },
         // Runtime-created data in the install folder that an update must never touch.
@@ -638,6 +684,9 @@ async Task<List<string>> EmitComponentPacks()
         }))),
         ("models-mangajanai", "models_mangajanai", ModelFiles("MangaJaNai_")),
         ("models-illustrationjanai", "models_illustrationjanai", ModelFiles("IllustrationJaNai_")),
+        ("models-bf16", "models_bf16", Directory.Exists(Path.Combine(modelsPath, "bf16"))
+            ? Rel(Directory.GetFiles(Path.Combine(modelsPath, "bf16"), "*.onnx"))
+            : []),
     };
     foreach (var f in Directory.GetFiles(inferencePath, "*builder_resource_*"))
     {

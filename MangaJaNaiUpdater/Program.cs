@@ -711,7 +711,9 @@ static (bool HasNvidia, string Sm, string GpuName) DetectGpu()
 // existing install on such a GPU too.
 List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 {
-    var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal)).Select(p => p.Name).ToList();
+    // models-bf16 only helps NVIDIA GPUs that run bf16 (below); the other models-* packs are for all.
+    var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal) && p.Name != "models-bf16")
+        .Select(p => p.Name).ToList();
     if (hasNvidia)
     {
         rec.Add("trt-runtime");
@@ -728,6 +730,12 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
         {
             rec.Add("trt-rtx");
         }
+        // bf16 variants of the fp32 IllustrationJaNai models, which mangajanai_upscale uses on TensorRT
+        // and TensorRT-RTX from compute capability 8.0 (Turing and older have no bf16).
+        if (sms.Any(s => SmNumber(s) >= 80) && index.Packs.Any(p => p.Name == "models-bf16"))
+        {
+            rec.Add("models-bf16");
+        }
     }
     return rec;
 }
@@ -737,6 +745,10 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 // convolutions, but no default model needs them (MangaJaNai ESRGAN is convolutions only, and the
 // IllustrationJaNai FDAT and SPAN models run their matrix multiplies in fp16); the fp32 DAT2 and HAT
 // models fall back to TensorRT per model there. Data-center 8.0, 9.0 and 10.0 aren't supported.
+// "sm86" -> 86, "sm120" -> 120 (major * 10 + minor); 0 if it isn't one.
+static int SmNumber(string sm) =>
+    sm.StartsWith("sm", StringComparison.Ordinal) && int.TryParse(sm[2..], out int cc) ? cc : 0;
+
 static bool TrtRtxDefault(string sm)
 {
     if (!sm.StartsWith("sm", StringComparison.Ordinal) || !int.TryParse(sm[2..], out int cc) || cc < 10)

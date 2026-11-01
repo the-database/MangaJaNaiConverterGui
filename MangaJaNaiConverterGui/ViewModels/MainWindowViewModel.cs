@@ -1885,6 +1885,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             "trt-ptx" => "TensorRT kernels: other NVIDIA GPUs",
             "models-mangajanai" => "MangaJaNai models (grayscale manga)",
             "models-illustrationjanai" => "IllustrationJaNai models (color)",
+            "models-bf16" => "IllustrationJaNai models, bf16 (NVIDIA)",
             _ when Name.StartsWith("trt-sm") => $"TensorRT kernels: {SmFamily(Name[6..])}",
             _ => Name,
         };
@@ -1896,6 +1897,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             "trt-ptx" => "Fallback kernels for NVIDIA GPUs without a dedicated kernel pack. The first engine build is slower.",
             "models-mangajanai" => "The default models for grayscale manga pages, one per source resolution.",
             "models-illustrationjanai" => "The default models for color pages and illustrations.",
+            "models-bf16" => "Faster bf16 versions of the IllustrationJaNai DAT2 and HAT models, used automatically on TensorRT and TensorRT-RTX with an RTX 30-series or newer GPU.",
             _ when Name.StartsWith("trt-sm") => "Engine-builder kernels matched to your GPU generation.",
             _ => "",
         };

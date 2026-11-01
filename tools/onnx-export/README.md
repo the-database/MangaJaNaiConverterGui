@@ -46,6 +46,7 @@ replaced with `path/to/`). They ship as two component packs, `models-mangajanai`
 | MangaJaNai V1 ESRGAN 2x/4x (14) | fp16 | Matches 1.x, whose default was fp16. fp32 would be no more accurate on TensorRT, which builds fp32 models as TF32 by default, and is ~3x slower. |
 | IllustrationJaNai V3 FDAT_M, FDAT_XL, SPAN_S (8) | fp16 | 56–72 dB vs fp32 PyTorch on TensorRT and DirectML |
 | IllustrationJaNai V3 DAT2 (2), HAT_L (1) | fp32 | fp16 overflows (activations above 65504), producing NaN |
+| ...and their bf16 variants (3, `models-bf16` pack, `models/bf16/`) | bf16 (strongly typed) | ~40% faster on TensorRT and TensorRT-RTX (RTX 5090), 53 dB vs fp32. Used only there, from compute capability 8.0: DirectML and Turing can't run bf16 |
 
 All are opset 17 with input `input` and output `output` in NCHW RGB [0, 1], batch 1, dynamic
 height/width. Gray pages are fed to them as one channel; the inference engine replicates it.
