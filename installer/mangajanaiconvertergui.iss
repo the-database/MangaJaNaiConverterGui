@@ -210,6 +210,50 @@ begin
   Result := FileExists(VelopackDir + '\Update.exe');
 end;
 
+// 1.x's default models: PyTorch files that 2.0 can't run. 2.0 ships their ONNX exports and moves
+// saved chains to them (UpscaleChain.MigrateModelName), so only files with those names go:
+// <digit>x_MangaJaNai_* or <digit>x_IllustrationJaNai_*, ending in .pth or .safetensors. Models the
+// user added under any other name stay.
+function IsLegacyDefaultModel(Name: String): Boolean;
+var
+  Lower, Ext: String;
+begin
+  Lower := Lowercase(Name);
+  Ext := ExtractFileExt(Lower);
+  Result := (Length(Lower) > 3) and (Lower[1] >= '0') and (Lower[1] <= '9') and (Lower[2] = 'x') and
+            ((Pos('_mangajanai_', Lower) = 3) or (Pos('_illustrationjanai_', Lower) = 3)) and
+            ((Ext = '.pth') or (Ext = '.safetensors'));
+end;
+
+procedure DeleteLegacyDefaultModels;
+var
+  Dir: String;
+  FindRec: TFindRec;
+  Names: TStringList;
+  i: Integer;
+begin
+  Dir := ExpandConstant('{userappdata}\{#LegacyName}\models');
+  Names := TStringList.Create;
+  try
+    // Collect first, then delete: don't remove files from the folder being enumerated.
+    if FindFirst(Dir + '\*', FindRec) then
+    begin
+      try
+        repeat
+          if ((FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0) and IsLegacyDefaultModel(FindRec.Name) then
+            Names.Add(FindRec.Name);
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
+    end;
+    for i := 0 to Names.Count - 1 do
+      DeleteFile(Dir + '\' + Names[i]);
+  finally
+    Names.Free;
+  end;
+end;
+
 // Moving the folder fails while 1.x is running, so it doubles as the "is it closed" check, and
 // leaves the old install intact if it is still open.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -220,16 +264,23 @@ begin
     DelTree(VelopackRetiredDir, True, True, True);
     if not RenameFile(VelopackDir, VelopackRetiredDir) then
       Result := 'Close {#LegacyName} 1.x (and any upscale it is running), then run setup again.' + #13#10#13#10 +
-                'Setup replaces the 1.x install. Your settings and models are kept.';
+                'Setup replaces the 1.x install. Your settings and the models you added are kept.';
   end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   failed: Integer;
+  pythonDir: String;
 begin
   if CurStep = ssInstall then
   begin
+    pythonDir := ExpandConstant('{userappdata}\{#LegacyName}\python');
+    // Upgrading from 1.x: its install (moved aside in PrepareToInstall), or its Python backend,
+    // which 1.x left behind even when its program folder was removed some other way. Its default
+    // models only go then, so a 2.0 reinstall never touches the models folder.
+    if DirExists(VelopackRetiredDir) or DirExists(pythonDir) then
+      DeleteLegacyDefaultModels;
     // 1.x's shortcuts and uninstall entry, under its old name.
     if DirExists(VelopackRetiredDir) then
     begin
@@ -239,7 +290,7 @@ begin
       RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#LegacyName}');
     end;
     // 1.x's Python backend (several GB): 2.0 runs on its own inference engine instead.
-    DelTree(ExpandConstant('{userappdata}\{#LegacyName}\python'), True, True, True);
+    DelTree(pythonDir, True, True, True);
   end
   else if CurStep = ssPostInstall then
   begin
