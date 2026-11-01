@@ -92,7 +92,7 @@ namespace MangaJaNaiConverterGui.Services
                 _allModels = models;
                 return true;
             }
-            // Unchanged: leave the list alone, so the model ComboBoxes keep their selection.
+            // Unchanged: leave the list alone, so nothing bound to it is reset.
             if (_allModels.SequenceEqual(models))
             {
                 return false;

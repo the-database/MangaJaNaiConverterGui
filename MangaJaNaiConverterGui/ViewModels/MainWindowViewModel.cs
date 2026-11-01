@@ -592,8 +592,8 @@ namespace MangaJaNaiConverterGui.ViewModels
         private bool _applyingModelVariants;
 
         // The variant rule (ModelVariants.Resolve) over every workflow's chains, for the installed
-        // models and the backend and device: on load, and whenever the models, the backend or the
-        // device change. A chain whose model moves shows its new model.
+        // models and the backend and device: on load, whenever the models, the backend or the device
+        // change, and after a model is picked. A chain whose model moves shows its new model.
         public void ApplyModelVariants()
         {
             if (Workflows is null || _backendService is null)
@@ -603,23 +603,42 @@ namespace MangaJaNaiConverterGui.ViewModels
             var installed = _backendService.AllModels.ToList();
             var bf16 = Bf16Runnable;
             var directMl = BackendIsDirectMl;
+
+            // The model list, filtered once the backend and device are known (before that, all).
+            var picker = _devicesListed ? ModelVariants.PickerModels(installed, bf16, directMl) : installed;
+            var rebuilt = !PickerModels.SequenceEqual(picker);
+            if (rebuilt)
+            {
+                PickerModels.Clear();
+                PickerModels.AddRange(picker);
+            }
+
             _applyingModelVariants = true;
             try
             {
                 foreach (var chain in Workflows.SelectMany(w => w.Chains ?? []))
                 {
-                    chain.ApplyVariant(ModelVariants.Resolve(chain.VariantName, installed, bf16, directMl));
+                    chain.ApplyVariant(ModelVariants.Resolve(chain.ModelFilePath, installed, bf16, directMl));
                 }
             }
             finally
             {
                 _applyingModelVariants = false;
             }
+            if (rebuilt)
+            {
+                ReselectModels();
+            }
             RefreshPrecisionTags();
             CurrentWorkflow?.Validate();
         }
 
-        // The model list was rebuilt (models installed or removed): reselect every chain's model.
+        // The models the chains' pickers list (ModelVariants.PickerModels), shared by every chain and
+        // updated in place; every installed model until the first device list.
+        private AvaloniaList<string>? _pickerModels;
+        public AvaloniaList<string> PickerModels => _pickerModels ??= new AvaloniaList<string>(_backendService?.AllModels ?? []);
+
+        // The model list was rebuilt: reselect every chain's model.
         private void ReselectModels()
         {
             foreach (var chain in Workflows?.SelectMany(w => w.Chains ?? []) ?? [])
@@ -644,12 +663,29 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             RefreshPrecisionTag(chain);
             CurrentWorkflow.Validate();
+            // A picked model goes through the variant rule too (the list only offers the variant it
+            // picks, so this moves only a model that got there otherwise). After the ComboBox's
+            // write-back, so the ComboBox shows the move.
+            if (_backendService != null && _devicesListed)
+            {
+                var picked = chain.ModelFilePath;
+                var choice = ModelVariants.Resolve(picked, _backendService.AllModels, Bf16Runnable, BackendIsDirectMl);
+                if (choice.Model != picked)
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (chain.ModelFilePath == picked)
+                        {
+                            chain.ApplyVariant(choice);
+                        }
+                    });
+                }
+            }
         }
 
         // Why a chain's model can't run on this backend, as a validation message; null if it can.
-        // On DirectML a bf16 model of a shipped family can't run: the variant rule moves it to its
-        // fp32 (or fp16) variant when one is installed, so this is a model picked by hand while one
-        // is, or none is installed.
+        // On DirectML a bf16 model of a shipped family can't run, and the variant rule moves it to an
+        // installed fp16 or fp32 variant: this is the case where none is installed.
         public string? ModelVariantProblem(UpscaleChain chain)
         {
             if (_backendService is null || !BackendIsDirectMl)
@@ -657,15 +693,9 @@ namespace MangaJaNaiConverterGui.ViewModels
                 return null;
             }
             var choice = ModelVariants.Resolve(chain.ModelFilePath, _backendService.AllModels, false, true);
-            if (choice.MissingPack is string pack)
-            {
-                return $"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is bf16, which DirectML can't run. Install the \"{ComponentItem.TitleOf(pack)}\" component in App Settings > Components, or choose another backend.";
-            }
-            if (choice.Model != chain.ModelFilePath && ModelVariants.NamedPrecision(chain.ModelFilePath) == ModelVariants.Bf16)
-            {
-                return $"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is bf16, which DirectML can't run. Select {choice.Model} instead.";
-            }
-            return null;
+            return choice.MissingPack is string pack
+                ? $"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is bf16, which DirectML can't run. Install the \"{ComponentItem.TitleOf(pack)}\" component in App Settings > Components, or choose another backend."
+                : null;
         }
 
         // ---- precision tags --------------------------------------------------------------------
@@ -1197,12 +1227,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             // Components change what runs: the models, the backends and what --model-info reports.
             _modelInfoCache.Clear();
             _nvidiaDevices = null;
-            if (_backendService.RefreshModels())
-            {
-                ReselectModels();
-            }
+            _backendService.RefreshModels();
             await RefreshComponents();
-            await RefreshDevices(); // and the variant rule for the models now installed
+            await RefreshDevices(); // and the variant rule and model list for the models now installed
         }
 
 
@@ -1715,7 +1742,13 @@ namespace MangaJaNaiConverterGui.ViewModels
                     break;
                 }
             }
+            UseDeviceList(backend, devices);
+        }
 
+        // The devices `backend` listed (the last one asked, if none did): the device list, the
+        // device, and everything that depends on the backend and device.
+        public void UseDeviceList(string backend, List<BackendDevice> devices)
+        {
             // Auto's list is the NVIDIA devices the setup check (UpdateBackendSetupHint) needs: what
             // TensorRT-RTX or TensorRT found, or none if it came down to DirectML.
             if (UpscaleBackends.Normalize(UpscaleBackend) == UpscaleBackends.Auto)
@@ -1892,10 +1925,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             LastRunVersion = version;
 
-            if (_backendService.RefreshModels())
-            {
-                ReselectModels();
-            }
+            _backendService.RefreshModels();
             IsExtractingBackend = false;
             await RefreshDevices(); // and the variant rule, now that the models and the GPU are known
             CurrentWorkflow?.Validate();
@@ -3290,10 +3320,6 @@ namespace MangaJaNaiConverterGui.ViewModels
                 this.RaisePropertyChanged(nameof(MissingModel));
                 if (changed)
                 {
-                    if (!_applyingVariant)
-                    {
-                        VariantSource = null; // picked (or loaded): the rule starts from this model
-                    }
                     Vm?.OnChainModelChanged(this);
                 }
             }
@@ -3343,7 +3369,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
-        public AvaloniaList<string> AllModels => _backendService.AllModels;
+        // What the model picker lists: the view model's variant-filtered list (every installed model
+        // before the chain is wired up).
+        public AvaloniaList<string> AllModels => Vm?.PickerModels ?? _backendService.AllModels;
 
         public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export";
 
@@ -3374,34 +3402,14 @@ namespace MangaJaNaiConverterGui.ViewModels
         // shipped family's name to the variant installed (ModelVariants.Resolve).
         public static string MigrateModelName(string model) => ModelVariants.MigrateLegacyName(model);
 
-        // The model the variant rule moved this chain from, this session (null if it hasn't, or a
-        // model was picked since). The rule starts from it again, so a move undoes itself once its
-        // reason is gone: a bf16 chain moved to fp32 for DirectML returns to bf16 on TensorRT.
-        public string? VariantSource { get; private set; }
-        private bool _applyingVariant;
-
-        // The name the variant rule starts from.
-        public string VariantName => VariantSource ?? ModelFilePath;
-
-        // Move to the variant the rule picked (ModelVariants.Resolve for VariantName); true if the
-        // model changed.
+        // Move to the variant the rule picked (ModelVariants.Resolve); true if the model changed.
         public bool ApplyVariant(ModelVariants.Choice choice)
         {
             if (choice.Model == ModelFilePath)
             {
                 return false;
             }
-            var from = VariantName;
-            _applyingVariant = true;
-            try
-            {
-                ModelFilePath = choice.Model;
-            }
-            finally
-            {
-                _applyingVariant = false;
-            }
-            VariantSource = choice.Model == from ? null : from;
+            ModelFilePath = choice.Model;
             return true;
         }
 

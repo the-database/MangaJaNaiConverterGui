@@ -3,6 +3,9 @@ using MangaJaNaiConverterGui.Drivers;
 using MangaJaNaiConverterGui.Services;
 using MangaJaNaiConverterGui.ViewModels;
 using Newtonsoft.Json;
+using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -99,14 +102,26 @@ namespace MangaJaNaiConverterGui.Tests
         static readonly string[] OnlyFp32 = [Dat2Fp32, MangaFp16, "No Model"];
         static readonly string[] OnlyBf16 = [Dat2Bf16, MangaFp16, "No Model"];
 
-        // The named file is installed: it stays, whatever the GPU.
+        // With both variants installed, a chain runs the best one for the GPU whichever it names:
+        // bf16 where bf16 runs (TensorRT / TensorRT-RTX on compute capability 8.0+), else fp32.
         [Theory]
-        [InlineData(Dat2Bf16, true)]
-        [InlineData(Dat2Bf16, false)]
-        [InlineData(Dat2Fp32, true)]
-        [InlineData(Dat2Fp32, false)]
-        public void AnInstalledModelStays(string saved, bool bf16Runnable) =>
-            Assert.Equal(saved, Resolve(saved, BothDat2, bf16Runnable));
+        [InlineData(Dat2Bf16, true, false, Dat2Bf16)]
+        [InlineData(Dat2Fp32, true, false, Dat2Bf16)]
+        [InlineData(Dat2Bf16, false, false, Dat2Fp32)]
+        [InlineData(Dat2Fp32, false, false, Dat2Fp32)]
+        [InlineData(Dat2Bf16, false, true, Dat2Fp32)]
+        [InlineData(Dat2Fp32, false, true, Dat2Fp32)]
+        public void BothInstalledRunsTheBestForTheGpu(string saved, bool bf16Runnable, bool directMl, string model) =>
+            Assert.Equal(model, Resolve(saved, BothDat2, bf16Runnable, directMl));
+
+        // The beginner case: an fp32 chain on an RTX 30+ GPU moves to the bf16 file once installed.
+        [Fact]
+        public void AnFp32ChainMovesToBf16WhereBf16Runs()
+        {
+            var choice = ModelVariants.Resolve(Dat2Fp32, BothDat2, true, false);
+            Assert.Equal(Dat2Bf16, choice.Model);
+            Assert.Null(choice.MissingPack);
+        }
 
         // The old IllustrationJaNai _bf16 names were fp32 files; the same names are now the bf16
         // files. Where bf16 is installed they name it; elsewhere the fp32 file installed instead.
@@ -144,11 +159,25 @@ namespace MangaJaNaiConverterGui.Tests
         public void WithoutBf16OnlyABf16SiblingLeavesTheChainAsItIs() =>
             Assert.Equal(Dat2Fp32, Resolve(Dat2Fp32, OnlyBf16, bf16Runnable: false));
 
-        // Turing on TensorRT can't run bf16 either, but an installed file is the user's choice: it
-        // stays (its precision tag carries the CLI's hint).
+        // Turing on TensorRT can't run bf16 either: fp32 when it's installed; with only the bf16
+        // file installed, that stays (its precision tag carries the CLI's hint).
         [Fact]
-        public void AnInstalledBf16ModelStaysOnTuring() =>
-            Assert.Equal(Dat2Bf16, Resolve(Dat2Bf16, BothDat2, bf16Runnable: false, directMl: false));
+        public void TuringMovesABf16ModelToFp32() =>
+            Assert.Equal(Dat2Fp32, Resolve(Dat2Bf16, BothDat2, bf16Runnable: false, directMl: false));
+
+        [Fact]
+        public void TuringWithOnlyTheBf16FileKeepsIt()
+        {
+            var choice = ModelVariants.Resolve(Dat2Bf16, OnlyBf16, false, false);
+            Assert.Equal(Dat2Bf16, choice.Model);
+            Assert.Null(choice.MissingPack);
+        }
+
+        // A user's own export named like a shipped family is still that family: it moves to the
+        // shipped variant (an expert keeps one under a custom name instead).
+        [Fact]
+        public void AnFp32ExportOfAShippedFamilyMovesToTheShippedFp16() =>
+            Assert.Equal(MangaFp16, Resolve(Manga + "_fp32.onnx", [MangaFp16, Manga + "_fp32.onnx"], bf16Runnable: true));
 
         // DirectML can't run bf16 at all: an installed bf16 model moves to its fp32 sibling.
         [Fact]
@@ -278,59 +307,138 @@ namespace MangaJaNaiConverterGui.Tests
             return (vm, chain);
         }
 
-        // Switching to DirectML moves a bf16 chain to fp32; switching back returns it to bf16 (the
-        // installed bf16 file is the chain's choice), and a model picked meanwhile is kept.
-        [Fact]
-        public void ADirectMlMoveUndoesItselfWhenTheBackendChangesBack()
+        static readonly BackendDevice Rtx4090 = new() { Id = "112600", Name = "NVIDIA GeForce RTX 4090", ComputeCapability = "8.9" };
+        static readonly BackendDevice Rtx2080 = new() { Id = "112600", Name = "NVIDIA GeForce RTX 2080", ComputeCapability = "7.5" };
+        static readonly BackendDevice DirectMlGpu = new() { Id = "112600", Name = "NVIDIA GeForce RTX 4090" };
+
+        // A backend and device listed, as RefreshDevices does once the backend answers.
+        static void Use(MainWindowViewModel vm, string choice, string listedBy, BackendDevice device)
         {
-            var (vm, chain) = VmWithChain(Dat2Bf16, BothDat2);
-
-            vm.UpscaleBackend = UpscaleBackends.DirectMl;
-            vm.ApplyModelVariants();
-            Assert.Equal(Dat2Fp32, chain.ModelFilePath);
-
-            vm.UpscaleBackend = UpscaleBackends.Auto;
-            vm.ApplyModelVariants();
-            Assert.Equal(Dat2Bf16, chain.ModelFilePath);
-            Assert.Null(chain.VariantSource);
+            vm.UpscaleBackend = choice;
+            vm.UseDeviceList(listedBy, [device]);
         }
 
         [Fact]
-        public void AModelPickedAfterAMoveIsKept()
+        public void AnFp32ChainMovesToBf16OnTensorRtRtxWithAnRtx40()
+        {
+            var (vm, chain) = VmWithChain(Dat2Fp32, BothDat2);
+            Use(vm, UpscaleBackends.Auto, UpscaleBackends.CliTensorRtRtx, Rtx4090);
+            Assert.True(vm.Bf16Runnable);
+            Assert.Equal(Dat2Bf16, chain.ModelFilePath);
+        }
+
+        [Fact]
+        public void ABf16ChainMovesToFp32OnDirectMl()
         {
             var (vm, chain) = VmWithChain(Dat2Bf16, BothDat2);
-            vm.UpscaleBackend = UpscaleBackends.DirectMl;
-            vm.ApplyModelVariants();
+            Use(vm, UpscaleBackends.DirectMl, UpscaleBackends.CliDirectMl, DirectMlGpu);
+            Assert.Equal(Dat2Fp32, chain.ModelFilePath);
+        }
 
-            chain.ModelFilePath = Dat2Fp32; // picked (same file, but now the user's choice)
-            chain.ModelFilePath = MangaFp16;
-            vm.UpscaleBackend = UpscaleBackends.Auto;
-            vm.ApplyModelVariants();
-            Assert.Equal(MangaFp16, chain.ModelFilePath);
+        // The chain follows the backend both ways, every time (no memory of earlier moves needed).
+        [Fact]
+        public void TheChainFollowsTheBackend()
+        {
+            var (vm, chain) = VmWithChain(Dat2Bf16, BothDat2);
+            Use(vm, UpscaleBackends.DirectMl, UpscaleBackends.CliDirectMl, DirectMlGpu);
+            Assert.Equal(Dat2Fp32, chain.ModelFilePath);
+            Use(vm, UpscaleBackends.Auto, UpscaleBackends.CliTensorRtRtx, Rtx4090);
+            Assert.Equal(Dat2Bf16, chain.ModelFilePath);
+            Use(vm, UpscaleBackends.TensorRt, UpscaleBackends.CliTensorRt, Rtx2080);
+            Assert.Equal(Dat2Fp32, chain.ModelFilePath);
+        }
+
+        // A hand pick goes through the same rule, right after the ComboBox's write-back.
+        [AvaloniaFact]
+        public void AHandPickedBf16ModelMovesToFp32OnDirectMl()
+        {
+            var (vm, chain) = VmWithChain(MangaFp16, BothDat2);
+            Use(vm, UpscaleBackends.DirectMl, UpscaleBackends.CliDirectMl, DirectMlGpu);
+
+            chain.ModelFilePath = Dat2Bf16;
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(Dat2Fp32, chain.ModelFilePath);
+            Assert.Null(vm.ModelVariantProblem(chain));
+        }
+
+        [AvaloniaFact]
+        public void AHandPickedFp32ModelMovesToBf16OnAnRtx40()
+        {
+            var (vm, chain) = VmWithChain(MangaFp16, BothDat2);
+            Use(vm, UpscaleBackends.TensorRtRtx, UpscaleBackends.CliTensorRtRtx, Rtx4090);
+
+            chain.ModelFilePath = Dat2Fp32;
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(Dat2Bf16, chain.ModelFilePath);
+        }
+
+        [AvaloniaFact]
+        public void AHandPickedCustomModelStays()
+        {
+            var (vm, chain) = VmWithChain(MangaFp16, [.. BothDat2, "4x_Mine_fp32.onnx"]);
+            Use(vm, UpscaleBackends.Auto, UpscaleBackends.CliTensorRtRtx, Rtx4090);
+
+            chain.ModelFilePath = "4x_Mine_fp32.onnx";
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal("4x_Mine_fp32.onnx", chain.ModelFilePath);
+        }
+
+        // ---- the model list ----------------------------------------------------------------------
+
+        static readonly string[] Installed =
+            ["4x_Mine_bf16.onnx", "4x_Mine_fp32.onnx", Dat2Bf16, Dat2Fp32, MangaFp16, "No Model"];
+
+        [Theory]
+        // TensorRT / TensorRT-RTX on compute capability 8.0+: the fp32 DAT2/HAT entries are hidden
+        [InlineData(true, false, new[] { "4x_Mine_bf16.onnx", "4x_Mine_fp32.onnx", Dat2Bf16, MangaFp16, "No Model" })]
+        // DirectML, and Turing: the bf16 ones
+        [InlineData(false, true, new[] { "4x_Mine_bf16.onnx", "4x_Mine_fp32.onnx", Dat2Fp32, MangaFp16, "No Model" })]
+        [InlineData(false, false, new[] { "4x_Mine_bf16.onnx", "4x_Mine_fp32.onnx", Dat2Fp32, MangaFp16, "No Model" })]
+        public void TheModelListHidesTheVariantsTheRuleWouldUndo(bool bf16Runnable, bool directMl, string[] listed) =>
+            Assert.Equal(listed, ModelVariants.PickerModels(Installed, bf16Runnable, directMl));
+
+        // With one variant installed it's listed, even where it can't run (the chain then fails
+        // validation on DirectML, naming the pack to install).
+        [Theory]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        public void ASingleInstalledVariantIsListed(bool bf16Runnable, bool directMl)
+        {
+            Assert.Contains(Dat2Bf16, ModelVariants.PickerModels(OnlyBf16, bf16Runnable, directMl));
+            Assert.Contains(Dat2Fp32, ModelVariants.PickerModels(OnlyFp32, bf16Runnable, directMl));
+        }
+
+        // A leftover prerelease file of a shipped family is hidden once the new one is installed.
+        [Fact]
+        public void ALeftoverUnsuffixedFileIsHidden() =>
+            Assert.Equal([MangaFp16], ModelVariants.PickerModels([Manga + ".onnx", MangaFp16], true, false));
+
+        [Fact]
+        public void TheChainsListFollowsTheBackend()
+        {
+            var (vm, chain) = VmWithChain(Dat2Bf16, Installed);
+            Assert.Same(vm.PickerModels, chain.AllModels);
+            Assert.Equal(Installed, vm.PickerModels); // all of them until a device is listed
+
+            Use(vm, UpscaleBackends.Auto, UpscaleBackends.CliTensorRtRtx, Rtx4090);
+            Assert.DoesNotContain(Dat2Fp32, vm.PickerModels);
+            Assert.Contains(Dat2Bf16, vm.PickerModels);
+
+            Use(vm, UpscaleBackends.DirectMl, UpscaleBackends.CliDirectMl, DirectMlGpu);
+            Assert.DoesNotContain(Dat2Bf16, vm.PickerModels);
+            Assert.Contains(Dat2Fp32, vm.PickerModels);
+            Assert.Contains("4x_Mine_bf16.onnx", vm.PickerModels);
+            Assert.Equal(Dat2Fp32, chain.ModelFilePath);
         }
 
         [Fact]
         public void DirectMlWithoutTheFp32PackIsAValidationProblem()
         {
             var (vm, chain) = VmWithChain(Dat2Bf16, OnlyBf16);
-            vm.UpscaleBackend = UpscaleBackends.DirectMl;
-            vm.ApplyModelVariants();
+            Use(vm, UpscaleBackends.DirectMl, UpscaleBackends.CliDirectMl, DirectMlGpu);
 
             Assert.Equal(Dat2Bf16, chain.ModelFilePath);
             Assert.Equal("Chain 1's model 4x_IllustrationJaNai_V3detail_DAT2_28k_bf16.onnx is bf16, which DirectML can't run. Install the \"IllustrationJaNai DAT2/HAT, fp32 (DirectML, older NVIDIA)\" component in App Settings > Components, or choose another backend.",
-                vm.ModelVariantProblem(chain));
-        }
-
-        [Fact]
-        public void ABf16ModelPickedOnDirectMlAsksForItsFp32Sibling()
-        {
-            var (vm, chain) = VmWithChain(MangaFp16, BothDat2);
-            vm.UpscaleBackend = UpscaleBackends.DirectMl;
-            vm.ApplyModelVariants();
-            chain.ModelFilePath = Dat2Bf16; // picked by hand: not moved behind the user's back
-
-            Assert.Equal(Dat2Bf16, chain.ModelFilePath);
-            Assert.Equal("Chain 1's model 4x_IllustrationJaNai_V3detail_DAT2_28k_bf16.onnx is bf16, which DirectML can't run. Select 4x_IllustrationJaNai_V3detail_DAT2_28k_fp32.onnx instead.",
                 vm.ModelVariantProblem(chain));
         }
 
@@ -364,7 +472,7 @@ namespace MangaJaNaiConverterGui.Tests
             vm.BackendSetupHint = "TensorRT-RTX is much faster on X.";
 
             var json = JsonConvert.SerializeObject(vm, NewtonsoftJsonSuspensionDriver.Settings);
-            foreach (var name in new[] { "ModelHint", "BackendSetupHint", "Bf16Runnable", "BackendIsDirectMl", "Precision", "Variant" })
+            foreach (var name in new[] { "ModelHint", "BackendSetupHint", "Bf16Runnable", "BackendIsDirectMl", "Precision", "Variant", "PickerModels" })
             {
                 Assert.DoesNotContain(name, json);
             }

@@ -8,9 +8,11 @@ namespace MangaJaNaiConverterGui.Services
 {
     // The shipped models, by family. A shipped file's name is its checkpoint's base name plus the
     // ONNX file's actual precision ("..._DAT2_28k_bf16.onnx"); a family is that base name, and some
-    // ship in more than one precision. A chain naming a shipped family moves to the best variant
-    // installed (Resolve), visibly: the chain's model changes, so the list shows what runs. Custom
-    // models (any other name) are never touched.
+    // ship in more than one precision. A chain naming a shipped family always runs the best variant
+    // installed for the backend and GPU (Resolve), visibly: the chain's model changes, so the list
+    // shows what runs, and the model list offers only that variant (PickerModels). Custom models
+    // (any other name) are never touched; an expert who wants another variant of a shipped model
+    // copies it under a name of their own.
     public static class ModelVariants
     {
         public const string Fp16 = "fp16";
@@ -127,11 +129,12 @@ namespace MangaJaNaiConverterGui.Services
         // pack that has a variant that can (MissingPack, else null).
         public readonly record struct Choice(string Model, string? MissingPack);
 
-        // The variant rule. For a shipped family's name (after the 1.x name migration):
-        // - the named file is installed: keep it, except a bf16 file on DirectML, which can't run it;
-        // - else the installed variant of its family, preferring bf16, fp16, fp32 where bf16 runs
-        //   (TensorRT or TensorRT-RTX on compute capability 8.0+), else fp16, fp32 (never bf16);
-        // - else keep the name; on DirectML a bf16 one then names the pack to install.
+        // The variant rule. For a shipped family's name (after the 1.x name migration), whether or
+        // not the named file is installed:
+        // - the best installed variant of its family: bf16, fp16, fp32 where bf16 runs (TensorRT or
+        //   TensorRT-RTX on compute capability 8.0+), else fp16, fp32 (never bf16);
+        // - else (no such variant installed) the name stays; on DirectML a bf16 one then names the
+        //   pack with a variant DirectML runs.
         // Custom models, "No Model" and empty names come back as they are (after the 1.x migration).
         public static Choice Resolve(string saved, IEnumerable<string> installed, bool bf16Runnable, bool directMl)
         {
@@ -148,27 +151,32 @@ namespace MangaJaNaiConverterGui.Services
                 files.TryAdd(f, f);
             }
 
-            var bf16Blocked = directMl && NamedPrecision(model) == Bf16;
-            if (!bf16Blocked && files.TryGetValue(model, out var named))
-            {
-                return new Choice(named, null);
-            }
             string[] order = bf16Runnable && !directMl ? [Bf16, Fp16, Fp32] : [Fp16, Fp32];
             foreach (var precision in order)
             {
-                if (files.TryGetValue($"{family.Base}_{precision}.onnx", out var sibling))
+                if (files.TryGetValue($"{family.Base}_{precision}.onnx", out var variant))
                 {
-                    return new Choice(sibling, null);
+                    return new Choice(variant, null);
                 }
             }
+            // Nothing better installed: the name stays (in the installed file's spelling).
+            var name = files.TryGetValue(model, out var named) ? named : model;
             string? missingPack = null;
-            if (bf16Blocked)
+            if (directMl && NamedPrecision(model) == Bf16)
             {
                 missingPack = family.Packs.TryGetValue(Fp16, out var fp16Pack) ? fp16Pack
                     : family.Packs.TryGetValue(Fp32, out var fp32Pack) ? fp32Pack : null;
             }
-            return new Choice(model, missingPack);
+            return new Choice(name, missingPack);
         }
+
+        // The model list a chain picks from: every installed model, but of a shipped family only the
+        // variant Resolve picks, so the list never offers a choice the rule would undo. Custom models
+        // are always listed. Keeps the installed list's order.
+        public static List<string> PickerModels(IReadOnlyCollection<string> installed, bool bf16Runnable, bool directMl) =>
+            installed.Where(m => FindFamily(m) is null ||
+                string.Equals(Resolve(m, installed, bf16Runnable, directMl).Model, m, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
         // Whether bf16 models run: TensorRT or TensorRT-RTX (mangajanai_upscale's --backend names) on
         // a GPU of compute capability 8.0 or newer (RTX 30-series and newer). DirectML and Turing
