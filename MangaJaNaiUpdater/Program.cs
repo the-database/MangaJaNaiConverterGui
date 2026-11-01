@@ -732,10 +732,11 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
     return rec;
 }
 
-// Whether TensorRT-RTX is the default on a GPU ("sm86"): consumer Ampere (8.6), Ada (8.9) and
-// Blackwell (12.x). TensorRT-RTX 1.7 supports 7.5, 8.6, 8.9 and 12.x; on Turing (7.5) it lacks FP32
-// GEMMs and 3D convolutions, which some models need, so Turing keeps TensorRT. Data-center 8.0, 9.0
-// and 10.0 aren't supported.
+// Whether TensorRT-RTX is the default on a GPU ("sm86"): the GPUs TensorRT-RTX 1.7 supports, Turing
+// (7.5), consumer Ampere (8.6), Ada (8.9) and Blackwell (12.x). On Turing it lacks FP32 GEMMs and 3D
+// convolutions, but no default model needs them (MangaJaNai ESRGAN is convolutions only, and the
+// IllustrationJaNai FDAT and SPAN models run their matrix multiplies in fp16); the fp32 DAT2 and HAT
+// models fall back to TensorRT per model there. Data-center 8.0, 9.0 and 10.0 aren't supported.
 static bool TrtRtxDefault(string sm)
 {
     if (!sm.StartsWith("sm", StringComparison.Ordinal) || !int.TryParse(sm[2..], out int cc) || cc < 10)
@@ -743,7 +744,7 @@ static bool TrtRtxDefault(string sm)
         return false;
     }
     int major = cc / 10, minor = cc % 10;
-    return (major == 8 && (minor == 6 || minor == 9)) || major >= 12;
+    return (major == 7 && minor == 5) || (major == 8 && (minor == 6 || minor == 9)) || major >= 12;
 }
 
 bool PreselectPack(Pack pack, Dictionary<string, string> installed, List<string> rec) =>

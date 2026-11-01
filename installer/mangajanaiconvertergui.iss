@@ -161,7 +161,7 @@ begin
 end;
 
 // Install the recommended packs the user kept selected: models-* under the models option, the rest
-// (trt-*, including trt-rtx, which is recommended on RTX 30-series and newer) under the TensorRT
+// (trt-*, including trt-rtx, which is recommended on RTX 20 / GTX 16 series and newer) under the TensorRT
 // option. Returns the count that failed.
 function InstallSelectedPacks: Integer;
 var

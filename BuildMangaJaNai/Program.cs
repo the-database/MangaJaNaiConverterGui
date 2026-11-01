@@ -648,7 +648,7 @@ async Task<List<string>> EmitComponentPacks()
             packs.Add(($"trt-{m.Groups[1].Value}", "inference_runtime", Rel([f])));
         }
     }
-    // The TensorRT-RTX backend (recommended on RTX 30-series and newer, see the updater). Its dep is
+    // The TensorRT-RTX backend (recommended on RTX 20 / GTX 16 series and newer, see the updater). Its dep is
     // aji: aji_trtrtx.dll has to match aji.dll, so the pack goes stale with every aji bump. It runs
     // on trt-runtime's cudart, and its fallback to TensorRT needs trt-runtime too.
     packs.Add(("trt-rtx", "aji", Rel(Directory.GetFiles(inferencePath).Where(f => IsTrtRtxFile(Path.GetFileName(f))))));

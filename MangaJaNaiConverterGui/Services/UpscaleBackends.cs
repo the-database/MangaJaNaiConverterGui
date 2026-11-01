@@ -8,7 +8,7 @@ namespace MangaJaNaiConverterGui.Services
     {
         public const string Auto = "Auto";
         public const string TensorRt = "TensorRT";
-        // The trt-rtx component, which the updater installs on RTX 30-series and newer: Auto's first
+        // The trt-rtx component, which the updater installs on RTX 20 / GTX 16 series and newer: Auto's first
         // choice wherever it's installed, and an explicit choice on any NVIDIA GPU.
         public const string TensorRtRtx = "TensorRT-RTX";
         public const string DirectMl = "DirectML";

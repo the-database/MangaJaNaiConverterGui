@@ -878,7 +878,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     var recommended = (bool?)p["recommended"] ?? false;
                     // Only surface packs relevant to this machine: what it uses (recommended) or
                     // already has (installed, so it can be removed), plus the TensorRT-RTX pack on
-                    // any NVIDIA GPU (it's only recommended on RTX 30-series and newer). Kernel packs for other GPU generations stay hidden; the
+                    // any NVIDIA GPU (it's only recommended on RTX 20 / GTX 16 series and newer). Kernel packs for other GPU generations stay hidden; the
                     // updater CLI still lists them all.
                     if (!ComponentItem.IsShown(name, installed, recommended, nvidia))
                     {
@@ -1892,7 +1892,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         public string Description => Name switch
         {
             "trt-runtime" => "The fastest upscaling engine, for NVIDIA GPUs. Without it, upscaling uses the slower DirectML engine. TensorRT-RTX needs it too.",
-            TensorRtRtxPack => "The fastest NVIDIA backend, installed by default on RTX 30-series and newer. It builds engines in seconds instead of a TensorRT build's few minutes and upscales faster; output is equivalent to TensorRT's, though not bit-identical. Auto uses it when it's installed. Needs the TensorRT runtime, which it falls back to if it can't run.",
+            TensorRtRtxPack => "The fastest NVIDIA backend, installed by default on RTX 20 / GTX 16 series and newer. It builds engines in seconds instead of a TensorRT build's few minutes and upscales faster; output is equivalent to TensorRT's, though not bit-identical. Auto uses it when it's installed. Needs the TensorRT runtime, which it falls back to if it can't run.",
             "trt-ptx" => "Fallback kernels for NVIDIA GPUs without a dedicated kernel pack. The first engine build is slower.",
             "models-mangajanai" => "The default models for grayscale manga pages, one per source resolution.",
             "models-illustrationjanai" => "The default models for color pages and illustrations.",
