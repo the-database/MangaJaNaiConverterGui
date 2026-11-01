@@ -62,6 +62,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             ).Subscribe(x =>
             {
                 CurrentWorkflow?.Validate();
+                RefreshPrecisionTags();
             });
 
             _timer.Interval = TimeSpan.FromSeconds(1);
@@ -170,7 +171,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_1200p_V1_ESRGAN_70k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -186,7 +187,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_1200p_V1_ESRGAN_70k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -202,7 +203,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_1300p_V1_ESRGAN_75k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -218,7 +219,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_1300p_V1_ESRGAN_75k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -234,7 +235,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_1400p_V1_ESRGAN_70k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -250,7 +251,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_1400p_V1_ESRGAN_105k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -266,7 +267,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_1500p_V1_ESRGAN_90k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -282,7 +283,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_1500p_V1_ESRGAN_105k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -298,7 +299,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_1600p_V1_ESRGAN_90k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -314,7 +315,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_1600p_V1_ESRGAN_70k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -330,7 +331,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_1920p_V1_ESRGAN_70k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -346,7 +347,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_1920p_V1_ESRGAN_105k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -362,7 +363,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 0,
         "MaxScaleFactor": 2,
-        "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k.onnx",
+        "ModelFilePath": "2x_MangaJaNai_2048p_V1_ESRGAN_95k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -378,7 +379,7 @@ namespace MangaJaNaiConverterGui.ViewModels
         "IsColor": false,
         "MinScaleFactor": 2,
         "MaxScaleFactor": 0,
-        "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k.onnx",
+        "ModelFilePath": "4x_MangaJaNai_2048p_V1_ESRGAN_70k_fp16.onnx",
         "ModelTileSize": "Auto (Estimate)",
         "AutoAdjustLevels": true,
         "ResizeHeightBeforeUpscale": 0,
@@ -546,6 +547,10 @@ namespace MangaJaNaiConverterGui.ViewModels
         private string _deviceBackend = "tensorrt";
         private string[] _deviceIds = [];
         private string[] _deviceNames = [];
+        // Each listed device's CUDA compute capability ("8.9"; null on DirectML).
+        private string?[] _deviceComputeCapabilities = [];
+        private bool _refreshingDevices;
+        private bool _devicesListed;
 
         private int _selectedDeviceIndex;
         [DataMember]
@@ -554,13 +559,306 @@ namespace MangaJaNaiConverterGui.ViewModels
             get => _selectedDeviceIndex;
             set
             {
+                var changed = _selectedDeviceIndex != value;
                 this.RaiseAndSetIfChanged(ref _selectedDeviceIndex, value);
                 if (value >= 0 && value < DeviceList.Length)
                 {
                     SelectedDeviceName = _deviceNames[value];
                     SelectedDeviceId = _deviceIds[value];
+                    // A device picked in the list (RefreshDevices does this itself once it's done).
+                    if (changed && !_refreshingDevices)
+                    {
+                        OnBackendContextChanged();
+                    }
                 }
             }
+        }
+
+        // The --backend an upscale runs with (see UpscaleBackends.UpscaleBackend).
+        private string CliBackend => UpscaleBackends.UpscaleBackend(UpscaleBackend, _deviceIds.Length > 0 ? _deviceBackend : null);
+
+        private string? SelectedComputeCapability =>
+            _selectedDeviceIndex >= 0 && _selectedDeviceIndex < _deviceComputeCapabilities.Length ? _deviceComputeCapabilities[_selectedDeviceIndex] : null;
+
+        // bf16 models run here: TensorRT or TensorRT-RTX on a device of compute capability 8.0+.
+        public bool Bf16Runnable => ModelVariants.Bf16Runnable(CliBackend, SelectedComputeCapability);
+
+        // Upscales run on DirectML: chosen, or what Auto found devices on.
+        public bool BackendIsDirectMl =>
+            UpscaleBackends.Normalize(UpscaleBackend) == UpscaleBackends.DirectMl || CliBackend == UpscaleBackends.CliDirectMl;
+
+        // ---- model variants ------------------------------------------------------------------
+
+        private bool _applyingModelVariants;
+
+        // The variant rule (ModelVariants.Resolve) over every workflow's chains, for the installed
+        // models and the backend and device: on load, whenever the models, the backend or the device
+        // change, and after a model is picked. A chain whose model moves shows its new model.
+        public void ApplyModelVariants()
+        {
+            if (Workflows is null || _backendService is null)
+            {
+                return;
+            }
+            var installed = _backendService.AllModels.ToList();
+            var bf16 = Bf16Runnable;
+            var directMl = BackendIsDirectMl;
+
+            // The model list, filtered once the backend and device are known (before that, all).
+            var picker = _devicesListed ? ModelVariants.PickerModels(installed, bf16, directMl) : installed;
+            var rebuilt = !PickerModels.SequenceEqual(picker);
+            if (rebuilt)
+            {
+                PickerModels.Clear();
+                PickerModels.AddRange(picker);
+            }
+
+            _applyingModelVariants = true;
+            try
+            {
+                foreach (var chain in Workflows.SelectMany(w => w.Chains ?? []))
+                {
+                    chain.ApplyVariant(ModelVariants.Resolve(chain.ModelFilePath, installed, bf16, directMl));
+                }
+            }
+            finally
+            {
+                _applyingModelVariants = false;
+            }
+            if (rebuilt)
+            {
+                ReselectModels();
+            }
+            RefreshPrecisionTags();
+            CurrentWorkflow?.Validate();
+        }
+
+        // The models the chains' pickers list (ModelVariants.PickerModels), shared by every chain and
+        // updated in place; every installed model until the first device list.
+        private AvaloniaList<string>? _pickerModels;
+        public AvaloniaList<string> PickerModels => _pickerModels ??= new AvaloniaList<string>(_backendService?.AllModels ?? []);
+
+        // The model list was rebuilt: reselect every chain's model.
+        private void ReselectModels()
+        {
+            foreach (var chain in Workflows?.SelectMany(w => w.Chains ?? []) ?? [])
+            {
+                chain.ReselectModel();
+            }
+        }
+
+        // The backend or device changed: what runs where, and the hints that depend on it.
+        private void OnBackendContextChanged()
+        {
+            UpdateBackendSetupHint();
+            RebuildComponents();
+            ApplyModelVariants();
+        }
+
+        internal void OnChainModelChanged(UpscaleChain chain)
+        {
+            if (_applyingModelVariants || CurrentWorkflow?.Chains?.Contains(chain) != true)
+            {
+                return;
+            }
+            RefreshPrecisionTag(chain);
+            CurrentWorkflow.Validate();
+            // A picked model goes through the variant rule too (the list only offers the variant it
+            // picks, so this moves only a model that got there otherwise). After the ComboBox's
+            // write-back, so the ComboBox shows the move.
+            if (_backendService != null && _devicesListed)
+            {
+                var picked = chain.ModelFilePath;
+                var choice = ModelVariants.Resolve(picked, _backendService.AllModels, Bf16Runnable, BackendIsDirectMl);
+                if (choice.Model != picked)
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (chain.ModelFilePath == picked)
+                        {
+                            chain.ApplyVariant(choice);
+                        }
+                    });
+                }
+            }
+        }
+
+        // Why a chain's model can't run on this backend, as a validation message; null if it can.
+        // On DirectML a bf16 model of a shipped family can't run, and the variant rule moves it to an
+        // installed fp16 or fp32 variant: this is the case where none is installed.
+        public string? ModelVariantProblem(UpscaleChain chain)
+        {
+            if (_backendService is null || !BackendIsDirectMl)
+            {
+                return null;
+            }
+            var choice = ModelVariants.Resolve(chain.ModelFilePath, _backendService.AllModels, false, true);
+            return choice.MissingPack is string pack
+                ? $"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is bf16, which DirectML can't run. Install the \"{ComponentItem.TitleOf(pack)}\" component in App Settings > Components, or choose another backend."
+                : null;
+        }
+
+        // ---- precision tags --------------------------------------------------------------------
+        // mangajanai_upscale --model-info per model file, backend and device, cached; run off the UI
+        // thread, a couple at a time. A failed query is cached too (as no tag), until components change.
+
+        private readonly ConcurrentDictionary<string, Task<ModelInfo?>> _modelInfoCache = new();
+        private readonly SemaphoreSlim _modelInfoGate = new(2);
+        private static readonly TimeSpan ModelInfoTimeout = TimeSpan.FromSeconds(60);
+
+        // The tags of the shown workflow's chains (another workflow's refresh when it's shown).
+        public void RefreshPrecisionTags()
+        {
+            foreach (var chain in CurrentWorkflow?.Chains ?? [])
+            {
+                RefreshPrecisionTag(chain);
+            }
+        }
+
+        private void RefreshPrecisionTag(UpscaleChain chain)
+        {
+            // Until the first device list, the backend and device a tag depends on aren't known.
+            if (_backendService is null || !_devicesListed)
+            {
+                return;
+            }
+            string? key = null;
+            string? path = _backendService.IsBackendInstalled ? _backendService.ResolveModelPath(chain.ModelFilePath) : null;
+            string? backend = null;
+            string? device = null;
+            if (path != null)
+            {
+                try
+                {
+                    var file = new FileInfo(path);
+                    backend = CliBackend == UpscaleBackends.CliAuto ? null : CliBackend;
+                    device = backend != null && _deviceIds.Length > 0 && !string.IsNullOrEmpty(SelectedDeviceId) ? SelectedDeviceId : null;
+                    key = string.Join("|", path, file.Length, file.LastWriteTimeUtc.Ticks, backend, device);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+            if (key is null)
+            {
+                chain.PrecisionQueryKey = null;
+                chain.SetPrecision(null, null);
+                return;
+            }
+            if (chain.PrecisionQueryKey == key)
+            {
+                return; // already shown, or on its way
+            }
+            chain.PrecisionQueryKey = key;
+            var query = _modelInfoCache.GetOrAdd(key, _ => Task.Run(() => QueryModelInfo(path!, backend, device)));
+            if (query.IsCompletedSuccessfully)
+            {
+                chain.SetPrecision(query.Result?.Precision, query.Result?.Hint);
+                return;
+            }
+            chain.SetPrecision(null, null);
+            _ = ShowPrecisionWhenDone(chain, key, query);
+        }
+
+        private static async Task ShowPrecisionWhenDone(UpscaleChain chain, string key, Task<ModelInfo?> query)
+        {
+            ModelInfo? info = null;
+            try
+            {
+                info = await query.ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (chain.PrecisionQueryKey == key)
+                {
+                    chain.SetPrecision(info?.Precision, info?.Hint);
+                }
+            });
+        }
+
+        private async Task<ModelInfo?> QueryModelInfo(string path, string? backend, string? device)
+        {
+            await _modelInfoGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                var args = new List<string> { "--model-info", path };
+                if (backend != null)
+                {
+                    args.AddRange(["--backend", backend]);
+                }
+                args.AddRange(["--aji-dir", _backendService.InferenceDirectory]);
+                if (device != null)
+                {
+                    args.AddRange(["--device", device]);
+                }
+                return ModelInfo.Parse(await RunBackendQuery(ModelInfoTimeout, [.. args]).ConfigureAwait(false));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return null;
+            }
+            finally
+            {
+                _modelInfoGate.Release();
+            }
+        }
+
+        // ---- backend setup check -----------------------------------------------------------------
+        // NVIDIA devices TensorRT or TensorRT-RTX can use, as Auto finds them (null until known): from
+        // Auto's own device list, or asked once in the background when DirectML is chosen.
+        private List<BackendDevice>? _nvidiaDevices;
+        private string? _nvidiaDevicesBackend;
+        private bool _probingNvidiaDevices;
+
+        private string? _backendSetupHint;
+        public string? BackendSetupHint
+        {
+            get => _backendSetupHint;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _backendSetupHint, value);
+                this.RaisePropertyChanged(nameof(ShowBackendSetupHint));
+            }
+        }
+
+        public bool ShowBackendSetupHint => !string.IsNullOrEmpty(BackendSetupHint);
+
+        private void UpdateBackendSetupHint() =>
+            BackendSetupHint = UpscaleBackends.FasterBackendHint(UpscaleBackend, _nvidiaDevices, _nvidiaDevicesBackend, SelectedDeviceId);
+
+        private async Task ProbeNvidiaDevices()
+        {
+            if (_probingNvidiaDevices || _backendService is null)
+            {
+                return;
+            }
+            _probingNvidiaDevices = true;
+            try
+            {
+                foreach (var b in UpscaleBackends.DeviceQueryOrder(UpscaleBackends.Auto, _backendService.IsTensorRtRtxInstalled)
+                    .Where(b => b != UpscaleBackends.CliDirectMl))
+                {
+                    var devices = await ListDevices(b);
+                    if (devices.Count > 0)
+                    {
+                        _nvidiaDevices = devices;
+                        _nvidiaDevicesBackend = b;
+                        break;
+                    }
+                }
+                _nvidiaDevices ??= [];
+            }
+            finally
+            {
+                _probingNvidiaDevices = false;
+            }
+            UpdateBackendSetupHint();
         }
 
         // The selected device's id: the card's PCI address (animejanai-inference 0.18.2+), the same on
@@ -870,28 +1168,36 @@ namespace MangaJaNaiConverterGui.ViewModels
                     ? $"{gpuName} ({sm})"
                     : "No NVIDIA GPU detected — using the built-in DirectML engine.";
 
-                var items = new AvaloniaList<ComponentItem>();
+                var packs = new List<ComponentItem>();
                 foreach (var p in (Newtonsoft.Json.Linq.JArray?)root["packs"] ?? [])
                 {
-                    var name = (string?)p["name"] ?? "";
-                    var installed = (bool?)p["installed"] ?? false;
-                    var recommended = (bool?)p["recommended"] ?? false;
-                    // Only surface packs relevant to this machine: what it uses (recommended) or
-                    // already has (installed, so it can be removed), plus the TensorRT-RTX pack on
-                    // any NVIDIA GPU (it's only recommended on RTX 20 / GTX 16 series and newer). Kernel packs for other GPU generations stay hidden; the
-                    // updater CLI still lists them all.
-                    if (!ComponentItem.IsShown(name, installed, recommended, nvidia))
-                    {
-                        continue;
-                    }
-                    items.Add(new ComponentItem(name, (long?)p["bytes"] ?? 0, installed, recommended));
+                    packs.Add(new ComponentItem((string?)p["name"] ?? "", (long?)p["bytes"] ?? 0,
+                        (bool?)p["installed"] ?? false, (bool?)p["recommended"] ?? false));
                 }
-                Components = items;
+                _allComponents = packs;
+                _gpuNvidia = nvidia;
+                RebuildComponents();
             }
             catch (Exception ex)
             {
                 ComponentStatusText = $"Could not read components: {ex.Message}";
             }
+        }
+
+        // Every pack the updater lists, and whether it found an NVIDIA GPU (the last RefreshComponents).
+        private List<ComponentItem> _allComponents = [];
+        private bool _gpuNvidia;
+
+        // Only surface packs relevant to this machine: what it uses (recommended) or already has
+        // (installed, so it can be removed), plus the TensorRT-RTX pack on any NVIDIA GPU (it's only
+        // recommended on RTX 20 / GTX 16 series and newer) and the fp32 DAT2/HAT models while upscales
+        // run on DirectML. Kernel packs for other GPU generations stay hidden; the updater CLI still
+        // lists them all. Rebuilt when the backend changes too.
+        private void RebuildComponents()
+        {
+            var directMl = BackendIsDirectMl;
+            Components = new AvaloniaList<ComponentItem>(
+                _allComponents.Where(c => ComponentItem.IsShown(c.Name, c.Installed, c.Recommended, _gpuNvidia, directMl)));
         }
 
         public async Task InstallComponent(ComponentItem item)
@@ -918,9 +1224,12 @@ namespace MangaJaNaiConverterGui.ViewModels
             }
             catch (Exception ex) { ComponentStatusText = ex.Message; }
             ComponentsBusy = false;
+            // Components change what runs: the models, the backends and what --model-info reports.
+            _modelInfoCache.Clear();
+            _nvidiaDevices = null;
             _backendService.RefreshModels();
             await RefreshComponents();
-            await RefreshDevices();
+            await RefreshDevices(); // and the variant rule and model list for the models now installed
         }
 
 
@@ -942,6 +1251,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 ct.ThrowIfCancellationRequested();
                 ConsoleQueueClear();
                 BackendFallbackText = string.Empty;
+                ModelHintText = string.Empty;
                 Upscaling = true;
                 ProgressCurrentFile = 0;
                 ProgressCurrentFileInArchive = 0;
@@ -962,7 +1272,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                 {
                     "--settings", _backendService.AppStatePath,
                     "--aji-dir", _backendService.InferenceDirectory,
-                    "--backend", UpscaleBackends.UpscaleBackend(UpscaleBackend, _deviceIds.Length > 0 ? _deviceBackend : null),
+                    "--backend", CliBackend,
                     "--cache-dir", _backendService.EngineCacheDirectory,
                     "--models-dir", _backendService.UserModelsDirectory,
                     "--models-dir", _backendService.BundledModelsDirectory,
@@ -1283,6 +1593,12 @@ namespace MangaJaNaiConverterGui.ViewModels
                                     BackendFallbackText = e.Data["BACKEND_FALLBACK ".Length..];
                                     EngineStatusText = string.Empty; // a failed TensorRT-RTX build ends here
                                 }
+                                // HINT <model>: <text>: a model's precision is slow or can't run on this
+                                // backend and GPU (once per model it loads); the latest is noted.
+                                else if (e.Data.StartsWith("HINT "))
+                                {
+                                    ModelHintText = e.Data["HINT ".Length..];
+                                }
                                 else if (e.Data.StartsWith("ENGINE_BUILD "))
                                 {
                                     var model = e.Data["ENGINE_BUILD ".Length..].Split(' ')[0];
@@ -1326,6 +1642,21 @@ namespace MangaJaNaiConverterGui.ViewModels
 
         public bool ShowBackendFallback => !string.IsNullOrEmpty(BackendFallbackText);
 
+        // The CLI's last precision hint this run ("<model>: <text>"): a note in the status bar, the
+        // full line as its tooltip.
+        private string _modelHintText = string.Empty;
+        public string ModelHintText
+        {
+            get => _modelHintText;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _modelHintText, value);
+                this.RaisePropertyChanged(nameof(ShowModelHint));
+            }
+        }
+
+        public bool ShowModelHint => !string.IsNullOrEmpty(ModelHintText);
+
         private string _engineStatusText = string.Empty;
         public string EngineStatusText
         {
@@ -1338,7 +1669,10 @@ namespace MangaJaNaiConverterGui.ViewModels
         }
 
         // Run the backend for a short query (e.g. --list-devices) and return its stdout.
-        private async Task<string> RunBackendQuery(params string[] arguments)
+        private Task<string> RunBackendQuery(params string[] arguments) => RunBackendQuery(null, arguments);
+
+        // The same, killed (and returning empty) after the timeout.
+        private async Task<string> RunBackendQuery(TimeSpan? timeout, string[] arguments)
         {
             if (!_backendService.IsBackendInstalled)
             {
@@ -1359,7 +1693,21 @@ namespace MangaJaNaiConverterGui.ViewModels
             process.Start();
             var stdout = process.StandardOutput.ReadToEndAsync();
             _ = process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            if (timeout is null)
+            {
+                await process.WaitForExitAsync();
+                return await stdout;
+            }
+            using var cts = new CancellationTokenSource(timeout.Value);
+            try
+            {
+                await process.WaitForExitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try { process.Kill(true); } catch { }
+                return string.Empty;
+            }
             return await stdout;
         }
 
@@ -1368,7 +1716,7 @@ namespace MangaJaNaiConverterGui.ViewModels
             try
             {
                 var json = await RunBackendQuery("--list-devices", "--backend", backend, "--aji-dir", _backendService.InferenceDirectory);
-                return string.IsNullOrWhiteSpace(json) ? [] : JsonConvert.DeserializeObject<List<BackendDevice>>(json) ?? [];
+                return BackendDevice.ParseList(json);
             }
             catch (Exception ex)
             {
@@ -1394,18 +1742,43 @@ namespace MangaJaNaiConverterGui.ViewModels
                     break;
                 }
             }
+            UseDeviceList(backend, devices);
+        }
+
+        // The devices `backend` listed (the last one asked, if none did): the device list, the
+        // device, and everything that depends on the backend and device.
+        public void UseDeviceList(string backend, List<BackendDevice> devices)
+        {
+            // Auto's list is the NVIDIA devices the setup check (UpdateBackendSetupHint) needs: what
+            // TensorRT-RTX or TensorRT found, or none if it came down to DirectML.
+            if (UpscaleBackends.Normalize(UpscaleBackend) == UpscaleBackends.Auto)
+            {
+                var nvidia = backend != UpscaleBackends.CliDirectMl && devices.Count > 0;
+                _nvidiaDevices = nvidia ? devices : [];
+                _nvidiaDevicesBackend = nvidia ? backend : null;
+            }
 
             var selected = BackendDevice.Find(devices, SelectedDeviceId, SelectedDeviceName, SelectedDeviceIndex);
             _deviceBackend = backend;
             _deviceIds = devices.Select(d => d.Id).ToArray();
             _deviceNames = devices.Select(d => d.Name).ToArray();
+            _deviceComputeCapabilities = devices.Select(d => d.ComputeCapability).ToArray();
+            _devicesListed = true;
             // Replacing the items clears the ComboBox's selection; select after, as a real change,
             // so the ComboBox picks it up even when the index is the same as before.
-            _selectedDeviceIndex = -1;
-            DeviceList = BackendDevice.Labels(devices);
-            if (devices.Count > 0)
+            _refreshingDevices = true;
+            try
             {
-                SelectedDeviceIndex = selected;
+                _selectedDeviceIndex = -1;
+                DeviceList = BackendDevice.Labels(devices);
+                if (devices.Count > 0)
+                {
+                    SelectedDeviceIndex = selected;
+                }
+            }
+            finally
+            {
+                _refreshingDevices = false;
             }
             var upscaleBackend = UpscaleBackends.UpscaleBackend(UpscaleBackend, devices.Count > 0 ? backend : null);
             DeviceStatusText = MissingBackendComponents() ?? (devices.Count == 0
@@ -1413,6 +1786,12 @@ namespace MangaJaNaiConverterGui.ViewModels
                 : upscaleBackend == UpscaleBackends.CliTensorRtRtx
                     ? "Using TensorRT-RTX. If it can't run on this GPU, TensorRT is used instead."
                     : $"Using {UpscaleBackends.DisplayName(upscaleBackend)}.");
+
+            OnBackendContextChanged();
+            if (UpscaleBackends.Normalize(UpscaleBackend) == UpscaleBackends.DirectMl && _nvidiaDevices is null)
+            {
+                _ = ProbeNvidiaDevices();
+            }
         }
 
         // The components the chosen backend needs that aren't installed, as a message; null if none.
@@ -1492,6 +1871,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                     chain.Migrate();
                 }
                 ReplaceCurrentWorkflow(workflow);
+                ApplyModelVariants();
             }
         }
 
@@ -1547,7 +1927,7 @@ namespace MangaJaNaiConverterGui.ViewModels
 
             _backendService.RefreshModels();
             IsExtractingBackend = false;
-            await RefreshDevices();
+            await RefreshDevices(); // and the variant rule, now that the models and the GPU are known
             CurrentWorkflow?.Validate();
         }
 
@@ -1630,6 +2010,7 @@ namespace MangaJaNaiConverterGui.ViewModels
                         WorkflowName = workflowName,
                         Chains = workflow.Chains
                     });
+                    ApplyModelVariants();
                 }
             }
         }
@@ -1871,23 +2252,28 @@ namespace MangaJaNaiConverterGui.ViewModels
         public const string TensorRtRtxPack = "trt-rtx";
 
         // Which packs the component manager lists: what this machine uses (recommended) or has
-        // (installed, so it can be removed), and on any NVIDIA GPU the TensorRT-RTX pack, so it can
-        // be installed where it isn't recommended.
-        public static bool IsShown(string name, bool installed, bool recommended, bool nvidia) =>
-            installed || recommended || (nvidia && name == TensorRtRtxPack);
+        // (installed, so it can be removed); on any NVIDIA GPU the TensorRT-RTX pack, so it can be
+        // installed where it isn't recommended; and while upscales run on DirectML the fp32 DAT2/HAT
+        // models, the ones DirectML can run (a GPU that runs bf16 isn't recommended them).
+        public static bool IsShown(string name, bool installed, bool recommended, bool nvidia, bool directMl = false) =>
+            installed || recommended || (nvidia && name == TensorRtRtxPack) ||
+            (directMl && name == ModelVariants.IllustrationJaNaiFp32Pack);
 
         // User-facing label for the raw pack id. Only the packs relevant to this machine reach the
         // UI, so the GPU family shown is the user's own.
-        public string Title => Name switch
+        public string Title => TitleOf(Name);
+
+        public static string TitleOf(string name) => name switch
         {
             "trt-runtime" => "TensorRT runtime",
             TensorRtRtxPack => "TensorRT-RTX",
             "trt-ptx" => "TensorRT kernels: other NVIDIA GPUs",
-            "models-mangajanai" => "MangaJaNai models (grayscale manga)",
-            "models-illustrationjanai" => "IllustrationJaNai models (color)",
-            "models-bf16" => "IllustrationJaNai models, bf16 (NVIDIA)",
-            _ when Name.StartsWith("trt-sm") => $"TensorRT kernels: {SmFamily(Name[6..])}",
-            _ => Name,
+            ModelVariants.MangaJaNaiPack => "MangaJaNai models (grayscale manga)",
+            ModelVariants.IllustrationJaNaiPack => "IllustrationJaNai models (color)",
+            ModelVariants.IllustrationJaNaiBf16Pack => "IllustrationJaNai DAT2/HAT, bf16 (NVIDIA)",
+            ModelVariants.IllustrationJaNaiFp32Pack => "IllustrationJaNai DAT2/HAT, fp32 (DirectML, older NVIDIA)",
+            _ when name.StartsWith("trt-sm") => $"TensorRT kernels: {SmFamily(name[6..])}",
+            _ => name,
         };
 
         public string Description => Name switch
@@ -1895,9 +2281,10 @@ namespace MangaJaNaiConverterGui.ViewModels
             "trt-runtime" => "The fastest upscaling engine, for NVIDIA GPUs. Without it, upscaling uses the slower DirectML engine. TensorRT-RTX needs it too.",
             TensorRtRtxPack => "The fastest NVIDIA backend, installed by default on RTX 20 / GTX 16 series and newer. It builds engines in seconds instead of a TensorRT build's few minutes and upscales faster; output is equivalent to TensorRT's, though not bit-identical. Auto uses it when it's installed. Needs the TensorRT runtime, which it falls back to if it can't run.",
             "trt-ptx" => "Fallback kernels for NVIDIA GPUs without a dedicated kernel pack. The first engine build is slower.",
-            "models-mangajanai" => "The default models for grayscale manga pages, one per source resolution.",
-            "models-illustrationjanai" => "The default models for color pages and illustrations.",
-            "models-bf16" => "Faster bf16 versions of the IllustrationJaNai DAT2 and HAT models, used automatically on TensorRT and TensorRT-RTX with an RTX 30-series or newer GPU.",
+            ModelVariants.MangaJaNaiPack => "The default models for grayscale manga pages, one per source resolution.",
+            ModelVariants.IllustrationJaNaiPack => "The default models for color pages and illustrations. The larger DAT2 and HAT models come separately, in the version that suits your GPU.",
+            ModelVariants.IllustrationJaNaiBf16Pack => "Faster versions of the DAT2 and HAT models for NVIDIA RTX 30-series and newer, used with the TensorRT and TensorRT-RTX backends.",
+            ModelVariants.IllustrationJaNaiFp32Pack => "The DAT2 and HAT models for DirectML and older NVIDIA GPUs (RTX 20 / GTX 16 series and older).",
             _ when Name.StartsWith("trt-sm") => "Engine-builder kernels matched to your GPU generation.",
             _ => "",
         };
@@ -2668,6 +3055,11 @@ namespace MangaJaNaiConverterGui.ViewModels
                     valid = false;
                     validationText.Add($"Chain {chain.ChainNumber}'s model {chain.ModelFilePath} is a PyTorch model; MangaJaNai GUI 2.0 runs ONNX models. Convert it to ONNX: {UpscaleChain.ConvertModelsUrl}");
                 }
+                else if (Vm?.ModelVariantProblem(chain) is string problem)
+                {
+                    valid = false;
+                    validationText.Add(problem);
+                }
             }
 
             Valid = valid;
@@ -2923,8 +3315,13 @@ namespace MangaJaNaiConverterGui.ViewModels
             // the list); the backend reads the setting as a string.
             set
             {
+                var changed = _modelFilePath != (value ?? string.Empty);
                 this.RaiseAndSetIfChanged(ref _modelFilePath, value ?? string.Empty);
                 this.RaisePropertyChanged(nameof(MissingModel));
+                if (changed)
+                {
+                    Vm?.OnChainModelChanged(this);
+                }
             }
         }
 
@@ -2972,7 +3369,9 @@ namespace MangaJaNaiConverterGui.ViewModels
             set => this.RaiseAndSetIfChanged(ref _resizeFactorBeforeUpscale, value ?? 100);
         }
 
-        public AvaloniaList<string> AllModels => _backendService.AllModels;
+        // What the model picker lists: the view model's variant-filtered list (every installed model
+        // before the chain is wired up).
+        public AvaloniaList<string> AllModels => Vm?.PickerModels ?? _backendService.AllModels;
 
         public const string ConvertModelsUrl = "https://github.com/the-database/MangaJaNaiGUI/tree/main/tools/onnx-export";
 
@@ -2999,28 +3398,72 @@ namespace MangaJaNaiConverterGui.ViewModels
             _ => "Auto (Estimate)",
         };
 
-        // 1.x's default settings pointed every Custom Workflow's color chain at IllustrationJaNai V1,
-        // which 2.0 doesn't ship (and 1.x didn't download either): such a chain moves to the 4x
-        // IllustrationJaNai model the default workflow uses.
-        private const string LegacyIllustrationModel = "4x_IllustrationJaNai_V1_ESRGAN_135k";
-        private const string LegacyIllustrationReplacement = "4x_IllustrationJaNai_V3denoise_FDAT_M_47k_fp16.onnx";
+        // The name-only part (no installed models needed); the VM's ApplyModelVariants then moves a
+        // shipped family's name to the variant installed (ModelVariants.Resolve).
+        public static string MigrateModelName(string model) => ModelVariants.MigrateLegacyName(model);
 
-        public static string MigrateModelName(string model)
+        // Move to the variant the rule picked (ModelVariants.Resolve); true if the model changed.
+        public bool ApplyVariant(ModelVariants.Choice choice)
         {
-            if (string.IsNullOrWhiteSpace(model) || model.EndsWith(".onnx", StringComparison.OrdinalIgnoreCase))
+            if (choice.Model == ModelFilePath)
             {
-                return model;
+                return false;
             }
-            var ext = Path.GetExtension(model);
-            if (Path.GetFileNameWithoutExtension(model).Equals(LegacyIllustrationModel, StringComparison.OrdinalIgnoreCase) &&
-                (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase)))
+            ModelFilePath = choice.Model;
+            return true;
+        }
+
+        // Make the model ComboBox show the model again after its list was rebuilt: a rebuilt list
+        // clears the ComboBox's selection without changing the setting, and setting the same value
+        // again doesn't reselect it.
+        public void ReselectModel()
+        {
+            var model = _modelFilePath;
+            _modelFilePath = string.Empty;
+            this.RaisePropertyChanged(nameof(ModelFilePath));
+            _modelFilePath = model;
+            this.RaisePropertyChanged(nameof(ModelFilePath));
+        }
+
+        // ---- precision tag -------------------------------------------------------------------
+        // The model file's precision as mangajanai_upscale --model-info reads it, beside the model
+        // picker; empty for No Model, a missing file or a failed query. The CLI's hint (a faster or
+        // runnable precision exists for this backend and GPU) is its tooltip and colors it.
+
+        private string _precisionTag = string.Empty;
+        public string PrecisionTag
+        {
+            get => _precisionTag;
+            private set
             {
-                return LegacyIllustrationReplacement;
+                this.RaiseAndSetIfChanged(ref _precisionTag, value);
+                this.RaisePropertyChanged(nameof(ShowPrecisionTag));
             }
-            return Regex.IsMatch(Path.GetFileName(model), @"^\dx_(MangaJaNai|IllustrationJaNai)_", RegexOptions.IgnoreCase) &&
-                   (ext.Equals(".pth", StringComparison.OrdinalIgnoreCase) || ext.Equals(".safetensors", StringComparison.OrdinalIgnoreCase))
-                ? Path.ChangeExtension(model, ".onnx")
-                : model;
+        }
+
+        private string? _precisionHint;
+        public string? PrecisionHint
+        {
+            get => _precisionHint;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _precisionHint, value);
+                this.RaisePropertyChanged(nameof(HasPrecisionHint));
+                this.RaisePropertyChanged(nameof(PrecisionToolTip));
+            }
+        }
+
+        public bool ShowPrecisionTag => !string.IsNullOrEmpty(PrecisionTag);
+        public bool HasPrecisionHint => !string.IsNullOrEmpty(PrecisionHint);
+        public string PrecisionToolTip => PrecisionHint ?? $"This model file stores its weights in {PrecisionTag}.";
+
+        // The --model-info query the tag shows (or is waiting for); a result for an older one is dropped.
+        internal string? PrecisionQueryKey { get; set; }
+
+        internal void SetPrecision(string? precision, string? hint)
+        {
+            PrecisionTag = precision is ModelVariants.Fp16 or ModelVariants.Bf16 or ModelVariants.Fp32 ? precision : string.Empty;
+            PrecisionHint = PrecisionTag.Length > 0 && !string.IsNullOrWhiteSpace(hint) ? hint : null;
         }
 
         private string[] _tileSizes = [
@@ -3088,6 +3531,23 @@ namespace MangaJaNaiConverterGui.ViewModels
         [JsonProperty("vram")]
         public long Vram { get; set; }
 
+        // CUDA compute capability, "major.minor" ("8.9"); null on DirectML (and from older backends).
+        [JsonProperty("compute_capability")]
+        public string? ComputeCapability { get; set; }
+
+        // The --list-devices output; empty if it isn't a device list.
+        public static List<BackendDevice> ParseList(string? json)
+        {
+            try
+            {
+                return string.IsNullOrWhiteSpace(json) ? [] : JsonConvert.DeserializeObject<List<BackendDevice>>(json) ?? [];
+            }
+            catch (JsonException)
+            {
+                return [];
+            }
+        }
+
         // The device list shows every device the backend lists. Devices that share a name (two of the
         // same card) get the end of their id, just long enough to tell them apart: "RTX 5090 (#2600)".
         public static string[] Labels(IReadOnlyList<BackendDevice> devices) =>
@@ -3133,6 +3593,37 @@ namespace MangaJaNaiConverterGui.ViewModels
                 }
             }
             return 0;
+        }
+    }
+
+    // mangajanai_upscale --model-info's output: the float precision holding most of the model's
+    // weights ("fp32", "fp16", "bf16" or "unknown"), and with --backend, a one-sentence hint when that
+    // precision is slow or can't run on the backend and GPU (else null).
+    public class ModelInfo
+    {
+        [JsonProperty("precision")]
+        public string? Precision { get; set; }
+
+        [JsonProperty("hint")]
+        public string? Hint { get; set; }
+
+        // Null if the output isn't a model-info object (a failed query, or a backend without it).
+        public static ModelInfo? Parse(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return null;
+            }
+            try
+            {
+                return Newtonsoft.Json.Linq.JToken.Parse(json.Trim()) is Newtonsoft.Json.Linq.JObject o
+                    ? new ModelInfo { Precision = (string?)o["precision"], Hint = (string?)o["hint"] }
+                    : null;
+            }
+            catch (Exception ex) when (ex is JsonException or InvalidCastException or ArgumentException)
+            {
+                return null;
+            }
         }
     }
 }

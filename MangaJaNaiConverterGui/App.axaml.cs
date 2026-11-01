@@ -71,7 +71,9 @@ namespace MangaJaNaiConverterGui
             RxSuspension.SuspensionHost.SetupDefaultSuspendResume(container.Resolve<ISuspensionDriverService>().SuspensionDriver);
             suspension.OnFrameworkInitializationCompleted();
 
-            // Load the saved view model state.
+            // Load the saved view model state. Chains get the name-only 1.x migration here; the
+            // variant rule (which model of a shipped family runs) needs the installed models and the
+            // GPU, so it follows once the window is up (CheckAndExtractBackend).
             var state = RxSuspension.SuspensionHost.GetAppState<MainWindowViewModel>();
 
             foreach (var wf in state.Workflows)
