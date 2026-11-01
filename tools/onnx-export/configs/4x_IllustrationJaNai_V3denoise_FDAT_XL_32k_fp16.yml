@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/the-database/traiNNer-redux/refs/heads/master/schemas/redux-config.schema.json
-# MangaJaNai 2.0 ONNX export: FDAT_XL, fp16. For TensorRT 11 and ONNX Runtime DirectML.
-name: 4x_IllustrationJaNai_V3denoise_FDAT_XL_32k_bf16
+# MangaJaNai 2.0 ONNX export: FDAT_XL, fp16. For TensorRT, TensorRT-RTX and ONNX Runtime DirectML.
+name: 4x_IllustrationJaNai_V3denoise_FDAT_XL_32k_fp16
 scale: 4
 num_gpu: auto
 

@@ -68,6 +68,28 @@
       <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
+    <!-- A chain's model precision ("fp16"), beside the model picker; in the caution color when the
+         backend has a hint about it (the tooltip). -->
+    <Style Selector="Border.precisionTag">
+      <Setter Property="Margin" Value="6,0,0,0"/>
+      <Setter Property="Padding" Value="6,1"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#33888888"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="ToolTip.ShowDelay" Value="200"/>
+    </Style>
+    <Style Selector="Border.precisionTag TextBlock">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="Gray"/>
+    </Style>
+    <Style Selector="Border.precisionTag.caution">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}"/>
+    </Style>
+    <Style Selector="Border.precisionTag.caution TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}"/>
+    </Style>
     <Style Selector="StackPanel.row">
       <Setter Property="Orientation" Value="Horizontal"/>
     </Style>
@@ -259,6 +281,13 @@
                         IsVisible="{Binding ShowBackendFallback}" ToolTip.Tip="{Binding BackendFallbackText}">
               <materialIcons:MaterialIcon Kind="Alert" Width="12" Height="12" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
               <TextBlock FontSize="10" VerticalAlignment="Center" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="TensorRT-RTX failed; using TensorRT" />
+            </StackPanel>
+
+            <!-- A model's precision is slow or can't run here (the CLI's latest HINT line this run) -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Margin="10,0,0,0" VerticalAlignment="Center"
+                        IsVisible="{Binding ShowModelHint}" ToolTip.Tip="{Binding ModelHintText}">
+              <materialIcons:MaterialIcon Kind="Alert" Width="12" Height="12" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+              <TextBlock FontSize="10" VerticalAlignment="Center" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="Model precision hint" />
             </StackPanel>
 
             <TextBlock Margin="10,0,10,0" DockPanel.Dock="Left" FontSize="10" TextTrimming="CharacterEllipsis" MaxWidth="400" Text="{Binding LeftStatus}" />
@@ -552,11 +581,30 @@
                                   <ColumnDefinition Width="Auto" />
                                   <ColumnDefinition Width="*" MaxWidth="500" />
                                   <ColumnDefinition Width="Auto" />
+                                  <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <ContentControl Classes="hint" Content="Model"
                                                 ToolTip.Tip="The upscaling model to run. To choose from more models, add ONNX (*.onnx) model files to the models folder (App Settings &gt; Models). Select No Model to skip running any upscaling model for this chain." />
-                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AllModels}" SelectedValue="{Binding ModelFilePath}" />
-                                <Button Grid.Column="2" Margin="5,0,0,0" ToolTip.Tip="Open Models Directory" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
+                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ModelChoices}"
+                                          SelectedValueBinding="{Binding Name, x:DataType=vm:ModelChoice}" SelectedValue="{Binding ModelFilePath}">
+                                  <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ModelChoice">
+                                      <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock IsVisible="{Binding Missing}" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="(not installed)" />
+                                      </StackPanel>
+                                    </DataTemplate>
+                                  </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Border Grid.Column="2" Classes="precisionTag" Classes.caution="{Binding HasPrecisionHint}"
+                                        IsVisible="{Binding ShowPrecisionTag}" ToolTip.Tip="{Binding PrecisionToolTip}">
+                                  <StackPanel Orientation="Horizontal" Spacing="3">
+                                    <materialIcons:MaterialIcon Kind="Alert" Width="11" Height="11" IsVisible="{Binding HasPrecisionHint}"
+                                                                Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+                                    <TextBlock Text="{Binding PrecisionTag}" />
+                                  </StackPanel>
+                                </Border>
+                                <Button Grid.Column="3" Margin="5,0,0,0" ToolTip.Tip="Open Models Directory" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenModelsDirectory}">
                                   <materialIcons:MaterialIcon Kind="FolderOpen" />
                                 </Button>
                               </Grid>
@@ -789,6 +837,13 @@
                 <ComboBox ItemsSource="{Binding DeviceList}" SelectedIndex="{Binding SelectedDeviceIndex, Mode=TwoWay}" IsEnabled="{Binding !Upscaling}" />
               </StackPanel>
               <TextBlock Foreground="Gray" TextWrapping="Wrap" Text="{Binding DeviceStatusText}" />
+              <!-- Setup check: shown only when another choice is clearly faster here -->
+              <StackPanel Classes="row" Spacing="8" IsVisible="{Binding ShowBackendSetupHint}">
+                <materialIcons:MaterialIcon Kind="Lightbulb" Opacity="0.7" />
+                <TextBlock TextWrapping="Wrap" Text="{Binding BackendSetupHint}" />
+                <Button Content="Switch to Auto" Command="{Binding SetBackendAuto}" IsEnabled="{Binding !Upscaling}"
+                        ToolTip.Tip="Auto picks the fastest backend for this GPU." />
+              </StackPanel>
             </StackPanel>
           </Border>
 

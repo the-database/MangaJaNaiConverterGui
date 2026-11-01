@@ -29,8 +29,13 @@ namespace MangaJaNaiConverterGui.Services
         // one per model and tile size. Each backend's stale cleanup only touches its own files.
         string EngineCacheDirectory { get; }
 
-        // The ONNX models in both folders, plus "No Model". Cached; RefreshModels rescans.
+        // The ONNX models in both folders, plus "No Model". Cached; RefreshModels rescans, and says
+        // whether the list changed.
         AvaloniaList<string> AllModels { get; }
-        void RefreshModels();
+        bool RefreshModels();
+
+        // A chain's model file as the backend finds it: the user's models folder first, then the
+        // bundled one (a full path as it is). Null for No Model or a file that isn't there.
+        string? ResolveModelPath(string? model);
     }
 }

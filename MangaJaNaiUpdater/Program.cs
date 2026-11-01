@@ -642,10 +642,96 @@ Dictionary<string, string> ReadInstalledComponents(PackIndex index)
     return installed;
 }
 
-void WriteInstalledComponents(Dictionary<string, string> installed)
+void WriteInstalledComponents(Dictionary<string, string> installed, Dictionary<string, List<string>>? files = null)
 {
+    files ??= ReadPackFiles();
+    // Only installed packs keep a file record.
+    foreach (var name in files.Keys.Where(k => !installed.ContainsKey(k)).ToList())
+    {
+        files.Remove(name);
+    }
     File.WriteAllText(Path.Combine(installDir, "components.json"),
-        JsonSerializer.Serialize(new { installed }, new JsonSerializerOptions { WriteIndented = true }));
+        JsonSerializer.Serialize(new { installed, files }, new JsonSerializerOptions { WriteIndented = true }));
+}
+
+// The files each installed pack put on disk (components.json "files"), so a reinstall can delete the
+// ones its new version no longer has (a renamed or dropped model) and a removal finds them all. Packs
+// installed before this record existed have none: RetiredFiles covers what they can leave behind.
+Dictionary<string, List<string>> ReadPackFiles()
+{
+    var files = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+    string path = Path.Combine(installDir, "components.json");
+    try
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        if (doc.RootElement.TryGetProperty("files", out var f))
+        {
+            foreach (var e in f.EnumerateObject())
+            {
+                files[e.Name] = e.Value.EnumerateArray().Select(v => v.GetString() ?? "").Where(s => s != "").ToList();
+            }
+        }
+    }
+    catch { /* no record yet */ }
+    return files;
+}
+
+// Delete install-relative files, never anything outside the install folder. Returns how many went.
+int DeleteInstallFiles(IEnumerable<string> relPaths)
+{
+    int gone = 0;
+    string root = Path.GetFullPath(installDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+    foreach (var rel in relPaths)
+    {
+        string abs = Path.GetFullPath(Path.Combine(installDir, rel));
+        if (abs.StartsWith(root, StringComparison.OrdinalIgnoreCase) && File.Exists(abs))
+        {
+            TryDelete(() => { File.SetAttributes(abs, FileAttributes.Normal); File.Delete(abs); });
+            gone++;
+        }
+    }
+    return gone;
+}
+
+// Model files the 2.0 prereleases shipped under names that have since changed (every model is now
+// named for its ONNX precision), from installs made before packs recorded their files. Deleted when
+// no installed pack lists them: the three DAT2/HAT "_bf16" names are real bf16 models again in the
+// models-illustrationjanai-bf16 pack, so they stay where that pack is installed.
+static string[] RetiredFiles() =>
+[
+    "models/2x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx",
+    "models/2x_MangaJaNai_1300p_V1_ESRGAN_75k.onnx",
+    "models/2x_MangaJaNai_1400p_V1_ESRGAN_70k.onnx",
+    "models/2x_MangaJaNai_1500p_V1_ESRGAN_90k.onnx",
+    "models/2x_MangaJaNai_1600p_V1_ESRGAN_90k.onnx",
+    "models/2x_MangaJaNai_1920p_V1_ESRGAN_70k.onnx",
+    "models/2x_MangaJaNai_2048p_V1_ESRGAN_95k.onnx",
+    "models/4x_MangaJaNai_1200p_V1_ESRGAN_70k.onnx",
+    "models/4x_MangaJaNai_1300p_V1_ESRGAN_75k.onnx",
+    "models/4x_MangaJaNai_1400p_V1_ESRGAN_105k.onnx",
+    "models/4x_MangaJaNai_1500p_V1_ESRGAN_105k.onnx",
+    "models/4x_MangaJaNai_1600p_V1_ESRGAN_70k.onnx",
+    "models/4x_MangaJaNai_1920p_V1_ESRGAN_105k.onnx",
+    "models/4x_MangaJaNai_2048p_V1_ESRGAN_70k.onnx",
+    "models/4x_IllustrationJaNai_V3denoise_FDAT_XL_32k_bf16.onnx",
+    "models/4x_IllustrationJaNai_V3detail_FDAT_XL_27k_bf16.onnx",
+    "models/4x_IllustrationJaNai_V3denoise_DAT2_27k_bf16.onnx",
+    "models/4x_IllustrationJaNai_V3detail_DAT2_28k_bf16.onnx",
+    "models/4x_IllustrationJaNai_V3detail_HAT_L_28k_bf16.onnx",
+];
+
+int DeleteRetiredFiles(PackIndex index)
+{
+    var installed = ReadInstalledComponents(index);
+    var listed = index.Packs.Where(p => installed.ContainsKey(p.Name))
+        .SelectMany(p => p.Files).Select(f => f.Replace('\\', '/'))
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    int gone = DeleteInstallFiles(RetiredFiles().Where(f => !listed.Contains(f)));
+    if (gone > 0)
+    {
+        Console.WriteLine($"Removed {gone} model file(s) from an earlier version that were renamed since.");
+    }
+    return gone;
 }
 
 string? PackVersionMismatch(PackIndex index)
@@ -711,13 +797,21 @@ static (bool HasNvidia, string Sm, string GpuName) DetectGpu()
 // existing install on such a GPU too.
 List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 {
-    // models-bf16 only helps NVIDIA GPUs that run bf16 (below); the other models-* packs are for all.
-    var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal) && p.Name != "models-bf16")
+    // The models every machine needs; the DAT2/HAT variant packs (-bf16, -fp32) are chosen below.
+    var rec = index.Packs.Where(p => p.Name.StartsWith("models-", StringComparison.Ordinal) && !IsModelVariantPack(p.Name))
         .Select(p => p.Name).ToList();
+    var sms = sm.Split(", ", StringSplitOptions.RemoveEmptyEntries);
+    // Exactly one DAT2/HAT variant per machine, so the model list only offers the one to use: bf16 where
+    // an NVIDIA GPU runs it (compute capability 8.0+, on TensorRT and TensorRT-RTX), else fp32, which
+    // DirectML and older NVIDIA GPUs run. (Switching such a machine to DirectML asks for the fp32 pack.)
+    var variant = hasNvidia && sms.Any(s => SmNumber(s) >= 80) ? "models-illustrationjanai-bf16" : "models-illustrationjanai-fp32";
+    if (index.Packs.Any(p => p.Name == variant))
+    {
+        rec.Add(variant);
+    }
     if (hasNvidia)
     {
         rec.Add("trt-runtime");
-        var sms = sm.Split(", ", StringSplitOptions.RemoveEmptyEntries);
         foreach (var s in sms)
         {
             var pack = index.Packs.Any(p => p.Name == $"trt-{s}") ? $"trt-{s}" : "trt-ptx";
@@ -730,12 +824,6 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
         {
             rec.Add("trt-rtx");
         }
-        // bf16 variants of the fp32 IllustrationJaNai models, which mangajanai_upscale uses on TensorRT
-        // and TensorRT-RTX from compute capability 8.0 (Turing and older have no bf16).
-        if (sms.Any(s => SmNumber(s) >= 80) && index.Packs.Any(p => p.Name == "models-bf16"))
-        {
-            rec.Add("models-bf16");
-        }
     }
     return rec;
 }
@@ -745,6 +833,9 @@ List<string> RecommendedPacks(PackIndex index, bool hasNvidia, string sm)
 // convolutions, but no default model needs them (MangaJaNai ESRGAN is convolutions only, and the
 // IllustrationJaNai FDAT and SPAN models run their matrix multiplies in fp16); the fp32 DAT2 and HAT
 // models fall back to TensorRT per model there. Data-center 8.0, 9.0 and 10.0 aren't supported.
+static bool IsModelVariantPack(string name) =>
+    name.EndsWith("-bf16", StringComparison.Ordinal) || name.EndsWith("-fp32", StringComparison.Ordinal);
+
 // "sm86" -> 86, "sm120" -> 120 (major * 10 + minor); 0 if it isn't one.
 static int SmNumber(string sm) =>
     sm.StartsWith("sm", StringComparison.Ordinal) && int.TryParse(sm[2..], out int cc) ? cc : 0;
@@ -844,7 +935,9 @@ async Task<int> InstallComponentAsync(string name)
         if (prev == target || recorded == target)
         {
             current[pack.Name] = target;
-            WriteInstalledComponents(current);
+            var recordedFiles = ReadPackFiles();
+            recordedFiles[pack.Name] = pack.Files.ToList();
+            WriteInstalledComponents(current, recordedFiles);
             Console.WriteLine($"{pack.Name} already up to date ({target}); skipping download.");
             return 0;
         }
@@ -869,7 +962,19 @@ async Task<int> InstallComponentAsync(string name)
     // Record the dep version (not the package version) so a later reinstall can tell whether this
     // pack's content actually changed; fall back to the package version for an untagged pack.
     installed[pack.Name] = target != "" ? target : index.PackageVersion;
-    WriteInstalledComponents(installed);
+    // Files the previous version of this pack had and this one doesn't (a renamed or dropped model).
+    var files = ReadPackFiles();
+    if (files.TryGetValue(pack.Name, out var previous))
+    {
+        var now = pack.Files.Select(f => f.Replace('\\', '/')).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        int stale = DeleteInstallFiles(previous.Where(f => !now.Contains(f.Replace('\\', '/'))));
+        if (stale > 0)
+        {
+            Console.WriteLine($"Removed {stale} file(s) the previous {pack.Name} had.");
+        }
+    }
+    files[pack.Name] = pack.Files.ToList();
+    WriteInstalledComponents(installed, files);
     Console.WriteLine($"{pack.Name} installed.");
     return 0;
 }
@@ -883,16 +988,9 @@ int RemoveComponent(string name)
         Console.WriteLine($"Unknown pack '{name}'. Available: {string.Join(", ", index.Packs.Select(p => p.Name))}");
         return 2;
     }
-    int gone = 0;
-    foreach (var f in pack.Files)
-    {
-        string abs = Path.Combine(installDir, f);
-        if (File.Exists(abs))
-        {
-            TryDelete(() => { File.SetAttributes(abs, FileAttributes.Normal); File.Delete(abs); });
-            gone++;
-        }
-    }
+    // The published list plus whatever an earlier version of the pack recorded.
+    var recorded = ReadPackFiles().GetValueOrDefault(pack.Name) ?? [];
+    int gone = DeleteInstallFiles(pack.Files.Concat(recorded).Distinct(StringComparer.OrdinalIgnoreCase));
     var installed = ReadInstalledComponents(index);
     installed.Remove(pack.Name);
     WriteInstalledComponents(installed);
@@ -916,6 +1014,7 @@ async Task<int> AutoComponentsAsync()
         .Select(p => p.Name).ToList();
     if (missing.Count == 0)
     {
+        DeleteRetiredFiles(index);
         Console.WriteLine("Everything the detected hardware needs is already installed.");
         await ComponentsAsync(index, false);
         return 0;
@@ -929,6 +1028,7 @@ async Task<int> AutoComponentsAsync()
             return rc;
         }
     }
+    DeleteRetiredFiles(index);
     return 0;
 }
 

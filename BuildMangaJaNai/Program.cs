@@ -24,8 +24,8 @@
 //                              aji files. With AJI_LOCAL_ZIP/AJI_LOCAL_DIR and without this, the released
 //                              one is not mixed in: there is no trt-rtx pack unless the dir holds it.
 //   MANGAJANAI_CLI_LOCAL    -> a local mangajanai_upscale.exe, or a directory/zip holding it
-//   MANGAJANAI_MODELS_DIR   -> a local directory of the model archives (models-*.7z) or loose .onnx files
-//                              (the bf16 variants: its bf16\ subfolder, or the bf16 archive)
+//   MANGAJANAI_MODELS_DIR   -> a local directory holding the model archives (by their asset names) and/or
+//                              loose .onnx files named by the precision rule below
 //   VC_CRT_DIR              -> a Microsoft.VC14x.CRT directory (default: found through vswhere)
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
@@ -70,32 +70,46 @@ const string DirectMLVersion   = "1.15.4";                // Microsoft.AI.Direct
 // yosh-image + libaji, released on its own mangajanai-cli-v* tags. MANGAJANAI_CLI_LOCAL overrides it
 // with a local build.
 const string CliRepo           = "the-database/yosh";
-// v0.1.2: --backend tensorrt-rtx (with its fallbacks to TensorRT, reported as BACKEND_FALLBACK lines)
-// and the backend named in ENGINE_BUILD lines.
-const string CliVersion        = "mangajanai-cli-v0.1.2";
+// v0.1.4: --model-info and HINT lines (each model's precision, and a hint when a faster export would
+// run on this GPU and backend), compute_capability in --list-devices, and it runs exactly the model
+// file it is given. v0.1.2 added --backend tensorrt-rtx and BACKEND_FALLBACK lines.
+const string CliVersion        = "mangajanai-cli-v0.1.4";
 const string CliAsset          = "mangajanai-cli-windows-x64.zip";
-const string CliSha256         = "a7264d0996ccfbd15706e152401c58944cdf5c341ca608a24a198cf615e0f9a8";
+const string CliSha256         = "d4501d6e3c8eaf14147700d4849412ee54fce2f62d062b54ebf3ed02aec2e2e7";
 
-// The default ONNX models (opset 17, fp16 where the model allows: one set for TensorRT and DirectML),
-// published as an archive on each model's MangaJaNai release. Local builds can use
-// MANGAJANAI_MODELS_DIR instead.
+// The default ONNX models, published as archives on each model's MangaJaNai release, one archive per
+// component pack. Every file is named <checkpoint>_<precision of the ONNX itself> (fp16, bf16 or fp32),
+// so the model list says what runs. DAT2 (2) and HAT_L overflow in fp16, so they come in two variants:
+// bf16 for NVIDIA GPUs from compute capability 8.0 (about 40-50% faster than fp32 on TensorRT and
+// TensorRT-RTX, 52-54 dB vs fp32) and fp32 for DirectML and older NVIDIA GPUs, which can't run bf16.
+// The updater installs one variant pack per machine (see RecommendedPacks in MangaJaNaiUpdater).
+// The release publishes no checksums; recorded from the uploaded assets.
 const string ModelsRepo        = "the-database/MangaJaNai";
-const string MangaJaNaiModelsTag        = "1.0.0";
-const string MangaJaNaiModelsAsset      = "MangaJaNai_V1_ONNX.7z";
-const string IllustrationJaNaiModelsTag   = "3.0.0";
-const string IllustrationJaNaiModelsAsset = "IllustrationJaNai_V3_ONNX.7z";
-(string Tag, string Asset)[] modelArchives =
+(string Pack, string Tag, string Asset, string Sha256)[] modelArchives =
 [
-    (MangaJaNaiModelsTag, MangaJaNaiModelsAsset),
-    (IllustrationJaNaiModelsTag, IllustrationJaNaiModelsAsset),
+    ("models-mangajanai", "1.0.0", "MangaJaNai_V1_ONNX_fp16.7z", "2c3809d712e3e96d107e2a59802186c284fac49d91a211435c8c896432ba27ab"),
+    ("models-illustrationjanai", "3.0.0", "IllustrationJaNai_V3_ONNX_fp16.7z", "bd7db0632b37b95b06410e99f95347980010b2ccc54730e2d68501f25bae898c"),
+    ("models-illustrationjanai-fp32", "3.0.0", "IllustrationJaNai_V3_ONNX_fp32.7z", "8b38bfdc95f194fb18eaa51d7ca869839ebbb1c29bed1e7a943a65b372d090ac"),
+    ("models-illustrationjanai-bf16", "3.0.0", "IllustrationJaNai_V3_ONNX_bf16.7z", "48e292c3f92aa2df79f9f83c6318a6c2052c29e6ea9fe2ed23b61cc526900247"),
 ];
-// bf16 variants of the IllustrationJaNai models that ship as fp32 (DAT2 x2 and HAT_L, where fp16
-// overflows), under the fp32 files' names: ~40% faster on TensorRT and TensorRT-RTX, visually the
-// same (53 dB vs fp32). DirectML and Turing can't run bf16, so they go to models/bf16/, which the
-// app's model list never shows; mangajanai_upscale prefers them on TensorRT/TensorRT-RTX with compute
-// capability 8.0 or newer. They become the models-bf16 pack, recommended on such GPUs.
-const string Bf16ModelsTag     = "3.0.0";
-const string Bf16ModelsAsset   = "IllustrationJaNai_V3_ONNX_bf16.7z";
+
+// Which models pack a model file belongs to, by its name; null if it isn't a shipped model.
+static string? ModelPack(string fileName)
+{
+    var stem = Path.GetFileNameWithoutExtension(fileName);
+    if (stem.Contains("_MangaJaNai_", StringComparison.Ordinal)) return "models-mangajanai";
+    if (!stem.Contains("_IllustrationJaNai_", StringComparison.Ordinal)) return null;
+    if (stem.EndsWith("_bf16", StringComparison.Ordinal)) return "models-illustrationjanai-bf16";
+    if (stem.EndsWith("_fp32", StringComparison.Ordinal)) return "models-illustrationjanai-fp32";
+    return "models-illustrationjanai";
+}
+
+// A models pack's manifest dep: its archive, so a new archive reinstalls the pack.
+string ModelDep(string pack)
+{
+    var a = modelArchives.First(m => m.Pack == pack);
+    return $"{a.Asset}@{a.Tag}";
+}
 
 // The app was MangaJaNaiConverterGui until 2.0. The exe and the install tree's root folder keep that
 // name (older updaters look for it in the full package); the release assets carry the new one.
@@ -451,7 +465,7 @@ async Task InstallModels()
     }
     else
     {
-        foreach (var (tag, asset) in modelArchives)
+        foreach (var (_, tag, asset, sha256) in modelArchives)
         {
             Console.WriteLine($"Downloading {asset} ({tag})...");
             var targetPath = Path.Combine(workDirectory, asset);
@@ -460,6 +474,7 @@ async Task InstallModels()
             {
                 if (p >= lastProgress + 10) { Console.WriteLine($"Downloading {asset} ({p}%)..."); lastProgress = p; }
             });
+            VerifySha256(targetPath, sha256);
             archives.Add(targetPath);
         }
     }
@@ -470,40 +485,28 @@ async Task InstallModels()
         archiveFile.Extract(modelsPath);
     }
 
-    var bf16Path = Path.Combine(modelsPath, "bf16");
-    Directory.CreateDirectory(bf16Path);
-    string? bf16Archive = null;
-    if (!string.IsNullOrEmpty(local))
+    // The naming rule, checked: every model is <checkpoint>_<fp16|bf16|fp32>, belongs to a pack, and
+    // each bf16 variant has its fp32 counterpart (and the reverse), so every machine gets one of them.
+    var names = Directory.GetFiles(modelsPath, "*.onnx").Select(f => Path.GetFileNameWithoutExtension(f)!).ToHashSet();
+    foreach (var stem in names)
     {
-        var localBf16 = Path.Combine(local, "bf16");
-        if (Directory.Exists(localBf16))
+        if (!(stem.EndsWith("_fp16", StringComparison.Ordinal) || stem.EndsWith("_bf16", StringComparison.Ordinal) ||
+              stem.EndsWith("_fp32", StringComparison.Ordinal)))
         {
-            foreach (var onnx in Directory.GetFiles(localBf16, "*.onnx"))
-            {
-                File.Copy(onnx, Path.Combine(bf16Path, Path.GetFileName(onnx)), true);
-            }
+            throw new InvalidOperationException($"model {stem}.onnx doesn't end in its precision (_fp16, _bf16 or _fp32)");
         }
-        var a = Path.Combine(local, Bf16ModelsAsset);
-        bf16Archive = File.Exists(a) ? a : null;
-    }
-    else
-    {
-        Console.WriteLine($"Downloading {Bf16ModelsAsset} ({Bf16ModelsTag})...");
-        bf16Archive = Path.Combine(workDirectory, Bf16ModelsAsset);
-        await DownloadFileAsync($"https://github.com/{ModelsRepo}/releases/download/{Bf16ModelsTag}/{Bf16ModelsAsset}", bf16Archive, _ => { });
-    }
-    if (bf16Archive is not null)
-    {
-        Console.WriteLine($"Extracting {Path.GetFileName(bf16Archive)} into models\\bf16...");
-        using ArchiveFile archiveFile = new(bf16Archive);
-        archiveFile.Extract(bf16Path);
-    }
-    // Each bf16 file stands in for an fp32 file of the same name; one without it would never be used.
-    foreach (var f in Directory.GetFiles(bf16Path, "*.onnx"))
-    {
-        if (!File.Exists(Path.Combine(modelsPath, Path.GetFileName(f))))
+        if (ModelPack(stem + ".onnx") is null)
         {
-            throw new InvalidOperationException($"bf16 model {Path.GetFileName(f)} has no fp32 model of the same name");
+            throw new InvalidOperationException($"model {stem}.onnx belongs to no models pack");
+        }
+        var family = stem[..^5];
+        if (stem.EndsWith("_bf16", StringComparison.Ordinal) && !names.Contains(family + "_fp32"))
+        {
+            throw new InvalidOperationException($"bf16 model {stem}.onnx has no fp32 counterpart for DirectML and older GPUs");
+        }
+        if (stem.EndsWith("_fp32", StringComparison.Ordinal) && !names.Contains(family + "_bf16"))
+        {
+            throw new InvalidOperationException($"fp32 model {stem}.onnx has no bf16 counterpart for newer NVIDIA GPUs");
         }
     }
 }
@@ -571,9 +574,10 @@ void WriteVersionAndManifest()
             ort_dml = $"{OrtDmlVersion}+{DirectMLVersion}",
             backend = CliVersion,
             // a pack's content changes only when its archive does
-            models_mangajanai = $"{MangaJaNaiModelsAsset}@{MangaJaNaiModelsTag}",
-            models_illustrationjanai = $"{IllustrationJaNaiModelsAsset}@{IllustrationJaNaiModelsTag}",
-            models_bf16 = $"{Bf16ModelsAsset}@{Bf16ModelsTag}",
+            models_mangajanai = ModelDep("models-mangajanai"),
+            models_illustrationjanai = ModelDep("models-illustrationjanai"),
+            models_illustrationjanai_fp32 = ModelDep("models-illustrationjanai-fp32"),
+            models_illustrationjanai_bf16 = ModelDep("models-illustrationjanai-bf16"),
             sevenzip = SevenZipVersion,
         },
         // Runtime-created data in the install folder that an update must never touch.
@@ -665,8 +669,8 @@ async Task<List<string>> EmitComponentPacks()
     var sevenZ = Path.Combine(installDirectory, "7za.exe");
 
     string[] Rel(IEnumerable<string> paths) => paths.Select(f => Path.GetRelativePath(installDirectory, f)).ToArray();
-    string[] ModelFiles(string marker) => Directory.Exists(modelsPath)
-        ? Rel(Directory.GetFiles(modelsPath, "*.onnx").Where(f => Path.GetFileName(f).Contains(marker, StringComparison.OrdinalIgnoreCase)))
+    string[] ModelFiles(string pack) => Directory.Exists(modelsPath)
+        ? Rel(Directory.GetFiles(modelsPath, "*.onnx").Where(f => ModelPack(Path.GetFileName(f)) == pack))
         : [];
 
     // Dep = the manifest.json deps key that governs a pack's content, so the updater can skip an
@@ -682,11 +686,10 @@ async Task<List<string>> EmitComponentPacks()
                            n is "CUDA_LICENSE.txt" or "TensorRT_Acknowledgements.txt";
             return runtime && !builderResource;
         }))),
-        ("models-mangajanai", "models_mangajanai", ModelFiles("MangaJaNai_")),
-        ("models-illustrationjanai", "models_illustrationjanai", ModelFiles("IllustrationJaNai_")),
-        ("models-bf16", "models_bf16", Directory.Exists(Path.Combine(modelsPath, "bf16"))
-            ? Rel(Directory.GetFiles(Path.Combine(modelsPath, "bf16"), "*.onnx"))
-            : []),
+        ("models-mangajanai", "models_mangajanai", ModelFiles("models-mangajanai")),
+        ("models-illustrationjanai", "models_illustrationjanai", ModelFiles("models-illustrationjanai")),
+        ("models-illustrationjanai-fp32", "models_illustrationjanai_fp32", ModelFiles("models-illustrationjanai-fp32")),
+        ("models-illustrationjanai-bf16", "models_illustrationjanai_bf16", ModelFiles("models-illustrationjanai-bf16")),
     };
     foreach (var f in Directory.GetFiles(inferencePath, "*builder_resource_*"))
     {

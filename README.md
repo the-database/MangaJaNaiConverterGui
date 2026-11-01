@@ -21,10 +21,10 @@ With **Auto Update** on (App Settings), updates download in the background and i
 Keep your NVIDIA drivers up to date.
 
 ### Custom models
-Put your own models in the models folder (App Settings > Models > Open Models Folder), then pick them in a chain. 2.0 runs ONNX models. Convert PyTorch models (`.pth`, `.safetensors`) to ONNX first: see [tools/onnx-export](tools/onnx-export).
+Put your own models in the models folder (App Settings > Models > Open Models Folder), then pick them in a chain. 2.0 runs ONNX models. Convert PyTorch models (`.pth`, `.safetensors`) to ONNX first: see [tools/onnx-export](tools/onnx-export), which also says which precision runs fastest on your GPU (fp32 is the slowest). Each chain shows its model's precision and says so when a faster one would run.
 
 ### Upgrading from 1.x
-Version 2.0 uses a new installer and doesn't update itself from 1.x. Install 2.0 with the setup above: it removes the 1.x install and its Python backend, and keeps your workflows and models folder. Workflows that use the default models switch to the ONNX versions automatically. Don't uninstall 1.x first; its uninstaller deletes the models folder, including any models you added.
+Version 2.0 uses a new installer and doesn't update itself from 1.x. Install 2.0 with the setup above: it removes the 1.x install, its Python backend and its default PyTorch models, and keeps your workflows and the models you added. Workflows that use the default models switch to their ONNX versions automatically. Don't uninstall 1.x first; its uninstaller deletes the models folder, including any models you added.
 
 ### Command line
 The upscaling backend, `inference\mangajanai_upscale.exe`, also runs on its own: `mangajanai_upscale.exe --help`.

@@ -64,6 +64,8 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "{#UpdaterExe}"; Flags: re
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+; Replaces the desktop shortcut of a 1.x install this one replaces (removed in CurStepChanged).
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Check: HadLegacyDesktopIcon
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
@@ -83,6 +85,7 @@ var
   GpuName: String;
   HasNvidia: Boolean;
   Packs: String;   // comma-separated, from MangaJaNaiUpdater --recommend (best-effort)
+  LegacyDesktopIcon: Boolean;   // 1.x had a desktop shortcut, so 2.0 gets one too
 
 // Run MangaJaNaiUpdater.exe --recommend (from the given exe path), capturing its KEY=value lines into
 // the globals. Returns False if it could not be run.
@@ -256,6 +259,11 @@ begin
   end;
 end;
 
+function HadLegacyDesktopIcon: Boolean;
+begin
+  Result := LegacyDesktopIcon;
+end;
+
 // Moving the folder fails while 1.x is running, so it doubles as the "is it closed" check, and
 // leaves the old install intact if it is still open.
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -263,6 +271,7 @@ begin
   Result := '';
   if HasVelopackInstall then
   begin
+    LegacyDesktopIcon := FileExists(ExpandConstant('{userdesktop}\{#LegacyName}.lnk'));
     DelTree(VelopackRetiredDir, True, True, True);
     if not RenameFile(VelopackDir, VelopackRetiredDir) then
       Result := 'Close {#LegacyName} 1.x (and any upscale it is running), then run setup again.' + #13#10#13#10 +

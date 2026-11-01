@@ -101,6 +101,69 @@ namespace MangaJaNaiConverterGui.Tests
         public void ComponentsShown(string name, bool installed, bool recommended, bool nvidia, bool shown) =>
             Assert.Equal(shown, ComponentItem.IsShown(name, installed, recommended, nvidia));
 
+        // The DAT2/HAT variants: bf16 where installed or recommended (an NVIDIA GPU that runs bf16);
+        // fp32 where installed, recommended, or while upscales run on DirectML (even on a GPU that
+        // runs bf16, where it isn't recommended).
+        [Theory]
+        [InlineData("models-illustrationjanai-bf16", false, false, true, false, false)]
+        [InlineData("models-illustrationjanai-bf16", false, true, true, false, true)]
+        [InlineData("models-illustrationjanai-bf16", true, false, true, false, true)]
+        [InlineData("models-illustrationjanai-bf16", false, false, true, true, false)]
+        [InlineData("models-illustrationjanai-fp32", false, false, true, false, false)]
+        [InlineData("models-illustrationjanai-fp32", false, false, true, true, true)]
+        [InlineData("models-illustrationjanai-fp32", false, false, false, true, true)]
+        [InlineData("models-illustrationjanai-fp32", false, true, false, false, true)]
+        [InlineData("models-illustrationjanai-fp32", true, false, true, false, true)]
+        [InlineData("models-illustrationjanai", false, true, false, true, true)]
+        [InlineData("trt-sm89", false, false, true, true, false)]
+        public void PrecisionPacksShown(string name, bool installed, bool recommended, bool nvidia, bool directMl, bool shown) =>
+            Assert.Equal(shown, ComponentItem.IsShown(name, installed, recommended, nvidia, directMl));
+
+        [Theory]
+        [InlineData("models-mangajanai", "MangaJaNai models (grayscale manga)")]
+        [InlineData("models-illustrationjanai", "IllustrationJaNai models (color)")]
+        [InlineData("models-illustrationjanai-bf16", "IllustrationJaNai DAT2/HAT, bf16 (NVIDIA)")]
+        [InlineData("models-illustrationjanai-fp32", "IllustrationJaNai DAT2/HAT, fp32 (DirectML, older NVIDIA)")]
+        [InlineData("trt-sm89", "TensorRT kernels: GeForce RTX 40 series (Ada)")]
+        // a pack this version doesn't know shows its id
+        [InlineData("models-from-a-newer-version", "models-from-a-newer-version")]
+        public void ComponentTitles(string name, string title)
+        {
+            Assert.Equal(title, new ComponentItem(name, 0, false, false).Title);
+            Assert.Equal(title, ComponentItem.TitleOf(name));
+        }
+
+        [Theory]
+        [InlineData("models-illustrationjanai")]
+        [InlineData("models-illustrationjanai-bf16")]
+        [InlineData("models-illustrationjanai-fp32")]
+        public void ModelPacksHaveDescriptions(string name) =>
+            Assert.NotEmpty(new ComponentItem(name, 0, false, false).Description);
+
+        static readonly BackendDevice[] Nvidia =
+            [new() { Id = "112600", Name = "NVIDIA GeForce RTX 4090", ComputeCapability = "8.9" },
+             new() { Id = "164787", Name = "NVIDIA GeForce RTX 3060", ComputeCapability = "8.6" }];
+
+        // App Settings' setup check: only with DirectML chosen while an NVIDIA GPU is usable.
+        [Theory]
+        [InlineData("DirectML", "tensorrt-rtx", "164787", "TensorRT-RTX is much faster on NVIDIA GeForce RTX 3060.")]
+        [InlineData("DirectML", "tensorrt-rtx", "999", "TensorRT-RTX is much faster on NVIDIA GeForce RTX 4090.")]
+        [InlineData("DirectML", "tensorrt", null, "TensorRT is much faster on NVIDIA GeForce RTX 4090.")]
+        [InlineData("Auto", "tensorrt-rtx", "112600", null)]
+        [InlineData("TensorRT", "tensorrt", "112600", null)]
+        [InlineData("TensorRT-RTX", "tensorrt-rtx", "112600", null)]
+        [InlineData("DirectML", "directml", "112600", null)]
+        [InlineData("DirectML", null, "112600", null)]
+        public void FasterBackendHint(string choice, string? nvidiaBackend, string? selected, string? hint) =>
+            Assert.Equal(hint, UpscaleBackends.FasterBackendHint(choice, Nvidia, nvidiaBackend, selected));
+
+        [Fact]
+        public void NoHintWithoutAnNvidiaGpu()
+        {
+            Assert.Null(UpscaleBackends.FasterBackendHint("DirectML", [], "tensorrt", null));
+            Assert.Null(UpscaleBackends.FasterBackendHint("DirectML", null, "tensorrt", null));
+        }
+
         [Theory]
         [InlineData("Auto", true, false, false, false)]
         [InlineData("TensorRT", false, true, false, false)]

@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/the-database/traiNNer-redux/refs/heads/master/schemas/redux-config.schema.json
-# MangaJaNai 2.0 ONNX export: HAT_L, fp32. For TensorRT 11 and ONNX Runtime DirectML.
+# MangaJaNai 2.0 ONNX export: HAT_L, bf16 (strongly typed). For TensorRT and TensorRT-RTX on NVIDIA compute capability 8.0+ (RTX 30-series and newer); DirectML can't run bf16.
 name: 4x_IllustrationJaNai_V3detail_HAT_L_28k_bf16
 scale: 4
 num_gpu: auto
@@ -12,8 +12,9 @@ path:
 
 onnx:
   dynamo: false
-  dtype: fp32
-  opset: 17
+  dtype: bf16
+  bf16_exclude_depthwise: true
+  opset: 22
   shape: 1x3xHxW
   verify: true
   optimize: false
