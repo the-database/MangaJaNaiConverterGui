@@ -61,6 +61,9 @@ const string AjiSha256Win      = "855fa197bc01a3621ee8265e0c19a9238024443cd9cd4a
 // licence notices (~232 MB unpacked). It becomes the trt-rtx pack, never part of the core.
 const string AjiTrtRtxSha256Win = "87742617e83c3e55a990d9e0355b9342c31a4fb5c283506908f9fcb05263defe";
 const string SevenZipVersion   = "2602";                  // 7-zip "extra": 7za.exe for the updater's packs
+// 7-Zip's own GitHub releases (ip7z/7zip; same file as www.7-zip.org/a/, which CI runners have
+// failed to resolve). 7z2602-extra.7z:
+const string SevenZipSha256    = "081df9e9311dfd9c9e0e98c1c80180b99bb51e4cb24156b5f3057fe3c259d70a";
 // DirectML backend runtime (aji_dml.dll loads both from its own directory). The last DirectML-flavored
 // ORT releases (DML is in sustained engineering); same pins as VideoJaNai.
 const string OrtDmlVersion     = "1.24.4";                // Microsoft.ML.OnnxRuntime.DirectML (NuGet)
@@ -140,9 +143,11 @@ var workDirectory = Path.Combine(outDirectory, "build-work");
 async Task InstallSevenZip()
 {
     Console.WriteLine("Downloading 7-Zip standalone console...");
-    var downloadUrl = $"https://www.7-zip.org/a/7z{SevenZipVersion}-extra.7z";
+    var tag = $"{SevenZipVersion[..^2]}.{SevenZipVersion[^2..]}";   // "2602" -> "26.02"
+    var downloadUrl = $"https://github.com/ip7z/7zip/releases/download/{tag}/7z{SevenZipVersion}-extra.7z";
     var targetPath = Path.Combine(workDirectory, "7z-extra.7z");
     await DownloadFileAsync(downloadUrl, targetPath, p => Console.WriteLine($"Downloading 7-Zip ({p}%)..."));
+    VerifySha256(targetPath, SevenZipSha256);
 
     var targetExtractPath = Path.Combine(workDirectory, "7z-extra");
     Directory.CreateDirectory(targetExtractPath);
